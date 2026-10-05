@@ -1,0 +1,265 @@
+package com.sipun.sonora.ui.update
+
+import android.widget.Toast
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import com.sipun.sonora.BuildConfig
+import com.sipun.sonora.core.update.AppUpdate
+import com.sipun.sonora.core.update.DownloadProgress
+import com.sipun.sonora.core.update.UpdateInstaller
+import com.sipun.sonora.core.update.UpdateManager
+import com.sipun.sonora.ui.components.DownloadProgressDialog
+import com.sipun.sonora.ui.components.UpdateDialog
+import com.sipun.sonora.ui.theme.SonoraRed
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
+
+@Composable
+fun UpdateContent(
+    checkRequested: Boolean,
+    onCheckRequestConsumed: () -> Unit,
+    onRequestCheck: () -> Unit,
+    notificationRequested: Boolean,
+    onNotificationRequestConsumed: () -> Unit,
+    appIcon: ImageBitmap,
+) {
+    val context = LocalContext.current
+    val installer = remember { UpdateInstaller(context.applicationContext) }
+    var pendingUpdate by remember { mutableStateOf<AppUpdate?>(null) }
+    var downloadedUpdate by remember { mutableStateOf<AppUpdate?>(null) }
+    var downloading by remember { mutableStateOf(false) }
+    var progress by remember { mutableStateOf<DownloadProgress?>(null) }
+    var showNoUpdate by remember { mutableStateOf(false) }
+    var checkingForUpdate by remember { mutableStateOf(false) }
+    var updateCheckFailed by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        UpdateManager.enqueuePeriodicCheck(context)
+        val stored = withContext(Dispatchers.IO) {
+            UpdateManager.getValidatedPendingUpdate(context)
+        }
+        if (stored != null) {
+            pendingUpdate = stored
+            downloadedUpdate = withContext(Dispatchers.IO) {
+                UpdateManager.getDownloadedUpdate(context)
+            }
+            withContext(Dispatchers.IO) {
+                UpdateManager.getDownloadProgress(context, stored.tag)
+            }?.let {
+                if (!it.isFinished && !it.isFailed) {
+                    progress = it
+                    downloading = true
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(checkRequested) {
+        if (!checkRequested) return@LaunchedEffect
+        onCheckRequestConsumed()
+        checkingForUpdate = true
+        updateCheckFailed = false
+        showNoUpdate = false
+        try {
+            val latest = withContext(Dispatchers.IO) {
+                UpdateManager.findLatestUpdate(context)
+            }
+            if (latest != null) {
+                UpdateManager.savePendingUpdate(context, latest)
+                pendingUpdate = latest
+                downloadedUpdate = withContext(Dispatchers.IO) {
+                    UpdateManager.getDownloadedUpdate(context)
+                }
+            } else {
+                showNoUpdate = true
+            }
+        } catch (_: Exception) {
+            updateCheckFailed = true
+        } finally {
+            checkingForUpdate = false
+        }
+    }
+
+    LaunchedEffect(notificationRequested) {
+        if (!notificationRequested) return@LaunchedEffect
+        onNotificationRequestConsumed()
+        val latest = pendingUpdate ?: withContext(Dispatchers.IO) {
+            UpdateManager.getValidatedPendingUpdate(context)
+        }
+        if (latest != null) {
+            pendingUpdate = latest
+            downloadedUpdate = withContext(Dispatchers.IO) {
+                UpdateManager.getDownloadedUpdate(context)
+            }
+        }
+    }
+
+    LaunchedEffect(pendingUpdate?.tag, downloading) {
+        val update = pendingUpdate ?: return@LaunchedEffect
+        if (!downloading) return@LaunchedEffect
+        while (downloading) {
+            val status = withContext(Dispatchers.IO) {
+                UpdateManager.getDownloadProgress(context, update.tag)
+            }
+            if (status != null) {
+                progress = status
+                if (status.isFinished) {
+                    downloadedUpdate = withContext(Dispatchers.IO) {
+                        UpdateManager.getDownloadedUpdate(context)
+                    }
+                    downloading = false
+                    progress = null
+                    break
+                }
+                if (status.isFailed) {
+                    downloading = false
+                    progress = null
+                    Toast.makeText(
+                        context,
+                        "Update download failed. Please try again.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    break
+                }
+            }
+            delay(250)
+        }
+    }
+
+    pendingUpdate?.let { update ->
+        if (downloading && progress != null) {
+            DownloadProgressDialog(
+                update = update,
+                appIcon = appIcon,
+                progress = progress!!,
+                onCancel = {
+                    UpdateManager.cancelDownload(context, update.tag)
+                    downloading = false
+                    progress = null
+                },
+            )
+        } else {
+            UpdateDialog(
+                update = update,
+                appIcon = appIcon,
+                isDownloaded = downloadedUpdate?.tag == update.tag,
+                isDownloading = downloading,
+                onDownload = {
+                    downloading = true
+                    UpdateManager.enqueueDownload(context, update)
+                },
+                onInstall = {
+                    when (installer.installDownloadedUpdate()) {
+                        UpdateInstaller.Result.Success -> Unit
+                        UpdateInstaller.Result.FileMissing ->
+                            Toast.makeText(
+                                context,
+                                "Downloaded update is no longer available.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        UpdateInstaller.Result.PermissionRequired -> {
+                            Toast.makeText(
+                                context,
+                                "Allow Sonora to install updates, then try again.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                            installer.openInstallPermissionSettings()
+                        }
+                        UpdateInstaller.Result.Failed ->
+                            Toast.makeText(
+                                context,
+                                "Could not open the update installer.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                    }
+                },
+                onDismiss = {
+                    pendingUpdate = null
+                    downloadedUpdate = null
+                    downloading = false
+                    progress = null
+                },
+            )
+        }
+    }
+
+    if (checkingForUpdate) {
+        AlertDialog(
+            onDismissRequest = {},
+            title = { Text("Checking for updates") },
+            text = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = SonoraRed,
+                        strokeWidth = 2.5.dp,
+                    )
+                    Text("Checking GitHub for the latest Sonora release.")
+                }
+            },
+            confirmButton = {},
+        )
+    }
+
+    if (updateCheckFailed) {
+        AlertDialog(
+            onDismissRequest = { updateCheckFailed = false },
+            title = { Text("Couldn't check for updates") },
+            text = {
+                Text(
+                    "Sonora couldn't reach GitHub right now. Check your internet connection and try again."
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        updateCheckFailed = false
+                        onRequestCheck()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = SonoraRed),
+                ) {
+                    Text("Try again")
+                }
+            },
+        )
+    }
+
+    if (showNoUpdate) {
+        AlertDialog(
+            onDismissRequest = { showNoUpdate = false },
+            title = { Text("You're up to date") },
+            text = {
+                Text("You're already running the latest version, " + BuildConfig.VERSION_NAME + ".")
+            },
+            confirmButton = {
+                Button(
+                    onClick = { showNoUpdate = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = SonoraRed),
+                ) {
+                    Text("OK")
+                }
+            },
+        )
+    }
+}

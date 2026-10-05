@@ -1,6 +1,5 @@
 package com.sipun.sonora.navigation
 
-import android.net.Uri
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -13,28 +12,22 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.runtime.*
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.coroutines.delay
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalDensity
-import androidx.navigation.NavType
-import androidx.navigation.compose.*
-import androidx.navigation.navArgument
-import com.sipun.sonora.feature.album.AlbumDetailScreen
-import com.sipun.sonora.feature.home.HomeScreen
-import com.sipun.sonora.feature.artist.ArtistDetailScreen
-import com.sipun.sonora.feature.nowplaying.NowPlayingScreen
-import com.sipun.sonora.feature.playlists.PlaylistDetailScreen
-import com.sipun.sonora.feature.settings.SettingsScreen
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.delay
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sipun.sonora.player.PlayerController
-import com.sipun.sonora.ui.components.SonoraMiniPlayer
 
 @Composable
 fun SonoraApp(onCheckForUpdates: () -> Unit = {}) {
@@ -57,12 +50,15 @@ fun SonoraApp(onCheckForUpdates: () -> Unit = {}) {
         }
     }
 
-    DisposableEffect(player) { onDispose { player.release() } }
+    DisposableEffect(player) {
+        onDispose { player.release() }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        NavHost(
+        SonoraNavGraph(
             navController = navController,
-            startDestination = SonoraRoute.Home.route,
+            player = player,
+            onCheckForUpdates = onCheckForUpdates,
             modifier = Modifier.fillMaxSize(),
             enterTransition = {
                 if (targetState.destination.route == SonoraRoute.NowPlaying.route) {
@@ -184,84 +180,15 @@ fun SonoraApp(onCheckForUpdates: () -> Unit = {}) {
                     ExitTransition.None
                 }
             },
-        ) {
-            composable(SonoraRoute.Home.route) {
-                HomeScreen(
-                    player,
-                    { navController.navigate(SonoraRoute.NowPlaying.route) },
-                    { navController.navigate(SonoraRoute.Album.createRoute(it)) },
-                    { navController.navigate(SonoraRoute.Artist.createRoute(it)) },
-                    { navController.navigate(SonoraRoute.Settings.route) },
-                    { navController.navigate(SonoraRoute.Playlist.createRoute(it)) },
-                )
-            }
-            composable(SonoraRoute.Settings.route) { SettingsScreen(onCheckForUpdates = onCheckForUpdates) }
-            composable(
-                SonoraRoute.Album.route,
-                arguments = listOf(navArgument("albumId") { type = NavType.StringType }),
-            ) { entry ->
-                AlbumDetailScreen(
-                    albumName = Uri.decode(entry.arguments?.getString("albumId").orEmpty()),
-                    playerController = player,
-                    onBack = { navController.popBackStack() },
-                    onOpenNowPlaying = { navController.navigate(SonoraRoute.NowPlaying.route) },
-                    onOpenArtist = { navController.navigate(SonoraRoute.Artist.createRoute(it)) },
-                )
-            }
-            composable(
-                SonoraRoute.Artist.route,
-                arguments = listOf(navArgument("artistId") { type = NavType.StringType }),
-            ) { entry ->
-                ArtistDetailScreen(
-                    artistName = Uri.decode(entry.arguments?.getString("artistId").orEmpty()),
-                    playerController = player,
-                    onBack = { navController.popBackStack() },
-                    onOpenNowPlaying = { navController.navigate(SonoraRoute.NowPlaying.route) },
-                    onOpenAlbum = { navController.navigate(SonoraRoute.Album.createRoute(it)) },
-                )
-            }
-            composable(
-                SonoraRoute.Playlist.route,
-                arguments = listOf(navArgument("playlistId") { type = NavType.StringType }),
-            ) { entry ->
-                PlaylistDetailScreen(
-                    playlistId = entry.arguments?.getString("playlistId").orEmpty(),
-                    playerController = player,
-                    onBack = { navController.popBackStack() },
-                    onOpenNowPlaying = { navController.navigate(SonoraRoute.NowPlaying.route) },
-                    onOpenAlbum = { navController.navigate(SonoraRoute.Album.createRoute(it)) },
-                    onOpenArtist = { navController.navigate(SonoraRoute.Artist.createRoute(it)) },
-                )
-            }
-            composable(SonoraRoute.NowPlaying.route) {
-                NowPlayingScreen(
-                    playerController = player,
-                    onBack = { navController.popBackStack() },
-                    onOpenAlbum = { albumId -> navController.navigate(SonoraRoute.Album.createRoute(albumId)) },
-                )
-            }
-        }
+        )
 
-        if (showMiniPlayer) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.BottomCenter,
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .navigationBarsPadding()
-                        .padding(bottom = 10.dp),
-                    contentAlignment = Alignment.BottomCenter,
-                ) {
-                    SonoraMiniPlayer(
-                        playerController = player,
-                        onOpenNowPlaying = {
-                            navController.navigate(SonoraRoute.NowPlaying.route)
-                        },
-                    )
-                }
-            }
-        }
+        SonoraMiniPlayerOverlay(
+            player = player,
+            playerState = playerState,
+            visible = showMiniPlayer,
+            onOpenNowPlaying = {
+                navController.navigate(SonoraRoute.NowPlaying.route)
+            },
+        )
     }
 }

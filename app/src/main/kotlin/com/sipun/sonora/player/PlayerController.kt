@@ -2,9 +2,6 @@ package com.sipun.sonora.player
 
 import android.content.ComponentName
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.media.MediaMetadataRetriever
 import android.net.Uri
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
@@ -24,16 +21,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.ByteArrayOutputStream
 
 class PlayerController(context: Context) {
-    companion object {
-        private const val MAX_ARTWORK_SIZE = 512
-        private const val MAX_ARTWORK_BYTES = 2 * 1024 * 1024
-    }
-
     private val appContext = context.applicationContext
     private val preferences = SonoraPreferences(appContext)
+    private val artworkLoader = ArtworkLoader(appContext)
     private val artworkScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var artworkJob: Job? = null
     private val _state = MutableStateFlow(
@@ -179,7 +171,7 @@ class PlayerController(context: Context) {
         artworkJob?.cancel()
         artworkJob = artworkScope.launch {
             val artwork = withContext(Dispatchers.IO) {
-                extractEmbeddedArtwork(item.localConfiguration?.uri)
+                artworkLoader.extractEmbeddedArtwork(item.localConfiguration?.uri)
             } ?: return@launch
 
             val current = mediaController.currentMediaItem ?: return@launch
@@ -197,43 +189,6 @@ class PlayerController(context: Context) {
                     .setMediaMetadata(metadata)
                     .build(),
             )
-        }
-    }
-
-    private fun extractEmbeddedArtwork(uri: Uri?): ByteArray? {
-        if (uri == null) return null
-
-        val retriever = MediaMetadataRetriever()
-        return try {
-            retriever.setDataSource(appContext, uri)
-            val embedded = retriever.embeddedPicture ?: return null
-            if (embedded.size <= MAX_ARTWORK_BYTES) {
-                embedded
-            } else {
-                val bitmap = BitmapFactory.decodeByteArray(embedded, 0, embedded.size)
-                    ?: return null
-                val maxDimension = maxOf(bitmap.width, bitmap.height)
-                val scaled = if (maxDimension > MAX_ARTWORK_SIZE) {
-                    val scale = MAX_ARTWORK_SIZE.toFloat() / maxDimension
-                    Bitmap.createScaledBitmap(
-                        bitmap,
-                        (bitmap.width * scale).toInt().coerceAtLeast(1),
-                        (bitmap.height * scale).toInt().coerceAtLeast(1),
-                        true,
-                    )
-                } else {
-                    bitmap
-                }
-                ByteArrayOutputStream().use { output ->
-                    scaled.compress(Bitmap.CompressFormat.JPEG, 90, output)
-                    if (scaled !== bitmap) scaled.recycle()
-                    output.toByteArray()
-                }
-            }
-        } catch (_: Exception) {
-            null
-        } finally {
-            retriever.release()
         }
     }
 
