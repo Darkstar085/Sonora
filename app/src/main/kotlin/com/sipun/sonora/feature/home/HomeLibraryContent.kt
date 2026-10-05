@@ -17,7 +17,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Album
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Person
@@ -36,8 +35,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
@@ -49,6 +48,7 @@ import com.sipun.sonora.ui.components.SongActionConfig
 import com.sipun.sonora.ui.components.SongArtworkImage
 import com.sipun.sonora.ui.components.SongMoreButton
 import com.sipun.sonora.ui.theme.SonoraRed
+import java.text.Normalizer
 
 @Composable
 internal fun SongList(
@@ -60,27 +60,83 @@ internal fun SongList(
     openArtist: (String) -> Unit,
     onChanged: () -> Unit,
 ) {
+    val sortedSongs = remember(songs) { songs.sortedWith(songTitleComparator) }
+
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         contentPadding = PaddingValues(bottom = 85.dp),
     ) {
-        itemsIndexed(songs, key = { _, song -> song.id }) { index, song ->
+        itemsIndexed(sortedSongs, key = { _, song -> song.id }) { index, song ->
             SongCard(
                 song = song,
                 player = player,
-                onClick = { player.playQueue(songs, index); open() },
+                onClick = { player.playQueue(sortedSongs, index); open() },
                 preferences = preferences,
                 onOpenAlbum = openAlbum,
                 onOpenArtist = openArtist,
                 actions = SongActionConfig(
-                            showRemoveFromDevice = true,
-                            showEditMetadata = true,
-                        ),
+                    showRemoveFromDevice = true,
+                    showEditMetadata = true,
+                ),
                 onChanged = onChanged,
             )
         }
     }
 }
+
+private val songTitleComparator = Comparator<Song> { first, second ->
+    naturalCompare(first.title, second.title)
+        .takeIf { it != 0 }
+        ?: naturalCompare(first.artist, second.artist)
+            .takeIf { it != 0 }
+        ?: naturalCompare(first.album, second.album)
+            .takeIf { it != 0 }
+        ?: first.id.compareTo(second.id)
+}
+
+private fun naturalCompare(first: String, second: String): Int {
+    val left = normalizeForSort(first)
+    val right = normalizeForSort(second)
+    var leftIndex = 0
+    var rightIndex = 0
+
+    while (leftIndex < left.length && rightIndex < right.length) {
+        val leftChar = left[leftIndex]
+        val rightChar = right[rightIndex]
+
+        if (leftChar.isDigit() && rightChar.isDigit()) {
+            val leftStart = leftIndex
+            val rightStart = rightIndex
+            while (leftIndex < left.length && left[leftIndex].isDigit()) leftIndex++
+            while (rightIndex < right.length && right[rightIndex].isDigit()) rightIndex++
+
+            val leftNumber = left.substring(leftStart, leftIndex).trimStart('0').ifBlank { "0" }
+            val rightNumber = right.substring(rightStart, rightIndex).trimStart('0').ifBlank { "0" }
+
+            if (leftNumber.length != rightNumber.length) {
+                return leftNumber.length.compareTo(rightNumber.length)
+            }
+
+            val numericCompare = leftNumber.compareTo(rightNumber)
+            if (numericCompare != 0) return numericCompare
+            continue
+        }
+
+        val charCompare = leftChar.lowercaseChar().compareTo(rightChar.lowercaseChar())
+        if (charCompare != 0) return charCompare
+
+        leftIndex++
+        rightIndex++
+    }
+
+    return left.length.compareTo(right.length)
+}
+
+private fun normalizeForSort(value: String): String =
+    Normalizer.normalize(value, Normalizer.Form.NFKC)
+        .filterNot { Character.getType(it.code) == Character.FORMAT.toInt() }
+        .trim()
+
 
 @Composable
 internal fun FavoriteList(
@@ -260,7 +316,7 @@ internal fun ArtistList(songs: List<Song>, openArtist: (String) -> Unit) {
                 Row(
                     Modifier
                         .fillMaxWidth()
-                        .padding(12.dp),
+                        .padding(10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
@@ -447,4 +503,3 @@ internal fun Artwork(song: Song, modifier: Modifier) {
         )
     }
 }
-
