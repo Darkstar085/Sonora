@@ -9,6 +9,7 @@ class SonoraPlaybackService : MediaSessionService() {
 
     override fun onCreate() {
         super.onCreate()
+        setForegroundServiceTimeoutMs(7_000L)
         mediaSession = MediaSession.Builder(this, ExoPlayer.Builder(this).build()).build()
     }
 

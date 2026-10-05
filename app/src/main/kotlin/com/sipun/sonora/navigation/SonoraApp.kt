@@ -37,7 +37,7 @@ import com.sipun.sonora.player.PlayerController
 import com.sipun.sonora.ui.components.SonoraMiniPlayer
 
 @Composable
-fun SonoraApp() {
+fun SonoraApp(onCheckForUpdates: () -> Unit = {}) {
     val context = LocalContext.current
     val navController = rememberNavController()
     val player = remember(context) { PlayerController(context.applicationContext) }
@@ -195,7 +195,7 @@ fun SonoraApp() {
                     { navController.navigate(SonoraRoute.Playlist.createRoute(it)) },
                 )
             }
-            composable(SonoraRoute.Settings.route) { SettingsScreen() }
+            composable(SonoraRoute.Settings.route) { SettingsScreen(onCheckForUpdates = onCheckForUpdates) }
             composable(
                 SonoraRoute.Album.route,
                 arguments = listOf(navArgument("albumId") { type = NavType.StringType }),

@@ -2,6 +2,9 @@ package com.sipun.sonora.player
 
 import android.content.ComponentName
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
@@ -11,23 +14,45 @@ import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.sipun.sonora.data.preferences.SonoraPreferences
 import com.sipun.sonora.domain.model.Song
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
 
 class PlayerController(context: Context) {
-    private val preferences = SonoraPreferences(context)
-    private val _state = MutableStateFlow(PlayerState())
+    companion object {
+        private const val MAX_ARTWORK_SIZE = 512
+        private const val MAX_ARTWORK_BYTES = 2 * 1024 * 1024
+    }
+
+    private val appContext = context.applicationContext
+    private val preferences = SonoraPreferences(appContext)
+    private val artworkScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private var artworkJob: Job? = null
+    private val _state = MutableStateFlow(
+        PlayerState(currentSong = preferences.lastPlayed()),
+    )
     val state: StateFlow<PlayerState> = _state.asStateFlow()
     private var controller: MediaController? = null
     private var pendingQueue: Pair<List<Song>, Int>? = null
     private val controllerFuture = MediaController.Builder(
-        context,
-        SessionToken(context, ComponentName(context, SonoraPlaybackService::class.java)),
+        appContext,
+        SessionToken(appContext, ComponentName(appContext, SonoraPlaybackService::class.java)),
     ).buildAsync()
 
     private val listener = object : Player.Listener {
         override fun onEvents(player: Player, events: Player.Events) = updateState()
+
+        override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+            loadCurrentArtwork()
+        }
     }
 
     init {
@@ -39,13 +64,6 @@ class PlayerController(context: Context) {
                     pendingQueue?.let { (songs, index) ->
                         pendingQueue = null
                         playQueue(songs, index)
-                    } ?: run {
-                        if (mediaController.currentMediaItem == null) {
-                            preferences.lastPlayed()?.let { song ->
-                                mediaController.setMediaItem(toMediaItem(song))
-                                mediaController.prepare()
-                            }
-                        }
                     }
                     updateState()
                 }
@@ -67,6 +85,7 @@ class PlayerController(context: Context) {
         )
         mediaController.prepare()
         mediaController.play()
+        loadCurrentArtwork()
         updateState(songs)
     }
 
@@ -87,7 +106,20 @@ class PlayerController(context: Context) {
     }
 
     fun togglePlayPause() {
-        controller?.let { if (it.isPlaying) it.pause() else it.play() }
+        controller?.let { mediaController ->
+            if (mediaController.isPlaying) {
+                mediaController.pause()
+            } else if (mediaController.currentMediaItem != null) {
+                mediaController.play()
+            } else {
+                preferences.lastPlayed()?.let { song ->
+                    mediaController.setMediaItem(toMediaItem(song))
+                    mediaController.prepare()
+                    mediaController.play()
+                    loadCurrentArtwork()
+                }
+            }
+        }
         updateState()
     }
 
@@ -133,8 +165,76 @@ class PlayerController(context: Context) {
     fun refresh() = updateState()
 
     fun release() {
+        artworkJob?.cancel()
+        artworkScope.cancel()
         controller?.removeListener(listener)
         MediaController.releaseFuture(controllerFuture)
+    }
+
+    private fun loadCurrentArtwork() {
+        val mediaController = controller ?: return
+        val item = mediaController.currentMediaItem ?: return
+        if (item.mediaMetadata.artworkData != null) return
+
+        artworkJob?.cancel()
+        artworkJob = artworkScope.launch {
+            val artwork = withContext(Dispatchers.IO) {
+                extractEmbeddedArtwork(item.localConfiguration?.uri)
+            } ?: return@launch
+
+            val current = mediaController.currentMediaItem ?: return@launch
+            if (current.mediaId != item.mediaId) return@launch
+
+            val metadata = current.mediaMetadata.buildUpon()
+                .setArtworkData(
+                    artwork,
+                    MediaMetadata.PICTURE_TYPE_FRONT_COVER,
+                )
+                .build()
+            mediaController.replaceMediaItem(
+                mediaController.currentMediaItemIndex,
+                current.buildUpon()
+                    .setMediaMetadata(metadata)
+                    .build(),
+            )
+        }
+    }
+
+    private fun extractEmbeddedArtwork(uri: Uri?): ByteArray? {
+        if (uri == null) return null
+
+        val retriever = MediaMetadataRetriever()
+        return try {
+            retriever.setDataSource(appContext, uri)
+            val embedded = retriever.embeddedPicture ?: return null
+            if (embedded.size <= MAX_ARTWORK_BYTES) {
+                embedded
+            } else {
+                val bitmap = BitmapFactory.decodeByteArray(embedded, 0, embedded.size)
+                    ?: return null
+                val maxDimension = maxOf(bitmap.width, bitmap.height)
+                val scaled = if (maxDimension > MAX_ARTWORK_SIZE) {
+                    val scale = MAX_ARTWORK_SIZE.toFloat() / maxDimension
+                    Bitmap.createScaledBitmap(
+                        bitmap,
+                        (bitmap.width * scale).toInt().coerceAtLeast(1),
+                        (bitmap.height * scale).toInt().coerceAtLeast(1),
+                        true,
+                    )
+                } else {
+                    bitmap
+                }
+                ByteArrayOutputStream().use { output ->
+                    scaled.compress(Bitmap.CompressFormat.JPEG, 90, output)
+                    if (scaled !== bitmap) scaled.recycle()
+                    output.toByteArray()
+                }
+            }
+        } catch (_: Exception) {
+            null
+        } finally {
+            retriever.release()
+        }
     }
 
     private fun toMediaItem(song: Song): MediaItem =
@@ -157,6 +257,7 @@ class PlayerController(context: Context) {
         val resolvedQueue = queue ?: _state.value.queue
         val currentSong = resolvedQueue.firstOrNull { it.id.toString() == currentItem?.mediaId }
             ?: currentItem?.toSong()
+            ?: _state.value.currentSong
 
         currentSong?.let(preferences::saveLastPlayed)
         _state.value = PlayerState(
