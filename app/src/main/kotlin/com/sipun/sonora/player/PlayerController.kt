@@ -1,0 +1,144 @@
+package com.sipun.sonora.player
+
+import android.content.ComponentName
+import android.content.Context
+import android.net.Uri
+import androidx.media3.common.C
+import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
+import androidx.media3.common.Player
+import androidx.media3.session.MediaController
+import androidx.media3.session.SessionToken
+import com.sipun.sonora.domain.model.Song
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+
+class PlayerController(context: Context) {
+    private val _state = MutableStateFlow(PlayerState())
+    val state: StateFlow<PlayerState> = _state.asStateFlow()
+    private var controller: MediaController? = null
+    private var pendingQueue: Pair<List<Song>, Int>? = null
+    private val controllerFuture = MediaController.Builder(
+        context,
+        SessionToken(context, ComponentName(context, SonoraPlaybackService::class.java)),
+    ).buildAsync()
+
+    private val listener = object : Player.Listener {
+        override fun onEvents(player: Player, events: Player.Events) = updateState()
+    }
+
+    init {
+        controllerFuture.addListener(
+            {
+                runCatching { controllerFuture.get() }.onSuccess { mediaController ->
+                    controller = mediaController
+                    mediaController.addListener(listener)
+                    pendingQueue?.let { (songs, index) ->
+                        pendingQueue = null
+                        playQueue(songs, index)
+                    }
+                    updateState()
+                }
+            },
+            context.mainExecutor,
+        )
+    }
+
+    fun playQueue(songs: List<Song>, startIndex: Int = 0) {
+        if (songs.isEmpty()) return
+        val mediaController = controller ?: run {
+            pendingQueue = songs to startIndex
+            return
+        }
+        mediaController.setMediaItems(
+            songs.map(::toMediaItem),
+            startIndex.coerceIn(0, songs.lastIndex),
+            C.TIME_UNSET,
+        )
+        mediaController.prepare()
+        mediaController.play()
+        updateState(songs)
+    }
+
+    fun togglePlayPause() {
+        controller?.let { if (it.isPlaying) it.pause() else it.play() }
+        updateState()
+    }
+
+    fun seekTo(positionMs: Long) {
+        controller?.seekTo(positionMs.coerceAtLeast(0L))
+        updateState()
+    }
+
+    fun skipNext() {
+        controller?.takeIf { it.hasNextMediaItem() }?.seekToNextMediaItem()
+        updateState()
+    }
+
+    fun skipPrevious() {
+        controller?.let {
+            if (it.currentPosition > 3_000L) it.seekTo(0L)
+            else if (it.hasPreviousMediaItem()) it.seekToPreviousMediaItem()
+        }
+        updateState()
+    }
+
+    fun toggleShuffle() {
+        controller?.let { it.shuffleModeEnabled = !it.shuffleModeEnabled }
+        updateState()
+    }
+
+    fun cycleRepeat() {
+        controller?.let {
+            it.repeatMode = when (it.repeatMode) {
+                Player.REPEAT_MODE_OFF -> Player.REPEAT_MODE_ALL
+                Player.REPEAT_MODE_ALL -> Player.REPEAT_MODE_ONE
+                else -> Player.REPEAT_MODE_OFF
+            }
+        }
+        updateState()
+    }
+
+    fun refresh() = updateState()
+
+    fun release() {
+        controller?.removeListener(listener)
+        MediaController.releaseFuture(controllerFuture)
+    }
+
+    private fun toMediaItem(song: Song): MediaItem =
+        MediaItem.Builder()
+            .setUri(song.uri)
+            .setMediaId(song.id.toString())
+            .setMediaMetadata(
+                MediaMetadata.Builder()
+                    .setTitle(song.title)
+                    .setArtist(song.artist)
+                    .setAlbumTitle(song.album)
+                    .setArtworkUri(song.albumArtUri?.let(Uri::parse))
+                    .build(),
+            )
+            .build()
+
+    private fun updateState(queue: List<Song>? = null) {
+        val mediaController = controller ?: return
+        val currentItem = mediaController.currentMediaItem
+        val resolvedQueue = queue ?: _state.value.queue
+        val currentSong = resolvedQueue.firstOrNull { it.id.toString() == currentItem?.mediaId }
+        _state.value = PlayerState(
+            currentSong = currentSong,
+            isPlaying = mediaController.isPlaying,
+            positionMs = mediaController.currentPosition.coerceAtLeast(0L),
+            durationMs = mediaController.duration.takeIf { it != C.TIME_UNSET }?.coerceAtLeast(0L) ?: 0L,
+            queue = resolvedQueue,
+            queueIndex = currentSong?.let(resolvedQueue::indexOf) ?: -1,
+            shuffleEnabled = mediaController.shuffleModeEnabled,
+            repeatMode = when (mediaController.repeatMode) {
+                Player.REPEAT_MODE_ONE -> RepeatMode.ONE
+                Player.REPEAT_MODE_ALL -> RepeatMode.ALL
+                else -> RepeatMode.OFF
+            },
+        )
+    }
+}
