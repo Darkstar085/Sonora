@@ -39,7 +39,9 @@ fun SonoraApp(onCheckForUpdates: () -> Unit = {}) {
     val slideOffset = with(LocalDensity.current) { 72.dp.roundToPx() }
     var miniPlayerVisible by remember { mutableStateOf(currentRoute != SonoraRoute.NowPlaying.route) }
     val playerState by player.state.collectAsStateWithLifecycle()
-    val showMiniPlayer = miniPlayerVisible && playerState.currentSong != null
+    val showMiniPlayer = miniPlayerVisible &&
+        currentRoute != SonoraRoute.Lyrics.route &&
+        playerState.currentSong != null
 
     LaunchedEffect(currentRoute) {
         if (currentRoute == SonoraRoute.NowPlaying.route) {

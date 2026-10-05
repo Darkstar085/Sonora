@@ -96,6 +96,7 @@ fun NowPlayingScreen(
     playerController: PlayerController,
     onBack: () -> Unit,
     onOpenAlbum: (String) -> Unit,
+    onOpenLyrics: () -> Unit,
 ) {
     val context = LocalContext.current
     val preferences = remember(context) { SonoraPreferences(context) }
@@ -473,13 +474,7 @@ fun NowPlayingScreen(
                         horizontalArrangement = Arrangement.SpaceEvenly,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        QuickAction(Icons.Default.Description, "Lyrics") {
-                            Toast.makeText(
-                                context,
-                                "Lyrics are not available for this song",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
+                        QuickAction(Icons.Default.Description, "Lyrics") { onOpenLyrics() }
                         QuickAction(Icons.AutoMirrored.Filled.QueueMusic, "Queue") {
                             showQueue = true
                         }

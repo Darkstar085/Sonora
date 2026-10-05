@@ -25,6 +25,10 @@ sealed interface SonoraRoute {
         override val route = "now_playing"
     }
 
+    data object Lyrics : SonoraRoute {
+        override val route = "lyrics"
+    }
+
     data object Album : SonoraRoute {
         override val route = "album/{albumId}"
         fun createRoute(albumId: String) = "album/" + Uri.encode(albumId)

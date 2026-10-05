@@ -1,0 +1,305 @@
+package com.sipun.sonora.feature.lyrics
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Album
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
+import com.sipun.sonora.R
+import com.sipun.sonora.data.lyrics.Lyrics
+import com.sipun.sonora.data.lyrics.LyricsRepository
+import com.sipun.sonora.player.PlayerController
+import com.sipun.sonora.ui.theme.SonoraBackground
+import com.sipun.sonora.ui.theme.SonoraRed
+import com.sipun.sonora.ui.theme.SonoraSurface
+import com.sipun.sonora.ui.theme.SonoraSurfaceVariant
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun LyricsScreen(playerController: PlayerController, onBack: () -> Unit) {
+    val state by playerController.state.collectAsStateWithLifecycle()
+    val repository = remember { LyricsRepository() }
+    var lyrics by remember { mutableStateOf<Lyrics?>(null) }
+    var loading by remember { mutableStateOf(false) }
+    var retry by remember { mutableIntStateOf(0) }
+
+
+    LaunchedEffect(state.isPlaying) {
+        while (state.isPlaying) {
+            playerController.refresh()
+            delay(250)
+        }
+    }
+
+    LaunchedEffect(state.currentSong?.id, retry) {
+        val song = state.currentSong ?: return@LaunchedEffect
+        loading = true
+        lyrics = null
+        try {
+            lyrics = repository.get(song)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+        } finally {
+            loading = false
+        }
+    }
+
+    Scaffold(
+        containerColor = SonoraBackground,
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        stringResource(R.string.lyrics_title),
+                        fontWeight = FontWeight.Bold,
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { retry++ }) {
+                        Icon(
+                            Icons.Default.Refresh,
+                            contentDescription = stringResource(R.string.lyrics_retry),
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = SonoraBackground,
+                ),
+            )
+        },
+    ) { padding ->
+        val song = state.currentSong
+
+        if (song == null) {
+            Box(
+                Modifier.fillMaxSize().padding(padding),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    stringResource(R.string.lyrics_unavailable),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            return@Scaffold
+        }
+
+        Column(
+            Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(horizontal = 20.dp),
+        ) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp, bottom = 20.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(
+                    Modifier
+                        .size(120.dp)
+                        .clip(RoundedCornerShape(22.dp))
+                        .background(SonoraSurfaceVariant),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        Icons.Default.Album,
+                        contentDescription = null,
+                        tint = SonoraRed,
+                        modifier = Modifier.size(52.dp),
+                    )
+                    song.albumArtUri?.let { uri ->
+                        AsyncImage(
+                            model = uri,
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop,
+                        )
+                    }
+                }
+
+                Column(
+                    Modifier
+                        .weight(1f)
+                        .padding(start = 20.dp),
+                ) {
+                    Text(
+                        song.title,
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        song.artist,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+
+            when {
+                loading -> Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator(color = SonoraRed)
+                }
+
+                lyrics == null || lyrics!!.lines.isEmpty() -> Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Button(
+                        onClick = { retry++ },
+                        colors = ButtonDefaults.buttonColors(containerColor = SonoraRed),
+                    ) {
+                        Text(stringResource(R.string.lyrics_retry))
+                    }
+                }
+
+                else -> LyricsCard(
+                    lyrics = lyrics!!,
+                    positionMs = state.positionMs,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun LyricsCard(
+    lyrics: Lyrics,
+    positionMs: Long,
+    modifier: Modifier = Modifier,
+) {
+    val listState = rememberLazyListState()
+    var active by remember(lyrics) { mutableIntStateOf(-1) }
+
+    LaunchedEffect(positionMs, lyrics) {
+        if (!lyrics.synced) return@LaunchedEffect
+        val index = lyrics.lines.indexOfLast {
+            (it.startMs ?: Long.MAX_VALUE) <= positionMs
+        }
+        if (index != active) active = index
+    }
+
+    LaunchedEffect(active) {
+        if (active >= 0) {
+            listState.animateScrollToItem((active - 3).coerceAtLeast(0))
+        }
+    }
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(30.dp),
+        colors = CardDefaults.cardColors(containerColor = SonoraSurface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+    ) {
+        Box(Modifier.fillMaxSize()) {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    start = 28.dp,
+                    end = 24.dp,
+                    top = 36.dp,
+                    bottom = 56.dp,
+                ),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                itemsIndexed(lyrics.lines) { index, line ->
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        if (index == active) {
+                            Box(
+                                Modifier
+                                    .padding(end = 12.dp)
+                                    .width(5.dp)
+                                    .height(48.dp)
+                                    .clip(RoundedCornerShape(5.dp))
+                                    .background(SonoraRed),
+                            )
+                        }
+
+                        Text(
+                            text = line.text,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = if (index == active) {
+                                FontWeight.Bold
+                            } else {
+                                FontWeight.Normal
+                            },
+                            color = if (index == active) {
+                                SonoraRed
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            },
+                        )
+                    }
+                }
+            }
+
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(58.dp)
+                    .align(Alignment.TopCenter)
+                    .background(
+                        Brush.verticalGradient(
+                            0f to SonoraSurface,
+                            1f to SonoraSurface.copy(alpha = 0f),
+                        )
+                    ),
+            )
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(72.dp)
+                    .align(Alignment.BottomCenter)
+                    .background(
+                        Brush.verticalGradient(
+                            0f to SonoraSurface.copy(alpha = 0f),
+                            1f to SonoraSurface,
+                        )
+                    ),
+            )
+        }
+    }
+}

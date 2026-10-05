@@ -15,6 +15,7 @@ import androidx.navigation.navArgument
 import com.sipun.sonora.feature.album.AlbumDetailScreen
 import com.sipun.sonora.feature.artist.ArtistDetailScreen
 import com.sipun.sonora.feature.home.HomeScreen
+import com.sipun.sonora.feature.lyrics.LyricsScreen
 import com.sipun.sonora.feature.nowplaying.NowPlayingScreen
 import com.sipun.sonora.feature.playlists.PlaylistDetailScreen
 import com.sipun.sonora.feature.settings.SettingsScreen
@@ -101,7 +102,11 @@ internal fun SonoraNavGraph(
                 onOpenAlbum = { albumId ->
                     navController.navigate(SonoraRoute.Album.createRoute(albumId))
                 },
+                onOpenLyrics = { navController.navigate(SonoraRoute.Lyrics.route) },
             )
+        }
+        composable(SonoraRoute.Lyrics.route) {
+            LyricsScreen(playerController = player, onBack = { navController.popBackStack() })
         }
     }
 }
