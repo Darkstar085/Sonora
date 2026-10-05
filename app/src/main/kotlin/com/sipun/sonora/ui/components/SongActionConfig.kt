@@ -10,4 +10,5 @@ data class SongActionConfig(
     val showAddToQueue: Boolean = false,
     val showRemoveFromDevice: Boolean = false,
     val showInfo: Boolean = true,
+    val showEditMetadata: Boolean = false,
 )

@@ -107,6 +107,7 @@ fun NowPlayingScreen(
     var showQueue by remember { mutableStateOf(false) }
     var showArtist by remember { mutableStateOf(false) }
     var showInfo by remember { mutableStateOf(false) }
+    var showEditMetadata by remember { mutableStateOf(false) }
     var showSpeed by remember { mutableStateOf(false) }
     var showSleepTimer by remember { mutableStateOf(false) }
     var showRemoveConfirmation by remember { mutableStateOf(false) }
@@ -159,6 +160,10 @@ fun NowPlayingScreen(
                 showMore = false
                 openEqualizer(context)
             },
+            onEditMetadata = {
+                showMore = false
+                showEditMetadata = true
+            },
             onInfo = {
                 showMore = false
                 showInfo = true
@@ -194,6 +199,19 @@ fun NowPlayingScreen(
             },
             onDismiss = { showArtist = false },
         )
+    }
+
+    if (showEditMetadata) {
+        state.currentSong?.let { song ->
+            com.sipun.sonora.ui.components.MetadataEditorDialog(
+                song = song,
+                onDismiss = { showEditMetadata = false },
+                onSaved = { updatedSong ->
+                    showEditMetadata = false
+                    playerController.updateCurrentSong(updatedSong)
+                },
+            )
+        }
     }
 
     if (showInfo) {

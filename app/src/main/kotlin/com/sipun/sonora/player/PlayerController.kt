@@ -156,6 +156,19 @@ class PlayerController(context: Context) {
 
     fun refresh() = updateState()
 
+    fun updateCurrentSong(song: Song) {
+        val mediaController = controller ?: return
+        val index = mediaController.currentMediaItemIndex
+        if (index < 0) return
+        val position = mediaController.currentPosition
+        val wasPlaying = mediaController.isPlaying
+        mediaController.replaceMediaItem(index, toMediaItem(song))
+        mediaController.seekTo(position)
+        if (wasPlaying) mediaController.play()
+        updateState(_state.value.queue.map { if (it.id == song.id) song else it })
+        loadCurrentArtwork()
+    }
+
     fun release() {
         artworkJob?.cancel()
         artworkScope.cancel()

@@ -102,4 +102,25 @@
     <string name="lyrics_loading">Fetching lyrics…</string>
     <string name="lyrics_unavailable">Lyrics unavailable</string>
     <string name="lyrics_retry">Try again</string>
+    <string name="edit_metadata">Edit metadata</string>
+    <string name="metadata_title">Title</string>
+    <string name="metadata_artist">Artist</string>
+    <string name="metadata_album">Album</string>
+    <string name="metadata_album_artist">Album artist</string>
+    <string name="metadata_genre">Genre</string>
+    <string name="metadata_year">Year</string>
+    <string name="metadata_track">Track</string>
+    <string name="metadata_disc">Disc</string>
+    <string name="metadata_composer">Composer</string>
+    <string name="metadata_comment">Comment</string>
+    <string name="metadata_grouping">Grouping</string>
+    <string name="metadata_lyrics">Lyrics</string>
+    <string name="metadata_copyright">Copyright</string>
+    <string name="metadata_bpm">BPM</string>
+    <string name="metadata_artwork">Artwork</string>
+    <string name="metadata_add_artwork">Add artwork</string>
+    <string name="metadata_change_artwork">Change artwork</string>
+    <string name="metadata_remove_artwork">Remove artwork</string>
+    <string name="metadata_save">Save changes</string>
+    <string name="metadata_save_failed">Couldn\'t save metadata: %1$s</string>
 </resources>

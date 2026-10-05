@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
@@ -70,6 +71,7 @@ fun SongMoreButton(
     var showMore by remember { mutableStateOf(false) }
     var showPlaylistDialog by remember { mutableStateOf(false) }
     var showInfoDialog by remember { mutableStateOf(false) }
+    var showEditMetadata by remember { mutableStateOf(false) }
     var showRemoveConfirmation by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -155,6 +157,13 @@ fun SongMoreButton(
                     }
                 }
 
+                if (actions.showEditMetadata) {
+                    SongMoreOption(Icons.Default.Edit, stringResource(R.string.edit_metadata)) {
+                        showMore = false
+                        showEditMetadata = true
+                    }
+                }
+
                 if (actions.showInfo) {
                     SongMoreOption(Icons.Default.Info, stringResource(R.string.song_info)) {
                         showMore = false
@@ -207,6 +216,17 @@ fun SongMoreButton(
             },
             dismissButton = {
                 TextButton(onClick = { showRemoveConfirmation = false }) { Text(stringResource(R.string.action_cancel)) }
+            },
+        )
+    }
+
+    if (showEditMetadata) {
+        MetadataEditorDialog(
+            song = song,
+            onDismiss = { showEditMetadata = false },
+            onSaved = {
+                showEditMetadata = false
+                onChanged()
             },
         )
     }

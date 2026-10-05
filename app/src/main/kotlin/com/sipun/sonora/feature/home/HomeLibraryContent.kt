@@ -71,7 +71,10 @@ internal fun SongList(
                 preferences = preferences,
                 onOpenAlbum = openAlbum,
                 onOpenArtist = openArtist,
-                actions = SongActionConfig(showRemoveFromDevice = true),
+                actions = SongActionConfig(
+                            showRemoveFromDevice = true,
+                            showEditMetadata = true,
+                        ),
                 onChanged = onChanged,
             )
         }
@@ -181,6 +184,7 @@ private fun SongCard(
                 actions = SongActionConfig(
                     showPlayNext = true,
                     showAddToQueue = true,
+                    showEditMetadata = actions.showEditMetadata,
                     showRemoveFromDevice = actions.showRemoveFromDevice,
                 ),
                 onOpenAlbum = onOpenAlbum,

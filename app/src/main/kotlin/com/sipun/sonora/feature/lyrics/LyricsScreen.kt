@@ -88,7 +88,7 @@ fun LyricsScreen(playerController: PlayerController, onBack: () -> Unit) {
                         )
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = SonoraBackground,
                 ),
             )

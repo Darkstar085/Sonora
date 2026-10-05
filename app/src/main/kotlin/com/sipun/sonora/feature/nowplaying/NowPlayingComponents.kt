@@ -31,6 +31,7 @@ import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.filled.Album
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Equalizer
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
@@ -101,6 +102,7 @@ internal fun MoreOptionsSheet(
     onSleepTimer: () -> Unit,
     onSpeed: () -> Unit,
     onEqualizer: () -> Unit,
+    onEditMetadata: () -> Unit,
     onInfo: () -> Unit,
     onRemove: () -> Unit,
 ) {
@@ -124,6 +126,7 @@ internal fun MoreOptionsSheet(
             MoreOption(Icons.Default.Timer, "Sleep timer", onSleepTimer)
             MoreOption(Icons.Default.Speed, "Playback speed", onSpeed)
             MoreOption(Icons.Default.Equalizer, "Equalizer", onEqualizer)
+            MoreOption(Icons.Default.Edit, "Edit metadata", onEditMetadata)
             MoreOption(Icons.Default.Info, "Show song info", onInfo)
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             MoreOption(

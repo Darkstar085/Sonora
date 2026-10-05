@@ -1,0 +1,275 @@
+package com.sipun.sonora.data.media
+
+import android.content.ContentResolver
+import android.content.ContentValues
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.os.Build
+import android.os.Process
+import android.provider.MediaStore
+import android.provider.OpenableColumns
+import android.webkit.MimeTypeMap
+import com.sipun.sonora.domain.model.Song
+import java.io.File
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import org.jaudiotagger.audio.AudioFileIO
+import org.jaudiotagger.tag.FieldKey
+import org.jaudiotagger.tag.Tag
+import org.jaudiotagger.tag.TagOptionSingleton
+import org.jaudiotagger.tag.images.AndroidArtwork
+
+data class EditableSongMetadata(
+    val title: String,
+    val artist: String,
+    val album: String,
+    val albumArtist: String,
+    val genre: String,
+    val year: Int?,
+    val track: Int?,
+    val disc: Int?,
+    val composer: String,
+    val comment: String,
+    val grouping: String,
+    val lyrics: String,
+    val copyright: String,
+    val bpm: Int?,
+    val artworkData: ByteArray? = null,
+)
+
+class MediaWriteAccessRequiredException : Exception()
+
+object AudioMetadataEditor {
+    fun getWriteRequestIntentSender(context: Context, uri: Uri): android.content.IntentSender? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return null
+        if (context.checkUriPermission(
+                uri,
+                Process.myPid(),
+                Process.myUid(),
+                Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            return null
+        }
+        return MediaStore.createWriteRequest(context.contentResolver, listOf(uri)).intentSender
+    }
+
+
+    suspend fun read(context: Context, song: Song): EditableSongMetadata = withContext(Dispatchers.IO) {
+        TagOptionSingleton.getInstance().setAndroid(true)
+        val temp = File.createTempFile("sonora-read-", audioSuffix(context, Uri.parse(song.uri)), context.cacheDir)
+        try {
+            context.contentResolver.openInputStream(Uri.parse(song.uri)).use { input ->
+                requireNotNull(input) { "Unable to read the audio file." }
+                temp.outputStream().use { output -> input.copyTo(output) }
+            }
+            val tag: Tag? = AudioFileIO.read(temp).tag
+            fun value(key: FieldKey): String = tag?.getFirst(key).orEmpty()
+            EditableSongMetadata(
+                title = value(FieldKey.TITLE).ifBlank { song.title },
+                artist = value(FieldKey.ARTIST).ifBlank { song.artist },
+                album = value(FieldKey.ALBUM).ifBlank { song.album },
+                albumArtist = value(FieldKey.ALBUM_ARTIST),
+                genre = value(FieldKey.GENRE).ifBlank { song.genre.orEmpty() },
+                year = value(FieldKey.YEAR).toIntOrNull() ?: song.year,
+                track = value(FieldKey.TRACK).toIntOrNull() ?: song.trackNumber,
+                disc = value(FieldKey.DISC_NO).toIntOrNull(),
+                composer = value(FieldKey.COMPOSER),
+                comment = value(FieldKey.COMMENT),
+                grouping = value(FieldKey.GROUPING),
+                lyrics = value(FieldKey.LYRICS),
+                copyright = value(FieldKey.COPYRIGHT),
+                bpm = value(FieldKey.BPM).toIntOrNull(),
+                artworkData = tag?.getFirstArtwork()?.binaryData,
+            )
+        } finally {
+            temp.delete()
+        }
+    }
+
+    suspend fun save(
+        context: Context,
+        song: Song,
+        metadata: EditableSongMetadata,
+        artworkUri: Uri?,
+        artworkChanged: Boolean,
+    ) = withContext(Dispatchers.IO) {
+        TagOptionSingleton.getInstance().setAndroid(true)
+        val resolver = context.contentResolver
+        val audioUri = Uri.parse(song.uri)
+        val audioTemp = File.createTempFile(
+            "sonora-edit-",
+            audioSuffix(context, audioUri),
+            context.cacheDir,
+        )
+        val imageTemp = if (artworkChanged && artworkUri != null) {
+            File.createTempFile(
+                "sonora-art-",
+                imageSuffix(context, artworkUri),
+                context.cacheDir,
+            )
+        } else null
+        val normalizedImageTemp = if (imageTemp != null) {
+            File.createTempFile("sonora-art-normalized-", ".jpg", context.cacheDir)
+        } else null
+
+        try {
+            resolver.openInputStream(audioUri).use { input ->
+                requireNotNull(input) { "Unable to read the audio file." }
+                audioTemp.outputStream().use { output -> input.copyTo(output) }
+            }
+
+            val audioFile = AudioFileIO.read(audioTemp)
+            val tag: Tag = audioFile.tagOrCreateAndSetDefault
+            writeField(tag, FieldKey.TITLE, metadata.title)
+            writeField(tag, FieldKey.ARTIST, metadata.artist)
+            writeField(tag, FieldKey.ALBUM, metadata.album)
+            writeField(tag, FieldKey.ALBUM_ARTIST, metadata.albumArtist)
+            writeField(tag, FieldKey.GENRE, metadata.genre)
+            writeField(tag, FieldKey.YEAR, metadata.year?.toString().orEmpty())
+            writeField(tag, FieldKey.TRACK, metadata.track?.toString().orEmpty())
+            writeField(tag, FieldKey.DISC_NO, metadata.disc?.toString().orEmpty())
+            writeField(tag, FieldKey.COMPOSER, metadata.composer)
+            writeField(tag, FieldKey.COMMENT, metadata.comment)
+            writeField(tag, FieldKey.GROUPING, metadata.grouping)
+            writeField(tag, FieldKey.LYRICS, metadata.lyrics)
+            writeField(tag, FieldKey.COPYRIGHT, metadata.copyright)
+            writeField(tag, FieldKey.BPM, metadata.bpm?.toString().orEmpty())
+
+            if (artworkChanged) {
+                tag.deleteArtworkField()
+                if (artworkUri != null && imageTemp != null) {
+                    resolver.openInputStream(artworkUri).use { input ->
+                        requireNotNull(input) { "Unable to read artwork." }
+                            imageTemp.outputStream().use { output -> input.copyTo(output) }
+                    }
+                    normalizeArtworkToJpeg(imageTemp, requireNotNull(normalizedImageTemp))
+                    tag.setField(AndroidArtwork.createArtworkFromFile(requireNotNull(normalizedImageTemp)))
+                }
+            }
+
+            AudioFileIO.write(audioFile)
+
+            try {
+                resolver.openOutputStream(audioUri, "wt").use { output ->
+                    requireNotNull(output) { "Unable to write the audio file." }
+                    audioTemp.inputStream().use { input -> input.copyTo(output) }
+                }
+            } catch (e: SecurityException) {
+                throw MediaWriteAccessRequiredException()
+            }
+
+            try {
+                resolver.update(
+                    audioUri,
+                    ContentValues().apply {
+                        put(MediaStore.Audio.Media.TITLE, metadata.title)
+                        put(MediaStore.Audio.Media.ARTIST, metadata.artist)
+                        put(MediaStore.Audio.Media.ALBUM, metadata.album)
+                        put(MediaStore.Audio.Media.YEAR, metadata.year ?: 0)
+                        put(MediaStore.Audio.Media.TRACK, metadata.track ?: 0)
+                    },
+                    null,
+                    null,
+                )
+            } catch (_: UnsupportedOperationException) {
+                // Some content providers do not support direct MediaStore updates.
+            }
+            resolver.notifyChange(audioUri, null, ContentResolver.NOTIFY_UPDATE)
+        } finally {
+            audioTemp.delete()
+            imageTemp?.delete()
+            normalizedImageTemp?.delete()
+        }
+    }
+
+    private fun normalizeArtworkToJpeg(source: File, target: File) {
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeFile(source.absolutePath, bounds)
+        require(bounds.outWidth > 0 && bounds.outHeight > 0) { "Unable to decode artwork image." }
+
+        val maxDimension = 2048
+        var sampleSize = 1
+        while (
+            bounds.outWidth / sampleSize > maxDimension ||
+            bounds.outHeight / sampleSize > maxDimension
+        ) {
+            sampleSize *= 2
+        }
+
+        val options = BitmapFactory.Options().apply { inSampleSize = sampleSize }
+        val bitmap = requireNotNull(BitmapFactory.decodeFile(source.absolutePath, options)) {
+            "Unable to decode artwork image."
+        }
+        try {
+            target.outputStream().use { output ->
+                require(bitmap.compress(Bitmap.CompressFormat.JPEG, 92, output)) {
+                    "Unable to encode artwork image."
+                }
+            }
+        } finally {
+            bitmap.recycle()
+        }
+    }
+
+    private fun audioSuffix(context: Context, uri: Uri): String =
+        mediaSuffix(context, uri, "audio")
+
+    private fun imageSuffix(context: Context, uri: Uri): String =
+        mediaSuffix(context, uri, "image", fallback = ".jpg")
+
+    private fun mediaSuffix(
+        context: Context,
+        uri: Uri,
+        mediaType: String,
+        fallback: String? = null,
+    ): String {
+        val displayName = runCatching {
+            context.contentResolver.query(
+                uri,
+                arrayOf(OpenableColumns.DISPLAY_NAME),
+                null,
+                null,
+                null,
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    cursor.getString(cursor.getColumnIndexOrThrow(OpenableColumns.DISPLAY_NAME))
+                } else {
+                    null
+                }
+            }
+        }.getOrNull()
+
+        val name = displayName ?: uri.lastPathSegment
+        val extension = name
+            ?.substringAfterLast('.', "")
+            ?.takeIf { it.isNotBlank() && !it.contains('/') }
+
+        if (extension != null) {
+            return ".$extension"
+        }
+
+        val mimeType = context.contentResolver.getType(uri)
+        val mimeExtension = MimeTypeMap.getSingleton()
+            .getExtensionFromMimeType(mimeType)
+            ?.takeIf { it.isNotBlank() }
+
+        if (mimeExtension != null) {
+            return ".$mimeExtension"
+        }
+
+        if (fallback != null) {
+            return fallback
+        }
+
+        error("Unable to determine $mediaType file format.")
+    }
+
+    private fun writeField(tag: Tag, key: FieldKey, value: String) {
+        if (value.isBlank()) tag.deleteField(key) else tag.setField(key, value)
+    }
+}
