@@ -10,6 +10,9 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import java.util.concurrent.TimeUnit
 
 internal object UpdateWorkScheduler {
@@ -19,16 +22,13 @@ internal object UpdateWorkScheduler {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
-        val request = PeriodicWorkRequestBuilder<UpdateCheckWorker>(
-            6,
-            TimeUnit.HOURS
-        )
+        val request = PeriodicWorkRequestBuilder<UpdateCheckWorker>(6, TimeUnit.HOURS)
             .setConstraints(constraints)
             .build()
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(
             CHECK_WORK,
             ExistingPeriodicWorkPolicy.UPDATE,
-            request
+            request,
         )
     }
 
@@ -46,27 +46,36 @@ internal object UpdateWorkScheduler {
         WorkManager.getInstance(context).enqueueUniqueWork(
             "update_download_" + update.tag,
             ExistingWorkPolicy.KEEP,
-            request
+            request,
         )
     }
 
-    fun getDownloadProgress(context: Context, tag: String): DownloadProgress? {
-        val work = WorkManager.getInstance(context)
+    fun getDownloadProgress(context: Context, tag: String): DownloadProgress? =
+        WorkManager.getInstance(context)
             .getWorkInfosForUniqueWork("update_download_" + tag)
             .get()
-            .firstOrNull() ?: return null
-        val downloaded = work.progress.getLong(UpdateDownloadWorker.PROGRESS_DOWNLOADED, 0L)
-        val total = work.progress.getLong(UpdateDownloadWorker.PROGRESS_TOTAL, 0L)
-        val percent = work.progress.getInt(UpdateDownloadWorker.PROGRESS_PERCENT, 0)
-        return when (work.state) {
+            .firstOrNull()
+            ?.toDownloadProgress()
+
+    fun observeDownloadProgress(context: Context, tag: String): Flow<DownloadProgress?> =
+        WorkManager.getInstance(context)
+            .getWorkInfosForUniqueWorkFlow("update_download_" + tag)
+            .map { infos -> infos.firstOrNull()?.toDownloadProgress() }
+            .distinctUntilChanged()
+
+    fun cancelDownload(context: Context, tag: String) {
+        WorkManager.getInstance(context).cancelUniqueWork("update_download_" + tag)
+    }
+
+    private fun WorkInfo.toDownloadProgress(): DownloadProgress? {
+        val downloaded = progress.getLong(UpdateDownloadWorker.PROGRESS_DOWNLOADED, 0L)
+        val total = progress.getLong(UpdateDownloadWorker.PROGRESS_TOTAL, 0L)
+        val percent = progress.getInt(UpdateDownloadWorker.PROGRESS_PERCENT, 0)
+        return when (state) {
             WorkInfo.State.SUCCEEDED -> DownloadProgress(downloaded, total, 100, isFinished = true)
             WorkInfo.State.FAILED -> DownloadProgress(downloaded, total, percent, isFailed = true)
             WorkInfo.State.CANCELLED -> null
             else -> DownloadProgress(downloaded, total, percent)
         }
-    }
-
-    fun cancelDownload(context: Context, tag: String) {
-        WorkManager.getInstance(context).cancelUniqueWork("update_download_" + tag)
     }
 }

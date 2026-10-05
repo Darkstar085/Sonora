@@ -22,6 +22,7 @@ import com.sipun.sonora.data.preferences.SonoraPlaylist
 import com.sipun.sonora.domain.model.Song
 import com.sipun.sonora.player.PlayerController
 import com.sipun.sonora.ui.components.SongMoreButton
+import com.sipun.sonora.ui.components.SongActionConfig
 import com.sipun.sonora.ui.theme.SonoraRed
 
 @Composable
@@ -46,7 +47,7 @@ internal fun SongList(
                 preferences = preferences,
                 onOpenAlbum = openAlbum,
                 onOpenArtist = openArtist,
-                showRemoveFromDevice = true,
+                actions = SongActionConfig(showRemoveFromDevice = true),
                 onChanged = onChanged,
             )
         }
@@ -140,9 +141,11 @@ private fun SongCard(
                 song = song,
                 preferences = preferences,
                 playerController = player,
-                showPlayNext = true,
-                showAddToQueue = true,
-                showRemoveFromDevice = showRemoveFromDevice,
+                actions = SongActionConfig(
+                    showPlayNext = true,
+                    showAddToQueue = true,
+                    showRemoveFromDevice = showRemoveFromDevice,
+                ),
                 onOpenAlbum = onOpenAlbum,
                 onOpenArtist = onOpenArtist,
                 onChanged = onChanged,

@@ -26,6 +26,7 @@ import com.sipun.sonora.data.media.AndroidMusicRepository
 import com.sipun.sonora.domain.model.Song
 import com.sipun.sonora.player.PlayerController
 import com.sipun.sonora.ui.components.SongMoreButton
+import com.sipun.sonora.ui.components.SongActionConfig
 import com.sipun.sonora.ui.theme.SonoraRed
 
 @Composable
@@ -172,9 +173,11 @@ fun AlbumDetailScreen(
                                 song = song,
                                 preferences = preferences,
                                 playerController = playerController,
-                                showAlbum = false,
-                                showPlayNext = true,
-                                showAddToQueue = true,
+                                actions = SongActionConfig(
+                                    showAlbum = false,
+                                    showPlayNext = true,
+                                    showAddToQueue = true,
+                                ),
                                 onOpenArtist = onOpenArtist,
                             )
                         }

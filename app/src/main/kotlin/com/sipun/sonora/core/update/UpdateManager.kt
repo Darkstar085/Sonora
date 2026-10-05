@@ -3,6 +3,7 @@ package com.sipun.sonora.core.update
 import android.content.Context
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.Flow
 import java.io.File
 
 data class DownloadProgress(
@@ -112,6 +113,9 @@ object UpdateManager {
 
     fun getDownloadProgress(context: Context, tag: String): DownloadProgress? =
         UpdateWorkScheduler.getDownloadProgress(context, tag)
+
+    fun observeDownloadProgress(context: Context, tag: String): Flow<DownloadProgress?> =
+        UpdateWorkScheduler.observeDownloadProgress(context, tag)
 
     fun cancelDownload(context: Context, tag: String) {
         UpdateWorkScheduler.cancelDownload(context, tag)

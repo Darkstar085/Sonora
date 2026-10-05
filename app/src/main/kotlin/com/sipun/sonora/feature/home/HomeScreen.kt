@@ -186,6 +186,7 @@ fun HomeScreen(
                             onOpenArtist,
                             onChanged = {
                                 scope.launch {
+                                    repository.invalidateCache()
                                     songs = repository.songs()
                                     favoriteIds = preferences.favoriteIds()
                                     playlists = preferences.playlists()

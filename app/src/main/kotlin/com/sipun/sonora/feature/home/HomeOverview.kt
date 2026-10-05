@@ -19,6 +19,7 @@ import com.sipun.sonora.data.preferences.SonoraPreferences
 import com.sipun.sonora.domain.model.Song
 import com.sipun.sonora.player.PlayerController
 import com.sipun.sonora.ui.components.SongMoreButton
+import com.sipun.sonora.ui.components.SongActionConfig
 import com.sipun.sonora.ui.theme.SonoraRed
 
 @Composable

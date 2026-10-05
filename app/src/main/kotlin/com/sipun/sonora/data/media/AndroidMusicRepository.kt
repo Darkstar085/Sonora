@@ -9,7 +9,27 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class AndroidMusicRepository(private val contentResolver: ContentResolver) : MusicRepository {
-    override suspend fun songs(): List<Song> = withContext(Dispatchers.IO) {
+    @Volatile
+    private var cachedSongs: List<Song>? = null
+
+    override suspend fun songs(): List<Song> {
+        cachedSongs?.let { return it }
+        return withContext(Dispatchers.IO) {
+            cachedSongs ?: querySongs().also { cachedSongs = it }
+        }
+    }
+
+    fun invalidateCache() {
+        cachedSongs = null
+    }
+
+    override suspend fun albums(): List<String> =
+        songs().map(Song::album).distinct().sortedWith(String.CASE_INSENSITIVE_ORDER)
+
+    override suspend fun artists(): List<String> =
+        songs().map(Song::artist).distinct().sortedWith(String.CASE_INSENSITIVE_ORDER)
+
+    private fun querySongs(): List<Song> {
         val songs = mutableListOf<Song>()
         val projection = arrayOf(
             MediaStore.Audio.Media._ID,
@@ -27,7 +47,13 @@ class AndroidMusicRepository(private val contentResolver: ContentResolver) : Mus
         val selection = MediaStore.Audio.Media.IS_MUSIC + " != 0"
         val sortOrder = MediaStore.Audio.Media.TITLE + " COLLATE NOCASE ASC"
 
-        contentResolver.query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, projection, selection, null, sortOrder)?.use { cursor ->
+        contentResolver.query(
+            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+            projection,
+            selection,
+            null,
+            sortOrder,
+        )?.use { cursor ->
             val id = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
             val title = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)
             val artist = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
@@ -45,17 +71,25 @@ class AndroidMusicRepository(private val contentResolver: ContentResolver) : Mus
                 val currentAlbumId = cursor.getLong(albumId)
                 val titleValue = cursor.getString(title).cleanMetadata("Unknown title")
                     .ifBlank { cursor.getString(displayName).cleanMetadata("Unknown title") }
-                val artistValue = cursor.getString(artist).cleanMetadata("Unknown artist")
-                val albumValue = cursor.getString(album).cleanMetadata("Unknown album")
 
                 songs += Song(
                     id = songId,
                     title = titleValue,
-                    artist = artistValue,
-                    album = albumValue,
+                    artist = cursor.getString(artist).cleanMetadata("Unknown artist"),
+                    album = cursor.getString(album).cleanMetadata("Unknown album"),
                     durationMs = cursor.getLong(duration),
-                    uri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, songId).toString(),
-                    albumArtUri = if (currentAlbumId > 0) ContentUris.withAppendedId(MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI, currentAlbumId).toString() else null,
+                    uri = ContentUris.withAppendedId(
+                        MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                        songId,
+                    ).toString(),
+                    albumArtUri = if (currentAlbumId > 0) {
+                        ContentUris.withAppendedId(
+                            MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI,
+                            currentAlbumId,
+                        ).toString()
+                    } else {
+                        null
+                    },
                     trackNumber = cursor.getInt(track).takeIf { it > 0 },
                     year = cursor.getInt(year).takeIf { it > 0 },
                     folder = cursor.getString(relativePath).orEmpty().ifBlank { null },
@@ -63,11 +97,8 @@ class AndroidMusicRepository(private val contentResolver: ContentResolver) : Mus
                 )
             }
         }
-        songs
+        return songs
     }
-
-    override suspend fun albums(): List<String> = songs().map(Song::album).distinct().sortedWith(String.CASE_INSENSITIVE_ORDER)
-    override suspend fun artists(): List<String> = songs().map(Song::artist).distinct().sortedWith(String.CASE_INSENSITIVE_ORDER)
 }
 
 private fun String?.cleanMetadata(fallback: String): String {

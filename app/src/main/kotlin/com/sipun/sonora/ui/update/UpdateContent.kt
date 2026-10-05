@@ -29,7 +29,6 @@ import com.sipun.sonora.ui.components.DownloadProgressDialog
 import com.sipun.sonora.ui.components.UpdateDialog
 import com.sipun.sonora.ui.theme.SonoraRed
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 
 @Composable
@@ -115,32 +114,24 @@ fun UpdateContent(
     LaunchedEffect(pendingUpdate?.tag, downloading) {
         val update = pendingUpdate ?: return@LaunchedEffect
         if (!downloading) return@LaunchedEffect
-        while (downloading) {
-            val status = withContext(Dispatchers.IO) {
-                UpdateManager.getDownloadProgress(context, update.tag)
-            }
-            if (status != null) {
-                progress = status
-                if (status.isFinished) {
-                    downloadedUpdate = withContext(Dispatchers.IO) {
-                        UpdateManager.getDownloadedUpdate(context)
-                    }
-                    downloading = false
-                    progress = null
-                    break
+        UpdateManager.observeDownloadProgress(context, update.tag).collect { status ->
+            if (status == null) return@collect
+            progress = status
+            if (status.isFinished) {
+                downloadedUpdate = withContext(Dispatchers.IO) {
+                    UpdateManager.getDownloadedUpdate(context)
                 }
-                if (status.isFailed) {
-                    downloading = false
-                    progress = null
-                    Toast.makeText(
-                        context,
-                        "Update download failed. Please try again.",
-                        Toast.LENGTH_LONG
-                    ).show()
-                    break
-                }
+                downloading = false
+                progress = null
+            } else if (status.isFailed) {
+                downloading = false
+                progress = null
+                Toast.makeText(
+                    context,
+                    "Update download failed. Please try again.",
+                    Toast.LENGTH_LONG,
+                ).show()
             }
-            delay(250)
         }
     }
 

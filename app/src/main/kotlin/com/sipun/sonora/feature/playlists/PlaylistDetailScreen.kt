@@ -27,6 +27,7 @@ import com.sipun.sonora.domain.model.Song
 import com.sipun.sonora.player.PlayerController
 import com.sipun.sonora.ui.theme.SonoraRed
 import com.sipun.sonora.ui.components.SongMoreButton
+import com.sipun.sonora.ui.components.SongActionConfig
 
 @Composable
 fun PlaylistDetailScreen(
@@ -112,10 +113,12 @@ fun PlaylistDetailScreen(
                                 song = song,
                                 preferences = preferences,
                                 playerController = playerController,
+                                actions = SongActionConfig(
                                 showPlaylist = false,
                                 showRemoveFromPlaylist = true,
                                 showPlayNext = true,
                                 showAddToQueue = true,
+                            ),
                                 onOpenAlbum = onOpenAlbum,
                                 onOpenArtist = onOpenArtist,
                                 onRemoveFromPlaylist = {
