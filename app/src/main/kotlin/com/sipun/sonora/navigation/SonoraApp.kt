@@ -144,7 +144,7 @@ fun SonoraApp(onCheckForUpdates: () -> Unit = {}) {
                     ExitTransition.None
                 }
             },
-            predictivePopEnterTransition = {
+            predictivePopEnterTransition = { _ ->
                 if (initialState.destination.route == SonoraRoute.NowPlaying.route) {
                     fadeIn(
                         animationSpec = tween(
@@ -156,7 +156,7 @@ fun SonoraApp(onCheckForUpdates: () -> Unit = {}) {
                     EnterTransition.None
                 }
             },
-            predictivePopExitTransition = {
+            predictivePopExitTransition = { _ ->
                 if (initialState.destination.route == SonoraRoute.NowPlaying.route) {
                     fadeOut(
                         animationSpec = tween(

@@ -30,8 +30,7 @@ class UpdateVersioningTest {
         """.trimIndent()
 
         assertEquals(
-            "Added queue controls
-Fixed playback restoration",
+            "Added queue controls\nFixed playback restoration",
             notes.toReleaseNotes(),
         )
     }

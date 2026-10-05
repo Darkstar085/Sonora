@@ -76,7 +76,7 @@ fun PlaylistDetailScreen(
                             Icon(Icons.AutoMirrored.Filled.QueueMusic, null, tint = SonoraRed, modifier = Modifier.size(72.dp))
                         }
                         Text(
-                            playlist!!.name,
+                            playlist?.name ?: "Playlist",
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                             maxLines = 2,

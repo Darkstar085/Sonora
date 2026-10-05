@@ -21,15 +21,15 @@ internal object UpdateVersioning {
     private fun versionParts(value: String): List<Int> = value.removePrefix("v").split(".")
         .map { it.takeWhile(Char::isDigit).toIntOrNull() ?: 0 }
 
-    fun String.toReleaseNotes(): String = lineSequence()
-        .map { it.trim() }
-        .filter { it.startsWith("-") }
-        .map { it.removePrefix("-").trim().replace(Regex("\\[([^]]+)]\\([^)]*\\)"), "$1") }
-        .joinToString("\n")
-
     fun formatReleaseDate(value: String): String? = runCatching {
         Instant.parse(value)
             .atZone(ZoneId.systemDefault())
             .format(DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.getDefault()))
     }.getOrNull()
 }
+
+fun String.toReleaseNotes(): String = lineSequence()
+    .map { it.trim() }
+    .filter { it.startsWith("-") }
+    .map { it.removePrefix("-").trim().replace(Regex("\\[([^]]+)]\\([^)]*\\)"), "$1") }
+    .joinToString("\n")

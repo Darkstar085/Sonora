@@ -249,4 +249,4 @@ private fun EmptySearchState(query: String) {
     }
 }
 
-private fun songCountLabel(count: Int): String = if (count == 1) "1 song" else count.toString() + " songs"
+internal fun songCountLabel(count: Int): String = if (count == 1) "1 song" else count.toString() + " songs"

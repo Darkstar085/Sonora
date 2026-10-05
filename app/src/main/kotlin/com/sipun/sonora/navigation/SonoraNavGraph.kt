@@ -30,8 +30,8 @@ internal fun SonoraNavGraph(
     exitTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition,
     popEnterTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition,
     popExitTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition,
-    predictivePopEnterTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition,
-    predictivePopExitTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition,
+    predictivePopEnterTransition: AnimatedContentTransitionScope<NavBackStackEntry>.(Int) -> EnterTransition,
+    predictivePopExitTransition: AnimatedContentTransitionScope<NavBackStackEntry>.(Int) -> ExitTransition,
 ) {
     NavHost(
         navController = navController,

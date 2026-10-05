@@ -107,7 +107,7 @@ private fun SongCard(
     preferences: SonoraPreferences,
     onOpenAlbum: (String) -> Unit,
     onOpenArtist: (String) -> Unit,
-    showRemoveFromDevice: Boolean = false,
+    actions: SongActionConfig = SongActionConfig(),
     onChanged: () -> Unit = {},
 ) {
     Card(
@@ -144,7 +144,7 @@ private fun SongCard(
                 actions = SongActionConfig(
                     showPlayNext = true,
                     showAddToQueue = true,
-                    showRemoveFromDevice = showRemoveFromDevice,
+                    showRemoveFromDevice = actions.showRemoveFromDevice,
                 ),
                 onOpenAlbum = onOpenAlbum,
                 onOpenArtist = onOpenArtist,
@@ -344,7 +344,7 @@ private fun CreatePlaylistDialog(onDismiss: () -> Unit, onCreate: (String) -> Un
 }
 
 @Composable
-private fun Artwork(song: Song, modifier: Modifier) {
+internal fun Artwork(song: Song, modifier: Modifier) {
     Box(
         modifier.clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surfaceVariant),
         contentAlignment = Alignment.Center,

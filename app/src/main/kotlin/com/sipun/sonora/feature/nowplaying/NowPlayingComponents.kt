@@ -1,4 +1,7 @@
-@file:OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+@file:OptIn(
+    androidx.compose.foundation.ExperimentalFoundationApi::class,
+    androidx.compose.material3.ExperimentalMaterial3Api::class,
+)
 
 package com.sipun.sonora.feature.nowplaying
 
@@ -22,6 +25,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.sipun.sonora.data.preferences.SonoraPreferences
@@ -30,6 +34,7 @@ import com.sipun.sonora.player.PlayerController
 import com.sipun.sonora.ui.theme.SonoraRed
 import com.sipun.sonora.ui.theme.SonoraSurface
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 
@@ -57,7 +62,7 @@ internal fun QuickAction(icon: androidx.compose.ui.graphics.vector.ImageVector, 
 }
 
 @Composable
-private fun MoreOptionsSheet(
+internal fun MoreOptionsSheet(
     onDismiss: () -> Unit,
     onAlbum: () -> Unit,
     onArtist: () -> Unit,
@@ -114,7 +119,7 @@ private fun MoreOption(
 }
 
 @Composable
-private fun QueueDialog(
+internal fun QueueDialog(
     queue: List<Song>,
     currentId: Long?,
     onSelect: (Song) -> Unit,
@@ -146,7 +151,7 @@ private fun QueueDialog(
 }
 
 @Composable
-private fun ArtistDialog(
+internal fun ArtistDialog(
     artist: String,
     songs: List<Song>,
     onSelect: (Song) -> Unit,
@@ -173,7 +178,7 @@ private fun ArtistDialog(
 }
 
 @Composable
-private fun SongInfoDialog(song: Song, onDismiss: () -> Unit) {
+internal fun SongInfoDialog(song: Song, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Song info") },
@@ -201,7 +206,7 @@ private fun InfoRow(label: String, value: String) {
 }
 
 @Composable
-private fun PlaybackSpeedDialog(
+internal fun PlaybackSpeedDialog(
     currentSpeed: Float,
     onSelect: (Float) -> Unit,
     onDismiss: () -> Unit,
@@ -227,7 +232,7 @@ private fun PlaybackSpeedDialog(
 }
 
 @Composable
-private fun SleepTimerDialog(
+internal fun SleepTimerDialog(
     onSelect: (Int?) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -251,7 +256,7 @@ private fun SleepTimerDialog(
     )
 }
 
-private fun setAsRingtone(context: android.content.Context, song: Song) {
+internal fun setAsRingtone(context: android.content.Context, song: Song) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.System.canWrite(context)) {
         context.startActivity(
             Intent(
@@ -296,7 +301,7 @@ private fun setAsRingtone(context: android.content.Context, song: Song) {
     }
 }
 
-private fun openEqualizer(context: android.content.Context) {
+internal fun openEqualizer(context: android.content.Context) {
     val intent = Intent(android.media.audiofx.AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL)
     if (intent.resolveActivity(context.packageManager) != null) {
         context.startActivity(intent)
