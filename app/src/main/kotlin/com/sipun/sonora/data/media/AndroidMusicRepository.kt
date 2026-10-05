@@ -22,6 +22,7 @@ class AndroidMusicRepository(private val contentResolver: ContentResolver) : Mus
             MediaStore.Audio.Media.YEAR,
             MediaStore.Audio.Media.RELATIVE_PATH,
             MediaStore.Audio.Media.DISPLAY_NAME,
+            MediaStore.Audio.Media.DATE_ADDED,
         )
         val selection = MediaStore.Audio.Media.IS_MUSIC + " != 0"
         val sortOrder = MediaStore.Audio.Media.TITLE + " COLLATE NOCASE ASC"
@@ -37,21 +38,28 @@ class AndroidMusicRepository(private val contentResolver: ContentResolver) : Mus
             val year = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.YEAR)
             val relativePath = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.RELATIVE_PATH)
             val displayName = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DISPLAY_NAME)
+            val dateAdded = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATE_ADDED)
 
             while (cursor.moveToNext()) {
                 val songId = cursor.getLong(id)
                 val currentAlbumId = cursor.getLong(albumId)
+                val titleValue = cursor.getString(title).cleanMetadata("Unknown title")
+                    .ifBlank { cursor.getString(displayName).cleanMetadata("Unknown title") }
+                val artistValue = cursor.getString(artist).cleanMetadata("Unknown artist")
+                val albumValue = cursor.getString(album).cleanMetadata("Unknown album")
+
                 songs += Song(
                     id = songId,
-                    title = cursor.getString(title).orEmpty().ifBlank { cursor.getString(displayName).orEmpty().ifBlank { "Unknown title" } },
-                    artist = cursor.getString(artist).orEmpty().ifBlank { "Unknown artist" },
-                    album = cursor.getString(album).orEmpty().ifBlank { "Unknown album" },
+                    title = titleValue,
+                    artist = artistValue,
+                    album = albumValue,
                     durationMs = cursor.getLong(duration),
                     uri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, songId).toString(),
                     albumArtUri = if (currentAlbumId > 0) ContentUris.withAppendedId(MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI, currentAlbumId).toString() else null,
                     trackNumber = cursor.getInt(track).takeIf { it > 0 },
                     year = cursor.getInt(year).takeIf { it > 0 },
                     folder = cursor.getString(relativePath).orEmpty().ifBlank { null },
+                    dateAddedSeconds = cursor.getLong(dateAdded),
                 )
             }
         }
@@ -60,4 +68,9 @@ class AndroidMusicRepository(private val contentResolver: ContentResolver) : Mus
 
     override suspend fun albums(): List<String> = songs().map(Song::album).distinct().sortedWith(String.CASE_INSENSITIVE_ORDER)
     override suspend fun artists(): List<String> = songs().map(Song::artist).distinct().sortedWith(String.CASE_INSENSITIVE_ORDER)
+}
+
+private fun String?.cleanMetadata(fallback: String): String {
+    val value = orEmpty().trim()
+    return if (value.isBlank() || value.equals("<unknown>", ignoreCase = true)) fallback else value
 }

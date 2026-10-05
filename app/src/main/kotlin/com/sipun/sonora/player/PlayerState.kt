@@ -9,6 +9,8 @@ data class PlayerState(
     val durationMs: Long = 0L,
     val queue: List<Song> = emptyList(),
     val queueIndex: Int = -1,
+    val hasPrevious: Boolean = false,
+    val hasNext: Boolean = false,
     val shuffleEnabled: Boolean = false,
     val repeatMode: RepeatMode = RepeatMode.OFF,
 )

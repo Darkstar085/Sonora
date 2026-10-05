@@ -12,4 +12,5 @@ data class Song(
     val year: Int? = null,
     val genre: String? = null,
     val folder: String? = null,
+    val dateAddedSeconds: Long = 0L,
 )

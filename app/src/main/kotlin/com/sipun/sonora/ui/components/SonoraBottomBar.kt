@@ -1,20 +1,39 @@
 package com.sipun.sonora.ui.components
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.sipun.sonora.navigation.SonoraRoute
+import com.sipun.sonora.ui.theme.SonoraRed
 
 private data class BottomDestination(
     val route: SonoraRoute,
@@ -37,31 +56,90 @@ fun SonoraBottomBar(
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
 
-    NavigationBar {
-        destinations.forEach { route ->
-            val destination = bottomDestinations.first { it.route.route == route.route }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .navigationBarsPadding(),
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 18.dp, vertical = 10.dp),
+            shape = RoundedCornerShape(34.dp),
+            color = Color.White,
+            tonalElevation = 0.dp,
+            shadowElevation = 6.dp,
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 6.dp, vertical = 5.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                destinations.forEach { route ->
+                    val destination = bottomDestinations.first { it.route.route == route.route }
+                    val selected = currentRoute == route.route
+                    val interactionSource = remember { MutableInteractionSource() }
 
-            NavigationBarItem(
-                selected = currentRoute == route.route,
-                onClick = {
-                    navController.navigate(route.route) {
-                        launchSingleTop = true
-                        restoreState = true
-                        popUpTo(SonoraRoute.Home.route) {
-                            saveState = true
+                    Surface(
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(28.dp),
+                        color = if (selected) {
+                            SonoraRed.copy(alpha = 0.12f)
+                        } else {
+                            Color.Transparent
+                        },
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(
+                                    interactionSource = interactionSource,
+                                    indication = null,
+                                ) {
+                                    if (!selected) {
+                                        navController.navigate(route.route) {
+                                            popUpTo(SonoraRoute.Home.route) { saveState = true }
+                                            launchSingleTop = true
+                                            restoreState = true
+                                        }
+                                    }
+                                }
+                                .padding(vertical = 8.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(2.dp),
+                        ) {
+                            Icon(
+                                imageVector = destination.icon,
+                                contentDescription = destination.label,
+                                tint = if (selected) {
+                                    SonoraRed
+                                } else {
+                                    Color(0xFF9A9CA3)
+                                },
+                                modifier = Modifier.size(25.dp),
+                            )
+                            Text(
+                                text = destination.label,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                fontWeight = if (selected) {
+                                    FontWeight.SemiBold
+                                } else {
+                                    FontWeight.Normal
+                                },
+                                color = if (selected) {
+                                    SonoraRed
+                                } else {
+                                    Color(0xFF777A83)
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                            )
                         }
                     }
-                },
-                icon = {
-                    Icon(
-                        imageVector = destination.icon,
-                        contentDescription = destination.label,
-                    )
-                },
-                label = {
-                    Text(destination.label)
-                },
-            )
+                }
+            }
         }
     }
 }

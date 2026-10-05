@@ -1,28 +1,29 @@
 package com.sipun.sonora.ui.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 
-private val LightColors = lightColorScheme(
+private val SonoraColors = lightColorScheme(
     primary = SonoraRed,
+    onPrimary = SonoraOnPrimary,
+    primaryContainer = SonoraRed.copy(alpha = 0.12f),
+    onPrimaryContainer = SonoraRed,
     background = SonoraBackground,
+    onBackground = SonoraOnBackground,
     surface = SonoraSurface,
-)
-
-private val DarkColors = darkColorScheme(
-    primary = SonoraRedDark,
+    onSurface = SonoraOnSurface,
+    surfaceVariant = SonoraSurfaceVariant,
+    onSurfaceVariant = SonoraOnSurfaceVariant,
+    outline = SonoraOutline,
 )
 
 @Composable
 fun SonoraTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit,
 ) {
     MaterialTheme(
-        colorScheme = if (darkTheme) DarkColors else LightColors,
+        colorScheme = SonoraColors,
         typography = SonoraTypography,
         content = content,
     )

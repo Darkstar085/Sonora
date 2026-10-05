@@ -5,21 +5,27 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import coil3.compose.AsyncImage
 import com.sipun.sonora.data.media.AndroidMusicRepository
+import com.sipun.sonora.data.preferences.SonoraPreferences
+import com.sipun.sonora.ui.components.AddToPlaylistDialog
 import com.sipun.sonora.domain.model.Song
 import com.sipun.sonora.player.PlayerController
 import com.sipun.sonora.ui.theme.SonoraRed
@@ -37,6 +43,9 @@ fun LibraryScreen(playerController: PlayerController, onOpenNowPlaying: () -> Un
     }
     var songs by remember { mutableStateOf<List<Song>>(emptyList()) }
     var loading by remember { mutableStateOf(false) }
+    val preferences = remember(context) { SonoraPreferences(context) }
+    var playlistSongId by remember { mutableStateOf<Long?>(null) }
+    var favoriteIds by remember { mutableStateOf(preferences.favoriteIds()) }
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted = it }
 
     LaunchedEffect(granted) {
@@ -50,25 +59,60 @@ fun LibraryScreen(playerController: PlayerController, onOpenNowPlaying: () -> Un
     if (loading) return BoxedLibraryState()
     if (songs.isEmpty()) return EmptyLibraryContent()
 
+    playlistSongId?.let { songId -> AddToPlaylistDialog(songId, preferences) { playlistSongId = null } }
+
     LazyColumn(
         Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
-        contentPadding = PaddingValues(20.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 20.dp),
     ) {
         item {
-            Text("Your library", style = MaterialTheme.typography.headlineSmall)
-            Text(songs.size.toString() + " songs", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(bottom = 8.dp))
+            Column(Modifier.padding(bottom = 6.dp)) {
+                Text("Your library", style = MaterialTheme.typography.headlineSmall)
+                Text("Local music on this device", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 2.dp))
+                Text(
+                    songs.size.toString() + if (songs.size == 1) " song" else " songs",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 2.dp),
+                )
+            }
         }
         itemsIndexed(songs, key = { _, song -> song.id }) { index, song ->
-            Card(onClick = { playerController.playQueue(songs, index); onOpenNowPlaying() }, Modifier.fillMaxWidth()) {
+            Card(
+                onClick = { playerController.playQueue(songs, index); onOpenNowPlaying() },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(18.dp),
+            ) {
                 Row(Modifier.fillMaxWidth().padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Box(Modifier.size(56.dp)) {
-                        Icon(Icons.Default.Album, null, tint = SonoraRed, modifier = Modifier.fillMaxSize().padding(12.dp))
-                        song.albumArtUri?.let { AsyncImage(model = it, contentDescription = "Album artwork", Modifier.fillMaxSize(), contentScale = ContentScale.Crop) }
+                    Box(
+                        Modifier.size(56.dp).clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.surfaceVariant),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(Icons.Default.Album, null, tint = SonoraRed, modifier = Modifier.size(34.dp))
+                        song.albumArtUri?.let {
+                            AsyncImage(
+                                model = it,
+                                contentDescription = "Album artwork",
+                                Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop,
+                            )
+                        }
                     }
-                    Column(Modifier.padding(start = 12.dp)) {
-                        Text(song.title, style = MaterialTheme.typography.titleMedium)
-                        Text(song.artist + " • " + song.album, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Column(
+                        Modifier.padding(start = 12.dp).weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(3.dp),
+                    ) {
+                        Text(song.title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(
+                            song.artist + " • " + song.album,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    IconButton(onClick = { playlistSongId = song.id }) { Icon(Icons.AutoMirrored.Filled.PlaylistAdd, "Add to playlist") }
+                    IconButton(onClick = { favoriteIds = favoriteIds.toMutableSet().also { ids -> if (!ids.add(song.id)) ids.remove(song.id) }.also { ids -> preferences.toggleFavorite(song.id) } }) {
+                        Icon(if (song.id in favoriteIds) Icons.Default.Favorite else Icons.Default.FavoriteBorder, "Favorite", tint = if (song.id in favoriteIds) SonoraRed else MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
@@ -76,24 +120,49 @@ fun LibraryScreen(playerController: PlayerController, onOpenNowPlaying: () -> Un
     }
 }
 
-@Composable private fun LibraryPermission(onRequest: () -> Unit) {
-    Column(Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-        Icon(Icons.Default.LibraryMusic, null, tint = MaterialTheme.colorScheme.primary)
+@Composable
+private fun LibraryPermission(onRequest: () -> Unit) {
+    Column(
+        Modifier.fillMaxSize().padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Icon(Icons.Default.LibraryMusic, null, tint = SonoraRed, modifier = Modifier.size(48.dp))
         Text("Access your music", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(top = 12.dp))
-        Text("Sonora needs audio access to discover music stored on this device.", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp, bottom = 20.dp))
+        Text(
+            "Sonora needs audio access to discover music stored on this device.",
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 8.dp, bottom = 20.dp),
+        )
         Button(onClick = onRequest) { Text("Allow access") }
     }
 }
-@Composable private fun BoxedLibraryState() {
-    Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-        CircularProgressIndicator()
+
+@Composable
+private fun BoxedLibraryState() {
+    Column(
+        Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        CircularProgressIndicator(color = SonoraRed)
         Text("Scanning your music…", modifier = Modifier.padding(top = 12.dp))
     }
 }
-@Composable private fun EmptyLibraryContent() {
-    Column(Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-        Icon(Icons.Default.AudioFile, null, tint = MaterialTheme.colorScheme.primary)
+
+@Composable
+private fun EmptyLibraryContent() {
+    Column(
+        Modifier.fillMaxSize().padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Icon(Icons.Default.AudioFile, null, tint = SonoraRed, modifier = Modifier.size(48.dp))
         Text("No music found", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(top = 12.dp))
-        Text("Add supported audio files to this device and open Sonora again.", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp))
+        Text(
+            "Add supported audio files to this device and open Sonora again.",
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 8.dp),
+        )
     }
 }

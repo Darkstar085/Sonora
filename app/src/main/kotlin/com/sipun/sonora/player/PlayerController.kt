@@ -9,12 +9,14 @@ import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
+import com.sipun.sonora.data.preferences.SonoraPreferences
 import com.sipun.sonora.domain.model.Song
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class PlayerController(context: Context) {
+    private val preferences = SonoraPreferences(context)
     private val _state = MutableStateFlow(PlayerState())
     val state: StateFlow<PlayerState> = _state.asStateFlow()
     private var controller: MediaController? = null
@@ -37,6 +39,13 @@ class PlayerController(context: Context) {
                     pendingQueue?.let { (songs, index) ->
                         pendingQueue = null
                         playQueue(songs, index)
+                    } ?: run {
+                        if (mediaController.currentMediaItem == null) {
+                            preferences.lastPlayed()?.let { song ->
+                                mediaController.setMediaItem(toMediaItem(song))
+                                mediaController.prepare()
+                            }
+                        }
                     }
                     updateState()
                 }
@@ -59,6 +68,22 @@ class PlayerController(context: Context) {
         mediaController.prepare()
         mediaController.play()
         updateState(songs)
+    }
+
+    fun playNext(song: Song) {
+        controller?.let { mediaController ->
+            val item = toMediaItem(song)
+            val insertIndex = (mediaController.currentMediaItemIndex + 1).coerceAtLeast(0)
+            mediaController.addMediaItem(insertIndex, item)
+            updateState()
+        }
+    }
+
+    fun addToQueue(song: Song) {
+        controller?.let { mediaController ->
+            mediaController.addMediaItem(toMediaItem(song))
+            updateState()
+        }
     }
 
     fun togglePlayPause() {
@@ -86,6 +111,11 @@ class PlayerController(context: Context) {
 
     fun toggleShuffle() {
         controller?.let { it.shuffleModeEnabled = !it.shuffleModeEnabled }
+        updateState()
+    }
+
+    fun setPlaybackSpeed(speed: Float) {
+        controller?.setPlaybackSpeed(speed)
         updateState()
     }
 
@@ -126,6 +156,9 @@ class PlayerController(context: Context) {
         val currentItem = mediaController.currentMediaItem
         val resolvedQueue = queue ?: _state.value.queue
         val currentSong = resolvedQueue.firstOrNull { it.id.toString() == currentItem?.mediaId }
+            ?: currentItem?.toSong()
+
+        currentSong?.let(preferences::saveLastPlayed)
         _state.value = PlayerState(
             currentSong = currentSong,
             isPlaying = mediaController.isPlaying,
@@ -133,12 +166,29 @@ class PlayerController(context: Context) {
             durationMs = mediaController.duration.takeIf { it != C.TIME_UNSET }?.coerceAtLeast(0L) ?: 0L,
             queue = resolvedQueue,
             queueIndex = currentSong?.let(resolvedQueue::indexOf) ?: -1,
+            hasPrevious = mediaController.hasPreviousMediaItem(),
+            hasNext = mediaController.hasNextMediaItem(),
             shuffleEnabled = mediaController.shuffleModeEnabled,
             repeatMode = when (mediaController.repeatMode) {
                 Player.REPEAT_MODE_ONE -> RepeatMode.ONE
                 Player.REPEAT_MODE_ALL -> RepeatMode.ALL
                 else -> RepeatMode.OFF
             },
+        )
+    }
+
+    private fun MediaItem.toSong(): Song {
+        val metadata = mediaMetadata
+        val id = mediaId.toLongOrNull() ?: 0L
+        val uri = localConfiguration?.uri?.toString().orEmpty()
+        return Song(
+            id = id,
+            title = metadata.title?.toString().orEmpty().ifBlank { "Unknown title" },
+            artist = metadata.artist?.toString().orEmpty().ifBlank { "Unknown artist" },
+            album = metadata.albumTitle?.toString().orEmpty().ifBlank { "Unknown album" },
+            durationMs = 0L,
+            uri = uri,
+            albumArtUri = metadata.artworkUri?.toString(),
         )
     }
 }
