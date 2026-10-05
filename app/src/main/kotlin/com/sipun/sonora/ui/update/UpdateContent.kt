@@ -1,7 +1,9 @@
 package com.sipun.sonora.ui.update
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.AlertDialog
@@ -29,6 +31,7 @@ import com.sipun.sonora.core.update.UpdateManager
 import com.sipun.sonora.ui.components.DownloadProgressDialog
 import com.sipun.sonora.ui.components.UpdateDialog
 import com.sipun.sonora.ui.theme.SonoraRed
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import com.sipun.sonora.R
@@ -55,6 +58,7 @@ fun UpdateContent(
     var showNoUpdate by remember { mutableStateOf(false) }
     var checkingForUpdate by remember { mutableStateOf(false) }
     var updateCheckFailed by remember { mutableStateOf(false) }
+    var updateCheckError by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         UpdateManager.enqueuePeriodicCheck(context)
@@ -79,9 +83,9 @@ fun UpdateContent(
 
     LaunchedEffect(checkRequested) {
         if (!checkRequested) return@LaunchedEffect
-        onCheckRequestConsumed()
         checkingForUpdate = true
         updateCheckFailed = false
+        updateCheckError = null
         showNoUpdate = false
         try {
             val latest = withContext(Dispatchers.IO) {
@@ -96,10 +100,15 @@ fun UpdateContent(
             } else {
                 showNoUpdate = true
             }
-        } catch (_: Exception) {
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            Log.e("UpdateContent", "Update check failed", exception)
+            updateCheckError = exception.message ?: exception.javaClass.simpleName
             updateCheckFailed = true
         } finally {
             checkingForUpdate = false
+            onCheckRequestConsumed()
         }
     }
 
@@ -223,17 +232,22 @@ fun UpdateContent(
 
     if (updateCheckFailed) {
         AlertDialog(
-            onDismissRequest = { updateCheckFailed = false },
+            onDismissRequest = {
+                updateCheckFailed = false
+                updateCheckError = null
+            },
             title = { Text(stringResource(R.string.update_check_failed)) },
             text = {
-                Text(
-                    stringResource(R.string.update_check_failed_message)
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(stringResource(R.string.update_check_failed_message))
+                    Text(updateCheckError.orEmpty())
+                }
             },
             confirmButton = {
                 Button(
                     onClick = {
                         updateCheckFailed = false
+                        updateCheckError = null
                         onRequestCheck()
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = SonoraRed),

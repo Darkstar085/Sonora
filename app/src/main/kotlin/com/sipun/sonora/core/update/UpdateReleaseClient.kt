@@ -3,6 +3,7 @@ package com.sipun.sonora.core.update
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLDecoder
@@ -47,7 +48,12 @@ internal class UpdateReleaseClient(
     fun loadManifest(currentVersion: String): AppUpdate? {
         val connection = openMetadataConnection(UpdateManager.MANIFEST_URL)
         return try {
-            if (connection.responseCode != HttpURLConnection.HTTP_OK) return null
+            if (connection.responseCode != HttpURLConnection.HTTP_OK) {
+                if (connection.responseCode == HttpURLConnection.HTTP_NOT_FOUND) return null
+                throw IOException(
+                    "GitHub manifest request failed: HTTP " + connection.responseCode
+                )
+            }
             val manifest = connection.inputStream.bufferedReader().use {
                 json.decodeFromString<UpdateManifest>(it.readText())
             }
@@ -119,7 +125,11 @@ internal class UpdateReleaseClient(
     private fun loadRelease(currentVersion: String, endpoint: String): AppUpdate? {
         val connection = openMetadataConnection(endpoint)
         return try {
-            if (connection.responseCode != HttpURLConnection.HTTP_OK) return null
+            if (connection.responseCode != HttpURLConnection.HTTP_OK) {
+                throw IOException(
+                    "GitHub API request failed: HTTP " + connection.responseCode
+                )
+            }
             val release = connection.inputStream.bufferedReader().use {
                 json.decodeFromString<GithubRelease>(it.readText())
             }
