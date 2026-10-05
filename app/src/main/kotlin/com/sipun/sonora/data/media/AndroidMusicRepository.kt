@@ -5,12 +5,28 @@ import android.content.ContentUris
 import android.provider.MediaStore
 import com.sipun.sonora.domain.model.Song
 import com.sipun.sonora.domain.repository.MusicRepository
+import java.io.File
+import org.jaudiotagger.audio.AudioFileIO
+import org.jaudiotagger.tag.FieldKey
+import org.jaudiotagger.tag.TagOptionSingleton
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 
 class AndroidMusicRepository(private val contentResolver: ContentResolver) : MusicRepository {
     @Volatile
     private var cachedSongs: List<Song>? = null
+
+    companion object {
+        private val _refreshVersion = MutableStateFlow(0L)
+        val refreshVersion = _refreshVersion.asStateFlow()
+
+        fun notifyMetadataChanged() {
+            _refreshVersion.update { it + 1L }
+        }
+    }
 
     override suspend fun songs(): List<Song> {
         cachedSongs?.let { return it }
@@ -36,6 +52,7 @@ class AndroidMusicRepository(private val contentResolver: ContentResolver) : Mus
             MediaStore.Audio.Media.TITLE,
             MediaStore.Audio.Media.ARTIST,
             MediaStore.Audio.Media.ALBUM,
+            MediaStore.Audio.Media.GENRE,
             MediaStore.Audio.Media.DURATION,
             MediaStore.Audio.Media.ALBUM_ID,
             MediaStore.Audio.Media.TRACK,
@@ -58,6 +75,7 @@ class AndroidMusicRepository(private val contentResolver: ContentResolver) : Mus
             val title = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)
             val artist = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
             val album = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
+            val genre = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.GENRE)
             val duration = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
             val albumId = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
             val track = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TRACK)
@@ -69,19 +87,34 @@ class AndroidMusicRepository(private val contentResolver: ContentResolver) : Mus
             while (cursor.moveToNext()) {
                 val songId = cursor.getLong(id)
                 val currentAlbumId = cursor.getLong(albumId)
-                val titleValue = cursor.getString(title).cleanMetadata("Unknown title")
-                    .ifBlank { cursor.getString(displayName).cleanMetadata("Unknown title") }
+                val uri = ContentUris.withAppendedId(
+                    MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                    songId,
+                )
+                val displayNameValue = cursor.getString(displayName).cleanMetadata("Unknown title")
+                val mediaStoreMetadata = MediaStoreMetadata(
+                    title = cursor.getString(title).cleanMetadata("Unknown title")
+                        .ifBlank { displayNameValue },
+                    artist = cursor.getString(artist).cleanMetadata("Unknown artist"),
+                    album = cursor.getString(album).cleanMetadata("Unknown album"),
+                    genre = cursor.getString(genre).cleanMetadata("").takeIf { it.isNotBlank() },
+                    trackNumber = cursor.getInt(track).takeIf { it > 0 },
+                    year = cursor.getInt(year).takeIf { it > 0 },
+                )
+                val metadata = if (displayNameValue.endsWith(".wav", ignoreCase = true)) {
+                    readWavMetadata(contentResolver, uri, mediaStoreMetadata) ?: mediaStoreMetadata
+                } else {
+                    mediaStoreMetadata
+                }
 
                 songs += Song(
                     id = songId,
-                    title = titleValue,
-                    artist = cursor.getString(artist).cleanMetadata("Unknown artist"),
-                    album = cursor.getString(album).cleanMetadata("Unknown album"),
+                    title = metadata.title,
+                    artist = metadata.artist,
+                    album = metadata.album,
+                    genre = metadata.genre,
                     durationMs = cursor.getLong(duration),
-                    uri = ContentUris.withAppendedId(
-                        MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                        songId,
-                    ).toString(),
+                    uri = uri.toString(),
                     albumArtUri = if (currentAlbumId > 0) {
                         ContentUris.withAppendedId(
                             MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI,
@@ -90,8 +123,8 @@ class AndroidMusicRepository(private val contentResolver: ContentResolver) : Mus
                     } else {
                         null
                     },
-                    trackNumber = cursor.getInt(track).takeIf { it > 0 },
-                    year = cursor.getInt(year).takeIf { it > 0 },
+                    trackNumber = metadata.trackNumber,
+                    year = metadata.year,
                     folder = cursor.getString(relativePath).orEmpty().ifBlank { null },
                     dateAddedSeconds = cursor.getLong(dateAdded),
                 )
@@ -100,6 +133,48 @@ class AndroidMusicRepository(private val contentResolver: ContentResolver) : Mus
         return songs
     }
 }
+
+private data class MediaStoreMetadata(
+    val title: String,
+    val artist: String,
+    val album: String,
+    val genre: String?,
+    val trackNumber: Int?,
+    val year: Int?,
+)
+
+private fun readWavMetadata(
+    contentResolver: ContentResolver,
+    uri: android.net.Uri,
+    fallback: MediaStoreMetadata,
+): MediaStoreMetadata? {
+    val temp = File.createTempFile("sonora-wav-", ".wav")
+    return try {
+        contentResolver.openInputStream(uri).use { input ->
+            requireNotNull(input)
+            temp.outputStream().use { output -> input.copyTo(output) }
+        }
+        TagOptionSingleton.getInstance().setAndroid(true)
+        val tag = AudioFileIO.read(temp).tag ?: return fallback
+        fun value(key: FieldKey): String = tag.getFirst(key).cleanMetadata("")
+
+        MediaStoreMetadata(
+            title = value(FieldKey.TITLE).ifBlank { fallback.title },
+            artist = value(FieldKey.ARTIST).ifBlank { fallback.artist },
+            album = value(FieldKey.ALBUM).ifBlank { fallback.album },
+            genre = value(FieldKey.GENRE).takeIf { it.isNotBlank() } ?: fallback.genre,
+            trackNumber = parseTrackNumber(value(FieldKey.TRACK)) ?: fallback.trackNumber,
+            year = value(FieldKey.YEAR).toIntOrNull() ?: fallback.year,
+        )
+    } catch (_: Exception) {
+        null
+    } finally {
+        temp.delete()
+    }
+}
+
+private fun parseTrackNumber(value: String): Int? =
+    value.substringBefore('/').trim().toIntOrNull()
 
 private fun String?.cleanMetadata(fallback: String): String {
     val value = orEmpty().trim()

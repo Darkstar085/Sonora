@@ -82,8 +82,10 @@ fun HomeScreen(
     var favoriteIds by remember { mutableStateOf(preferences.favoriteIds()) }
     var playlists by remember { mutableStateOf(preferences.playlists()) }
     val playerState by playerController.state.collectAsState()
+    val metadataRefreshVersion by AndroidMusicRepository.refreshVersion.collectAsState()
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(metadataRefreshVersion) {
+        repository.invalidateCache()
         isLoading = true
         loadError = null
         try {

@@ -33,6 +33,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,6 +51,7 @@ import com.sipun.sonora.data.preferences.SonoraPreferences
 import com.sipun.sonora.domain.model.Song
 import com.sipun.sonora.player.PlayerController
 import com.sipun.sonora.ui.components.SongActionConfig
+import com.sipun.sonora.ui.components.SongArtworkImage
 import com.sipun.sonora.ui.components.SongMoreButton
 import com.sipun.sonora.ui.theme.SonoraRed
 
@@ -65,8 +67,10 @@ fun ArtistDetailScreen(
     val repository = remember(context) { AndroidMusicRepository(context.contentResolver) }
     val preferences = remember(context) { SonoraPreferences(context) }
     var songs by remember { mutableStateOf<List<Song>>(emptyList()) }
+    val metadataRefreshVersion by AndroidMusicRepository.refreshVersion.collectAsState()
 
-    LaunchedEffect(artistName) {
+    LaunchedEffect(artistName, metadataRefreshVersion) {
+        repository.invalidateCache()
         songs = repository.songs().filter { it.artist.equals(artistName, ignoreCase = true) }
     }
 
@@ -112,20 +116,11 @@ fun ArtistDetailScreen(
                                 .background(MaterialTheme.colorScheme.surfaceVariant),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Icon(
-                                Icons.Default.Person,
-                                null,
-                                tint = SonoraRed,
-                                modifier = Modifier.size(72.dp)
+                            SongArtworkImage(
+                                song = first,
+                                modifier = Modifier.fillMaxSize(),
+                                contentDescription = "Artist artwork",
                             )
-                            first.albumArtUri?.let {
-                                AsyncImage(
-                                    model = it,
-                                    contentDescription = "Artist artwork",
-                                    Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop,
-                                )
-                            }
                         }
                         Text(
                             artistName,

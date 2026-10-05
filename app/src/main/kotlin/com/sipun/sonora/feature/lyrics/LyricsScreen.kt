@@ -27,6 +27,7 @@ import com.sipun.sonora.R
 import com.sipun.sonora.data.lyrics.Lyrics
 import com.sipun.sonora.data.lyrics.LyricsRepository
 import com.sipun.sonora.player.PlayerController
+import com.sipun.sonora.ui.components.SongArtworkImage
 import com.sipun.sonora.ui.theme.SonoraBackground
 import com.sipun.sonora.ui.theme.SonoraRed
 import com.sipun.sonora.ui.theme.SonoraSurface
@@ -128,20 +129,11 @@ fun LyricsScreen(playerController: PlayerController, onBack: () -> Unit) {
                         .background(SonoraSurfaceVariant),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(
-                        Icons.Default.Album,
+                    SongArtworkImage(
+                        song = song,
+                        modifier = Modifier.fillMaxSize(),
                         contentDescription = null,
-                        tint = SonoraRed,
-                        modifier = Modifier.size(52.dp),
                     )
-                    song.albumArtUri?.let { uri ->
-                        AsyncImage(
-                            model = uri,
-                            contentDescription = null,
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop,
-                        )
-                    }
                 }
 
                 Column(

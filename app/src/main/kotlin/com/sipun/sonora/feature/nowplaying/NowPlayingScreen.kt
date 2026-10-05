@@ -80,6 +80,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.sipun.sonora.data.preferences.SonoraPreferences
 import com.sipun.sonora.player.PlayerController
+import com.sipun.sonora.ui.components.SongArtworkImage
 import com.sipun.sonora.player.RepeatMode
 import com.sipun.sonora.ui.components.AddToPlaylistDialog
 import com.sipun.sonora.ui.theme.SonoraBackground
@@ -376,18 +377,11 @@ fun NowPlayingScreen(
                         .background(MaterialTheme.colorScheme.surfaceVariant),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(
-                        Icons.Default.Album,
-                        null,
-                        tint = SonoraRed,
-                        modifier = Modifier.size(72.dp)
-                    )
-                    song?.albumArtUri?.let {
-                        AsyncImage(
-                            model = it,
-                            contentDescription = "Album artwork",
+                    song?.let {
+                        SongArtworkImage(
+                            song = it,
                             modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop,
+                            artworkData = state.artworkData,
                         )
                     }
                 }

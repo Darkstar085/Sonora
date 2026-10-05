@@ -5,7 +5,11 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
 import android.net.Uri
+import android.provider.OpenableColumns
 import java.io.ByteArrayOutputStream
+import java.io.File
+import org.jaudiotagger.audio.AudioFileIO
+import org.jaudiotagger.tag.TagOptionSingleton
 
 internal class ArtworkLoader(private val context: Context) {
     companion object {
@@ -19,16 +23,57 @@ internal class ArtworkLoader(private val context: Context) {
         val retriever = MediaMetadataRetriever()
         return try {
             retriever.setDataSource(context, uri)
-            val embedded = retriever.embeddedPicture ?: return null
-            if (embedded.size <= MAX_ARTWORK_BYTES) {
-                embedded
+            val embedded = retriever.embeddedPicture
+            if (embedded != null) {
+                if (embedded.size <= MAX_ARTWORK_BYTES) {
+                    embedded
+                } else {
+                    resizeArtwork(embedded)
+                }
             } else {
-                resizeArtwork(embedded)
+                extractWithJaudiotagger(uri)
             }
         } catch (_: Exception) {
             null
         } finally {
             retriever.release()
+        }
+    }
+
+    private fun extractWithJaudiotagger(uri: Uri): ByteArray? {
+        val suffix = runCatching {
+            context.contentResolver.query(
+                uri,
+                arrayOf(OpenableColumns.DISPLAY_NAME),
+                null,
+                null,
+                null,
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    cursor.getString(0)
+                        .substringAfterLast('.', "")
+                        .takeIf { it.isNotBlank() }
+                        ?.let { ".$it" }
+                } else {
+                    null
+                }
+            }
+        }.getOrNull() ?: ".audio"
+
+        val temp = File.createTempFile("sonora-artwork-", suffix, context.cacheDir)
+        return try {
+            context.contentResolver.openInputStream(uri).use { input ->
+                requireNotNull(input)
+                temp.outputStream().use { output -> input.copyTo(output) }
+            }
+            TagOptionSingleton.getInstance().setAndroid(true)
+            AudioFileIO.read(temp).tag?.getFirstArtwork()?.binaryData?.let {
+                if (it.size <= MAX_ARTWORK_BYTES) it else resizeArtwork(it)
+            }
+        } catch (_: Exception) {
+            null
+        } finally {
+            temp.delete()
         }
     }
 

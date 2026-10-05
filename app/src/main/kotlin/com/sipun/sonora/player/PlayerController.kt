@@ -43,6 +43,8 @@ class PlayerController(context: Context) {
         override fun onEvents(player: Player, events: Player.Events) = updateState()
 
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+            _state.value = _state.value.copy(artworkData = null)
+            updateState()
             loadCurrentArtwork()
         }
     }
@@ -162,6 +164,7 @@ class PlayerController(context: Context) {
         if (index < 0) return
         val position = mediaController.currentPosition
         val wasPlaying = mediaController.isPlaying
+        _state.value = _state.value.copy(artworkData = null)
         mediaController.replaceMediaItem(index, toMediaItem(song))
         mediaController.seekTo(position)
         if (wasPlaying) mediaController.play()
@@ -202,6 +205,8 @@ class PlayerController(context: Context) {
                     .setMediaMetadata(metadata)
                     .build(),
             )
+            _state.value = _state.value.copy(artworkData = artwork)
+            updateState()
         }
     }
 
@@ -230,6 +235,7 @@ class PlayerController(context: Context) {
         currentSong?.let(preferences::saveLastPlayed)
         _state.value = PlayerState(
             currentSong = currentSong,
+            artworkData = _state.value.artworkData,
             isPlaying = mediaController.isPlaying,
             positionMs = mediaController.currentPosition.coerceAtLeast(0L),
             durationMs = mediaController.duration.takeIf { it != C.TIME_UNSET }?.coerceAtLeast(0L)

@@ -4,6 +4,7 @@ import com.sipun.sonora.domain.model.Song
 
 data class PlayerState(
     val currentSong: Song? = null,
+    val artworkData: ByteArray? = null,
     val isPlaying: Boolean = false,
     val positionMs: Long = 0L,
     val durationMs: Long = 0L,

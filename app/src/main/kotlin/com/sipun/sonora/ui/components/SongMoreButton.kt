@@ -224,8 +224,11 @@ fun SongMoreButton(
         MetadataEditorDialog(
             song = song,
             onDismiss = { showEditMetadata = false },
-            onSaved = {
+            onSaved = { updatedSong ->
                 showEditMetadata = false
+                if (playerController?.state?.value?.currentSong?.id == updatedSong.id) {
+                    playerController.updateCurrentSong(updatedSong)
+                }
                 onChanged()
             },
         )

@@ -33,6 +33,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,6 +50,7 @@ import com.sipun.sonora.data.media.AndroidMusicRepository
 import com.sipun.sonora.domain.model.Song
 import com.sipun.sonora.player.PlayerController
 import com.sipun.sonora.ui.components.SongActionConfig
+import com.sipun.sonora.ui.components.SongArtworkImage
 import com.sipun.sonora.ui.components.SongMoreButton
 import com.sipun.sonora.ui.theme.SonoraRed
 
@@ -65,8 +67,10 @@ fun AlbumDetailScreen(
     var songs by remember { mutableStateOf<List<Song>>(emptyList()) }
     val preferences =
         remember(context) { com.sipun.sonora.data.preferences.SonoraPreferences(context) }
+    val metadataRefreshVersion by AndroidMusicRepository.refreshVersion.collectAsState()
 
-    LaunchedEffect(albumName) {
+    LaunchedEffect(albumName, metadataRefreshVersion) {
+        repository.invalidateCache()
         songs = repository.songs().filter { it.album.equals(albumName, ignoreCase = true) }
     }
 
@@ -113,20 +117,10 @@ fun AlbumDetailScreen(
                                 .background(MaterialTheme.colorScheme.surfaceVariant),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Icon(
-                                Icons.Default.Album,
-                                null,
-                                tint = SonoraRed,
-                                modifier = Modifier.size(72.dp),
+                            SongArtworkImage(
+                                song = first,
+                                modifier = Modifier.fillMaxSize(),
                             )
-                            first.albumArtUri?.let {
-                                AsyncImage(
-                                    model = it,
-                                    contentDescription = "Album artwork",
-                                    Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop,
-                                )
-                            }
                         }
                         Text(
                             first.album,

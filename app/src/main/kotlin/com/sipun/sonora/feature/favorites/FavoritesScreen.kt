@@ -27,6 +27,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,6 +44,7 @@ import com.sipun.sonora.data.media.AndroidMusicRepository
 import com.sipun.sonora.data.preferences.SonoraPreferences
 import com.sipun.sonora.domain.model.Song
 import com.sipun.sonora.player.PlayerController
+import com.sipun.sonora.ui.components.SongArtworkImage
 import com.sipun.sonora.ui.theme.SonoraRed
 
 @Composable
@@ -54,8 +56,10 @@ fun FavoritesScreen(
     val repository = remember(context) { AndroidMusicRepository(context.contentResolver) }
     val preferences = remember(context) { SonoraPreferences(context) }
     var songs by remember { mutableStateOf<List<Song>>(emptyList()) }
+    val metadataRefreshVersion by AndroidMusicRepository.refreshVersion.collectAsState()
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(metadataRefreshVersion) {
+        repository.invalidateCache()
         songs = repository.songs().filter { it.id in preferences.favoriteIds() }
     }
 
@@ -132,23 +136,12 @@ private fun FavoriteSongCard(
                 .padding(10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Box(
-                Modifier
+            SongArtworkImage(
+                song = song,
+                modifier = Modifier
                     .size(60.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(Icons.Default.Album, null, tint = SonoraRed, modifier = Modifier.size(34.dp))
-                song.albumArtUri?.let {
-                    AsyncImage(
-                        model = it,
-                        contentDescription = "Album artwork",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop,
-                    )
-                }
-            }
+                    .clip(RoundedCornerShape(14.dp)),
+            )
             Column(
                 Modifier
                     .padding(start = 12.dp)

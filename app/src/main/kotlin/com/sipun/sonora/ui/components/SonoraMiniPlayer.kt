@@ -65,20 +65,11 @@ fun SonoraMiniPlayer(
                         .clip(RoundedCornerShape(12.dp)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(
-                        Icons.Default.Album,
-                        null,
-                        tint = SonoraRed,
-                        modifier = Modifier.size(28.dp),
+                    SongArtworkImage(
+                        song = song,
+                        modifier = Modifier.fillMaxSize(),
+                        artworkData = state.artworkData,
                     )
-                    song.albumArtUri?.let {
-                        AsyncImage(
-                            model = it,
-                            contentDescription = "Album artwork",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop,
-                        )
-                    }
                 }
 
                 Column(

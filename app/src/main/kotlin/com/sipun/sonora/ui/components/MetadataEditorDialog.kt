@@ -1,6 +1,9 @@
 package com.sipun.sonora.ui.components
 
+import android.app.Activity
 import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -32,6 +35,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.sipun.sonora.R
+import com.sipun.sonora.data.media.AndroidMusicRepository
 import com.sipun.sonora.data.media.AudioMetadataEditor
 import com.sipun.sonora.data.media.EditableSongMetadata
 import com.sipun.sonora.domain.model.Song
@@ -88,10 +92,24 @@ fun MetadataEditorDialog(song: Song, onDismiss: () -> Unit, onSaved: (Song) -> U
     val writeAccessLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartIntentSenderForResult(),
     ) { result ->
-        if (result.resultCode == android.app.Activity.RESULT_OK) {
+        if (result.resultCode == Activity.RESULT_OK) {
             saveRequest++
         } else {
             saving = false
+        }
+    }
+
+    val mediaManagementLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult(),
+    ) {
+        val sender = AudioMetadataEditor.getWriteRequestIntentSender(
+            context,
+            Uri.parse(song.uri),
+        )
+        if (sender != null) {
+            writeAccessLauncher.launch(IntentSenderRequest.Builder(sender).build())
+        } else {
+            saveRequest++
         }
     }
 
@@ -121,8 +139,10 @@ fun MetadataEditorDialog(song: Song, onDismiss: () -> Unit, onSaved: (Song) -> U
                         genre = genre.ifBlank { null },
                         year = year.toIntOrNull(),
                         trackNumber = track.toIntOrNull(),
+                        albumArtUri = if (artworkChanged && artworkUri == null) null else song.albumArtUri,
                     )
                 )
+                AndroidMusicRepository.notifyMetadataChanged()
             }.onFailure {
                 if (it is com.sipun.sonora.data.media.MediaWriteAccessRequiredException) {
                     val sender = AudioMetadataEditor.getWriteRequestIntentSender(context, Uri.parse(song.uri))
@@ -234,11 +254,21 @@ fun MetadataEditorDialog(song: Song, onDismiss: () -> Unit, onSaved: (Song) -> U
                 enabled = !saving && !loading && title.isNotBlank(),
                 onClick = {
                     saving = true
-                    val sender = AudioMetadataEditor.getWriteRequestIntentSender(context, Uri.parse(song.uri))
-                    if (sender != null) {
-                        writeAccessLauncher.launch(IntentSenderRequest.Builder(sender).build())
+                    val managementIntent = AudioMetadataEditor.getMediaManagementIntent(context)
+                    if (managementIntent != null) {
+                        mediaManagementLauncher.launch(managementIntent)
                     } else {
-                        saveRequest++
+                        val sender = AudioMetadataEditor.getWriteRequestIntentSender(
+                            context,
+                            Uri.parse(song.uri),
+                        )
+                        if (sender != null) {
+                            writeAccessLauncher.launch(
+                                IntentSenderRequest.Builder(sender).build(),
+                            )
+                        } else {
+                            saveRequest++
+                        }
                     }
                 },
             ) {

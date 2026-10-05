@@ -46,6 +46,7 @@ import com.sipun.sonora.data.preferences.SonoraPreferences
 import com.sipun.sonora.domain.model.Song
 import com.sipun.sonora.player.PlayerController
 import com.sipun.sonora.ui.components.SongActionConfig
+import com.sipun.sonora.ui.components.SongArtworkImage
 import com.sipun.sonora.ui.components.SongMoreButton
 import com.sipun.sonora.ui.theme.SonoraRed
 
@@ -269,13 +270,11 @@ internal fun ArtistList(songs: List<Song>, openArtist: (String) -> Unit) {
                             .background(MaterialTheme.colorScheme.surfaceVariant),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Icon(Icons.Default.Person, null, tint = SonoraRed)
-                        tracks.firstOrNull()?.albumArtUri?.let {
-                            AsyncImage(
-                                model = it,
-                                contentDescription = "Artist artwork",
+                        tracks.firstOrNull()?.let {
+                            SongArtworkImage(
+                                song = it,
                                 modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop,
+                                contentDescription = "Artist artwork",
                             )
                         }
                     }
@@ -442,15 +441,10 @@ internal fun Artwork(song: Song, modifier: Modifier) {
             .background(MaterialTheme.colorScheme.surfaceVariant),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(Icons.Default.Album, null, tint = SonoraRed, modifier = Modifier.size(44.dp))
-        song.albumArtUri?.let {
-            AsyncImage(
-                model = it,
-                contentDescription = "Album artwork",
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop,
-            )
-        }
+        SongArtworkImage(
+            song = song,
+            modifier = Modifier.fillMaxSize(),
+        )
     }
 }
 

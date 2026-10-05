@@ -31,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -66,8 +67,12 @@ fun PlaylistDetailScreen(
             preferences.playlists().firstOrNull { it.id == playlistId })
     }
     var allSongs by remember { mutableStateOf<List<Song>>(emptyList()) }
+    val metadataRefreshVersion by AndroidMusicRepository.refreshVersion.collectAsState()
 
-    LaunchedEffect(Unit) { allSongs = repository.songs() }
+    LaunchedEffect(metadataRefreshVersion) {
+        repository.invalidateCache()
+        allSongs = repository.songs()
+    }
 
     val songs =
         playlist?.songIds?.mapNotNull { id -> allSongs.firstOrNull { it.id == id } }.orEmpty()

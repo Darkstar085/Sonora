@@ -5,6 +5,7 @@ import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.media.MediaScannerConnection
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -12,6 +13,7 @@ import android.os.Build
 import android.os.Process
 import android.provider.MediaStore
 import android.provider.OpenableColumns
+import android.provider.Settings
 import android.webkit.MimeTypeMap
 import com.sipun.sonora.domain.model.Song
 import java.io.File
@@ -21,7 +23,9 @@ import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
 import org.jaudiotagger.tag.Tag
 import org.jaudiotagger.tag.TagOptionSingleton
+import org.jaudiotagger.tag.flac.FlacTag
 import org.jaudiotagger.tag.images.AndroidArtwork
+import org.jaudiotagger.tag.reference.PictureTypes
 
 data class EditableSongMetadata(
     val title: String,
@@ -44,6 +48,15 @@ data class EditableSongMetadata(
 class MediaWriteAccessRequiredException : Exception()
 
 object AudioMetadataEditor {
+    fun getMediaManagementIntent(context: Context): Intent? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S || MediaStore.canManageMedia(context)) {
+            return null
+        }
+        return Intent(Settings.ACTION_REQUEST_MANAGE_MEDIA).apply {
+            data = Uri.parse("package:" + context.packageName)
+        }
+    }
+
     fun getWriteRequestIntentSender(context: Context, uri: Uri): android.content.IntentSender? {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return null
         if (context.checkUriPermission(
@@ -147,8 +160,27 @@ object AudioMetadataEditor {
                         requireNotNull(input) { "Unable to read artwork." }
                             imageTemp.outputStream().use { output -> input.copyTo(output) }
                     }
-                    normalizeArtworkToJpeg(imageTemp, requireNotNull(normalizedImageTemp))
-                    tag.setField(AndroidArtwork.createArtworkFromFile(requireNotNull(normalizedImageTemp)))
+                    val normalizedArtwork = requireNotNull(normalizedImageTemp)
+                    normalizeArtworkToJpeg(imageTemp, normalizedArtwork)
+                    if (tag is FlacTag) {
+                        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                        BitmapFactory.decodeFile(normalizedArtwork.absolutePath, bounds)
+                        val artworkData = normalizedArtwork.readBytes()
+                        tag.setField(
+                            tag.createArtworkField(
+                                artworkData,
+                                PictureTypes.DEFAULT_ID,
+                                "image/jpeg",
+                                "",
+                                bounds.outWidth,
+                                bounds.outHeight,
+                                24,
+                                0,
+                            ),
+                        )
+                    } else {
+                        tag.setField(AndroidArtwork.createArtworkFromFile(normalizedArtwork))
+                    }
                 }
             }
 
@@ -163,7 +195,7 @@ object AudioMetadataEditor {
                 throw MediaWriteAccessRequiredException()
             }
 
-            try {
+            val mediaStoreUpdated = runCatching {
                 resolver.update(
                     audioUri,
                     ContentValues().apply {
@@ -175,15 +207,42 @@ object AudioMetadataEditor {
                     },
                     null,
                     null,
-                )
-            } catch (_: UnsupportedOperationException) {
-                // Some content providers do not support direct MediaStore updates.
-            }
+                ) > 0
+            }.getOrDefault(false)
+
             resolver.notifyChange(audioUri, null, ContentResolver.NOTIFY_UPDATE)
+
+            if (!mediaStoreUpdated) {
+                rescanMediaStore(context, audioUri)
+            }
         } finally {
             audioTemp.delete()
             imageTemp?.delete()
             normalizedImageTemp?.delete()
+        }
+    }
+
+    private fun rescanMediaStore(context: Context, audioUri: Uri) {
+        @Suppress("DEPRECATION")
+        val path = runCatching {
+            context.contentResolver.query(
+                audioUri,
+                arrayOf(MediaStore.Audio.Media.DATA),
+                null,
+                null,
+                null,
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) cursor.getString(0) else null
+            }
+        }.getOrNull()
+
+        if (!path.isNullOrBlank()) {
+            MediaScannerConnection.scanFile(
+                context,
+                arrayOf(path),
+                arrayOf(context.contentResolver.getType(audioUri)),
+                null,
+            )
         }
     }
 
