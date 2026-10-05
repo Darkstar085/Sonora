@@ -80,7 +80,7 @@ internal class LibraryPreferences(context: Context) {
                 PLAYLISTS,
                 playlists.map { playlist ->
                     playlist.id + "|" + playlist.name.replace("|", " ") + "|" +
-                        playlist.songIds.joinToString(",")
+                            playlist.songIds.joinToString(",")
                 }.toSet(),
             )
             .apply()

@@ -6,15 +6,38 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Album
+import androidx.compose.material.icons.filled.AudioFile
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.LibraryMusic
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,9 +49,9 @@ import androidx.core.content.ContextCompat
 import coil3.compose.AsyncImage
 import com.sipun.sonora.data.media.AndroidMusicRepository
 import com.sipun.sonora.data.preferences.SonoraPreferences
-import com.sipun.sonora.ui.components.AddToPlaylistDialog
 import com.sipun.sonora.domain.model.Song
 import com.sipun.sonora.player.PlayerController
+import com.sipun.sonora.ui.components.AddToPlaylistDialog
 import com.sipun.sonora.ui.theme.SonoraRed
 
 @Composable
@@ -40,14 +63,21 @@ fun LibraryScreen(playerController: PlayerController, onOpenNowPlaying: () -> Un
         else Manifest.permission.READ_EXTERNAL_STORAGE
     }
     var granted by remember {
-        mutableStateOf(ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED)
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                permission
+            ) == PackageManager.PERMISSION_GRANTED
+        )
     }
     var songs by remember { mutableStateOf<List<Song>>(emptyList()) }
     var loading by remember { mutableStateOf(false) }
     val preferences = remember(context) { SonoraPreferences(context) }
     var playlistSongId by remember { mutableStateOf<Long?>(null) }
     var favoriteIds by remember { mutableStateOf(preferences.favoriteIds()) }
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted = it }
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+        granted = it
+    }
 
     LaunchedEffect(granted) {
         if (!granted) return@LaunchedEffect
@@ -60,7 +90,11 @@ fun LibraryScreen(playerController: PlayerController, onOpenNowPlaying: () -> Un
     if (loading) return BoxedLibraryState()
     if (songs.isEmpty()) return EmptyLibraryContent()
 
-    playlistSongId?.let { songId -> AddToPlaylistDialog(songId, preferences) { playlistSongId = null } }
+    playlistSongId?.let { songId ->
+        AddToPlaylistDialog(songId, preferences) {
+            playlistSongId = null
+        }
+    }
 
     LazyColumn(
         Modifier.fillMaxSize(),
@@ -70,7 +104,11 @@ fun LibraryScreen(playerController: PlayerController, onOpenNowPlaying: () -> Un
         item {
             Column(Modifier.padding(bottom = 6.dp)) {
                 Text("Your library", style = MaterialTheme.typography.headlineSmall)
-                Text("Local music on this device", color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 2.dp))
+                Text(
+                    "Local music on this device",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 2.dp)
+                )
                 Text(
                     songs.size.toString() + if (songs.size == 1) " song" else " songs",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -84,12 +122,25 @@ fun LibraryScreen(playerController: PlayerController, onOpenNowPlaying: () -> Un
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(18.dp),
             ) {
-                Row(Modifier.fillMaxWidth().padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Box(
-                        Modifier.size(56.dp).clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.surfaceVariant),
+                        Modifier
+                            .size(56.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Icon(Icons.Default.Album, null, tint = SonoraRed, modifier = Modifier.size(34.dp))
+                        Icon(
+                            Icons.Default.Album,
+                            null,
+                            tint = SonoraRed,
+                            modifier = Modifier.size(34.dp)
+                        )
                         song.albumArtUri?.let {
                             AsyncImage(
                                 model = it,
@@ -100,10 +151,17 @@ fun LibraryScreen(playerController: PlayerController, onOpenNowPlaying: () -> Un
                         }
                     }
                     Column(
-                        Modifier.padding(start = 12.dp).weight(1f),
+                        Modifier
+                            .padding(start = 12.dp)
+                            .weight(1f),
                         verticalArrangement = Arrangement.spacedBy(3.dp),
                     ) {
-                        Text(song.title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(
+                            song.title,
+                            style = MaterialTheme.typography.titleMedium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                         Text(
                             song.artist + " • " + song.album,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -111,9 +169,19 @@ fun LibraryScreen(playerController: PlayerController, onOpenNowPlaying: () -> Un
                             overflow = TextOverflow.Ellipsis,
                         )
                     }
-                    IconButton(onClick = { playlistSongId = song.id }) { Icon(Icons.AutoMirrored.Filled.PlaylistAdd, "Add to playlist") }
-                    IconButton(onClick = { favoriteIds = favoriteIds.toMutableSet().also { ids -> if (!ids.add(song.id)) ids.remove(song.id) }.also { ids -> preferences.toggleFavorite(song.id) } }) {
-                        Icon(if (song.id in favoriteIds) Icons.Default.Favorite else Icons.Default.FavoriteBorder, "Favorite", tint = if (song.id in favoriteIds) SonoraRed else MaterialTheme.colorScheme.onSurfaceVariant)
+                    IconButton(onClick = {
+                        playlistSongId = song.id
+                    }) { Icon(Icons.AutoMirrored.Filled.PlaylistAdd, "Add to playlist") }
+                    IconButton(onClick = {
+                        favoriteIds = favoriteIds.toMutableSet()
+                            .also { ids -> if (!ids.add(song.id)) ids.remove(song.id) }
+                            .also { ids -> preferences.toggleFavorite(song.id) }
+                    }) {
+                        Icon(
+                            if (song.id in favoriteIds) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            "Favorite",
+                            tint = if (song.id in favoriteIds) SonoraRed else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }
@@ -124,12 +192,18 @@ fun LibraryScreen(playerController: PlayerController, onOpenNowPlaying: () -> Un
 @Composable
 private fun LibraryPermission(onRequest: () -> Unit) {
     Column(
-        Modifier.fillMaxSize().padding(24.dp),
+        Modifier
+            .fillMaxSize()
+            .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
         Icon(Icons.Default.LibraryMusic, null, tint = SonoraRed, modifier = Modifier.size(48.dp))
-        Text("Access your music", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(top = 12.dp))
+        Text(
+            "Access your music",
+            style = MaterialTheme.typography.headlineSmall,
+            modifier = Modifier.padding(top = 12.dp)
+        )
         Text(
             "Sonora needs audio access to discover music stored on this device.",
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -154,12 +228,18 @@ private fun BoxedLibraryState() {
 @Composable
 private fun EmptyLibraryContent() {
     Column(
-        Modifier.fillMaxSize().padding(24.dp),
+        Modifier
+            .fillMaxSize()
+            .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
         Icon(Icons.Default.AudioFile, null, tint = SonoraRed, modifier = Modifier.size(48.dp))
-        Text("No music found", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(top = 12.dp))
+        Text(
+            "No music found",
+            style = MaterialTheme.typography.headlineSmall,
+            modifier = Modifier.padding(top = 12.dp)
+        )
         Text(
             "Add supported audio files to this device and open Sonora again.",
             color = MaterialTheme.colorScheme.onSurfaceVariant,

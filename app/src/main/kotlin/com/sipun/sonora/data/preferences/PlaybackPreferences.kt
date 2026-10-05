@@ -31,9 +31,12 @@ internal class PlaybackPreferences(context: Context) {
         val uri = preferences.getString(LAST_PLAYED_URI, null) ?: return null
         return Song(
             id = preferences.getLong(LAST_PLAYED_ID, 0L),
-            title = preferences.getString(LAST_PLAYED_TITLE, null).orEmpty().ifBlank { "Unknown title" },
-            artist = preferences.getString(LAST_PLAYED_ARTIST, null).orEmpty().ifBlank { "Unknown artist" },
-            album = preferences.getString(LAST_PLAYED_ALBUM, null).orEmpty().ifBlank { "Unknown album" },
+            title = preferences.getString(LAST_PLAYED_TITLE, null).orEmpty()
+                .ifBlank { "Unknown title" },
+            artist = preferences.getString(LAST_PLAYED_ARTIST, null).orEmpty()
+                .ifBlank { "Unknown artist" },
+            album = preferences.getString(LAST_PLAYED_ALBUM, null).orEmpty()
+                .ifBlank { "Unknown album" },
             durationMs = 0L,
             uri = uri,
             albumArtUri = preferences.getString(LAST_PLAYED_ART, null),

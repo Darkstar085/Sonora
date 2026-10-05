@@ -1,28 +1,52 @@
 package com.sipun.sonora.feature.home
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Album
+import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import com.sipun.sonora.data.preferences.SonoraPreferences
 import com.sipun.sonora.data.preferences.SonoraPlaylist
+import com.sipun.sonora.data.preferences.SonoraPreferences
 import com.sipun.sonora.domain.model.Song
 import com.sipun.sonora.player.PlayerController
-import com.sipun.sonora.ui.components.SongMoreButton
 import com.sipun.sonora.ui.components.SongActionConfig
+import com.sipun.sonora.ui.components.SongMoreButton
 import com.sipun.sonora.ui.theme.SonoraRed
 
 @Composable
@@ -70,8 +94,17 @@ internal fun FavoriteList(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            Icon(Icons.Default.FavoriteBorder, null, tint = SonoraRed, modifier = Modifier.size(56.dp))
-            Text("No favorites yet", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(top = 14.dp))
+            Icon(
+                Icons.Default.FavoriteBorder,
+                null,
+                tint = SonoraRed,
+                modifier = Modifier.size(56.dp)
+            )
+            Text(
+                "No favorites yet",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(top = 14.dp)
+            )
             Text(
                 "Tap the heart on a song to save it here.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -116,12 +149,16 @@ private fun SongCard(
         shape = RoundedCornerShape(18.dp),
     ) {
         Row(
-            Modifier.fillMaxWidth().padding(10.dp),
+            Modifier
+                .fillMaxWidth()
+                .padding(10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Artwork(song, Modifier.size(56.dp))
             Column(
-                Modifier.padding(start = 12.dp).weight(1f),
+                Modifier
+                    .padding(start = 12.dp)
+                    .weight(1f),
                 verticalArrangement = Arrangement.spacedBy(3.dp),
             ) {
                 Text(
@@ -157,7 +194,10 @@ private fun SongCard(
 @Composable
 internal fun AlbumList(songs: List<Song>, openAlbum: (String) -> Unit) {
     val albums = songs.groupBy(Song::album)
-    LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(bottom = 85.dp)) {
+    LazyColumn(
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(bottom = 85.dp)
+    ) {
         items(albums.keys.sorted(), key = { it }) { album ->
             val tracks = albums.getValue(album)
             Card(
@@ -165,13 +205,25 @@ internal fun AlbumList(songs: List<Song>, openAlbum: (String) -> Unit) {
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(18.dp),
             ) {
-                Row(Modifier.fillMaxWidth().padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Artwork(tracks.first(), Modifier.size(64.dp))
                     Column(
-                        Modifier.padding(start = 12.dp).weight(1f),
+                        Modifier
+                            .padding(start = 12.dp)
+                            .weight(1f),
                         verticalArrangement = Arrangement.spacedBy(3.dp),
                     ) {
-                        Text(album, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                        Text(
+                            album,
+                            style = MaterialTheme.typography.titleMedium,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
                         Text(
                             tracks.first().artist + " • " + songCountLabel(tracks.size),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -179,7 +231,7 @@ internal fun AlbumList(songs: List<Song>, openAlbum: (String) -> Unit) {
                             overflow = TextOverflow.Ellipsis,
                         )
                     }
-                    
+
                 }
             }
         }
@@ -189,7 +241,10 @@ internal fun AlbumList(songs: List<Song>, openAlbum: (String) -> Unit) {
 @Composable
 internal fun ArtistList(songs: List<Song>, openArtist: (String) -> Unit) {
     val artists = songs.groupBy(Song::artist)
-    LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(bottom = 85.dp)) {
+    LazyColumn(
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(bottom = 85.dp)
+    ) {
         items(artists.keys.sorted(), key = { it }) { artist ->
             val tracks = artists.getValue(artist)
             Card(
@@ -197,7 +252,12 @@ internal fun ArtistList(songs: List<Song>, openArtist: (String) -> Unit) {
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(18.dp),
             ) {
-                Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Box(
                         Modifier
                             .size(64.dp)
@@ -216,11 +276,21 @@ internal fun ArtistList(songs: List<Song>, openArtist: (String) -> Unit) {
                         }
                     }
                     Column(
-                        Modifier.padding(start = 12.dp).weight(1f),
+                        Modifier
+                            .padding(start = 12.dp)
+                            .weight(1f),
                         verticalArrangement = Arrangement.spacedBy(3.dp),
                     ) {
-                        Text(artist, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                        Text(songCountLabel(tracks.size), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(
+                            artist,
+                            style = MaterialTheme.typography.titleMedium,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            songCountLabel(tracks.size),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }
@@ -237,7 +307,9 @@ internal fun PlaylistList(
 ) {
     Column(Modifier.fillMaxSize()) {
         Row(
-            Modifier.fillMaxWidth().padding(bottom = 10.dp),
+            Modifier
+                .fillMaxWidth()
+                .padding(bottom = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(Modifier.weight(1f)) {
@@ -269,8 +341,17 @@ internal fun PlaylistList(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
             ) {
-                Icon(Icons.AutoMirrored.Filled.QueueMusic, null, tint = SonoraRed, modifier = Modifier.size(56.dp))
-                Text("No playlists yet", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(top = 14.dp))
+                Icon(
+                    Icons.AutoMirrored.Filled.QueueMusic,
+                    null,
+                    tint = SonoraRed,
+                    modifier = Modifier.size(56.dp)
+                )
+                Text(
+                    "No playlists yet",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(top = 14.dp)
+                )
                 Text(
                     "Create a playlist to organize your music.",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -289,19 +370,25 @@ internal fun PlaylistList(
                         shape = RoundedCornerShape(20.dp),
                     ) {
                         Row(
-                            Modifier.fillMaxWidth().padding(14.dp),
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(14.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Box(
-                                Modifier.size(58.dp).background(
-                                    SonoraRed.copy(alpha = 0.10f),
-                                    RoundedCornerShape(16.dp),
-                                ),
+                                Modifier
+                                    .size(58.dp)
+                                    .background(
+                                        SonoraRed.copy(alpha = 0.10f),
+                                        RoundedCornerShape(16.dp),
+                                    ),
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Icon(Icons.AutoMirrored.Filled.QueueMusic, null, tint = SonoraRed)
                             }
-                            Column(Modifier.padding(start = 12.dp).weight(1f)) {
+                            Column(Modifier
+                                .padding(start = 12.dp)
+                                .weight(1f)) {
                                 Text(playlist.name, style = MaterialTheme.typography.titleMedium)
                                 Text(
                                     playlist.songIds.size.toString() + if (playlist.songIds.size == 1) " song" else " songs",
@@ -346,7 +433,9 @@ private fun CreatePlaylistDialog(onDismiss: () -> Unit, onCreate: (String) -> Un
 @Composable
 internal fun Artwork(song: Song, modifier: Modifier) {
     Box(
-        modifier.clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surfaceVariant),
+        modifier
+            .clip(RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant),
         contentAlignment = Alignment.Center,
     ) {
         Icon(Icons.Default.Album, null, tint = SonoraRed, modifier = Modifier.size(44.dp))

@@ -7,7 +7,6 @@ package com.sipun.sonora.feature.nowplaying
 
 import android.content.ContentValues
 import android.content.Intent
-import android.content.Context
 import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
@@ -15,22 +14,49 @@ import android.provider.MediaStore
 import android.provider.Settings
 import android.widget.Toast
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Album
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Equalizer
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.sipun.sonora.data.preferences.SonoraPreferences
 import com.sipun.sonora.domain.model.Song
-import com.sipun.sonora.player.PlayerController
 import com.sipun.sonora.ui.theme.SonoraRed
 import com.sipun.sonora.ui.theme.SonoraSurface
 import kotlinx.coroutines.Dispatchers
@@ -39,7 +65,11 @@ import kotlinx.coroutines.withContext
 
 
 @Composable
-internal fun QuickAction(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit) {
+internal fun QuickAction(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    onClick: () -> Unit
+) {
     Column(
         modifier = Modifier.width(78.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -79,7 +109,9 @@ internal fun MoreOptionsSheet(
         containerColor = SonoraSurface,
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
     ) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
+        Column(Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 8.dp)) {
             Text(
                 "More options",
                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
@@ -94,7 +126,12 @@ internal fun MoreOptionsSheet(
             MoreOption(Icons.Default.Equalizer, "Equalizer", onEqualizer)
             MoreOption(Icons.Default.Info, "Show song info", onInfo)
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            MoreOption(Icons.Default.DeleteOutline, "Remove from library", onRemove, destructive = true)
+            MoreOption(
+                Icons.Default.DeleteOutline,
+                "Remove from library",
+                onRemove,
+                destructive = true
+            )
             Spacer(Modifier.height(12.dp))
         }
     }
@@ -108,8 +145,19 @@ private fun MoreOption(
     destructive: Boolean = false,
 ) {
     ListItem(
-        headlineContent = { Text(label, color = if (destructive) SonoraRed else LocalContentColor.current) },
-        leadingContent = { Icon(icon, null, tint = if (destructive) SonoraRed else LocalContentColor.current) },
+        headlineContent = {
+            Text(
+                label,
+                color = if (destructive) SonoraRed else LocalContentColor.current
+            )
+        },
+        leadingContent = {
+            Icon(
+                icon,
+                null,
+                tint = if (destructive) SonoraRed else LocalContentColor.current
+            )
+        },
         trailingContent = { Icon(Icons.Default.ChevronRight, null) },
         modifier = Modifier
             .fillMaxWidth()
@@ -166,7 +214,10 @@ internal fun ArtistDialog(
             } else {
                 Column(Modifier.heightIn(max = 420.dp)) {
                     songs.forEach { song ->
-                        TextButton(onClick = { onSelect(song) }, modifier = Modifier.fillMaxWidth()) {
+                        TextButton(
+                            onClick = { onSelect(song) },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
                             Text(song.title, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                     }
@@ -200,7 +251,11 @@ internal fun SongInfoDialog(song: Song, onDismiss: () -> Unit) {
 @Composable
 private fun InfoRow(label: String, value: String) {
     Column {
-        Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(
+            label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
         Text(value, style = MaterialTheme.typography.bodyLarge)
     }
 }
@@ -243,7 +298,10 @@ internal fun SleepTimerDialog(
         text = {
             Column {
                 options.forEach { minutes ->
-                    TextButton(onClick = { onSelect(minutes) }, modifier = Modifier.fillMaxWidth()) {
+                    TextButton(
+                        onClick = { onSelect(minutes) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         Text("$minutes minutes")
                     }
                 }
@@ -264,7 +322,11 @@ internal fun setAsRingtone(context: android.content.Context, song: Song) {
                 Uri.parse("package:" + context.packageName),
             ),
         )
-        Toast.makeText(context, "Allow Sonora to change system settings, then try again.", Toast.LENGTH_LONG).show()
+        Toast.makeText(
+            context,
+            "Allow Sonora to change system settings, then try again.",
+            Toast.LENGTH_LONG
+        ).show()
         return
     }
 
@@ -272,9 +334,13 @@ internal fun setAsRingtone(context: android.content.Context, song: Song) {
         runCatching {
             val resolver = context.contentResolver
             val source = Uri.parse(song.uri)
-            val collection = MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+            val collection =
+                MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
             val values = ContentValues().apply {
-                put(MediaStore.Audio.Media.DISPLAY_NAME, "Sonora_" + song.title.replace("/", "_") + ".mp3")
+                put(
+                    MediaStore.Audio.Media.DISPLAY_NAME,
+                    "Sonora_" + song.title.replace("/", "_") + ".mp3"
+                )
                 put(MediaStore.Audio.Media.MIME_TYPE, "audio/*")
                 put(MediaStore.Audio.Media.RELATIVE_PATH, "Ringtones/")
                 put(MediaStore.Audio.Media.IS_RINGTONE, 1)
@@ -288,9 +354,18 @@ internal fun setAsRingtone(context: android.content.Context, song: Song) {
                     input.copyTo(output)
                 }
             }
-            resolver.update(uri, ContentValues().apply { put(MediaStore.Audio.Media.IS_PENDING, 0) }, null, null)
+            resolver.update(
+                uri,
+                ContentValues().apply { put(MediaStore.Audio.Media.IS_PENDING, 0) },
+                null,
+                null
+            )
             withContext(Dispatchers.Main) {
-                RingtoneManager.setActualDefaultRingtoneUri(context, RingtoneManager.TYPE_RINGTONE, uri)
+                RingtoneManager.setActualDefaultRingtoneUri(
+                    context,
+                    RingtoneManager.TYPE_RINGTONE,
+                    uri
+                )
                 Toast.makeText(context, "Ringtone set", Toast.LENGTH_SHORT).show()
             }
         }.onFailure {

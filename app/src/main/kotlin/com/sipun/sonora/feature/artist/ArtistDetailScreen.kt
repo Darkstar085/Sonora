@@ -3,7 +3,17 @@
 package com.sipun.sonora.feature.artist
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,8 +21,22 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,8 +49,8 @@ import com.sipun.sonora.data.media.AndroidMusicRepository
 import com.sipun.sonora.data.preferences.SonoraPreferences
 import com.sipun.sonora.domain.model.Song
 import com.sipun.sonora.player.PlayerController
-import com.sipun.sonora.ui.components.SongMoreButton
 import com.sipun.sonora.ui.components.SongActionConfig
+import com.sipun.sonora.ui.components.SongMoreButton
 import com.sipun.sonora.ui.theme.SonoraRed
 
 @Composable
@@ -59,25 +83,41 @@ fun ArtistDetailScreen(
         },
     ) { padding ->
         if (songs.isEmpty()) {
-            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .padding(padding), contentAlignment = Alignment.Center
+            ) {
                 CircularProgressIndicator(color = SonoraRed)
             }
         } else {
             val first = songs.first()
             LazyColumn(
-                Modifier.fillMaxSize().padding(padding),
+                Modifier
+                    .fillMaxSize()
+                    .padding(padding),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 item {
-                    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Column(
+                        Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
                         Box(
-                            Modifier.fillMaxWidth(0.72f).aspectRatio(1f)
+                            Modifier
+                                .fillMaxWidth(0.72f)
+                                .aspectRatio(1f)
                                 .clip(RoundedCornerShape(28.dp))
                                 .background(MaterialTheme.colorScheme.surfaceVariant),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Icon(Icons.Default.Person, null, tint = SonoraRed, modifier = Modifier.size(72.dp))
+                            Icon(
+                                Icons.Default.Person,
+                                null,
+                                tint = SonoraRed,
+                                modifier = Modifier.size(72.dp)
+                            )
                             first.albumArtUri?.let {
                                 AsyncImage(
                                     model = it,
@@ -131,7 +171,9 @@ fun ArtistDetailScreen(
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Row(
-                            Modifier.fillMaxWidth().padding(10.dp),
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(10.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
@@ -140,8 +182,18 @@ fun ArtistDetailScreen(
                                 modifier = Modifier.width(34.dp),
                             )
                             Column(Modifier.weight(1f)) {
-                                Text(song.title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                Text(song.album, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                Text(
+                                    song.title,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Text(
+                                    song.album,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
                             }
                             SongMoreButton(
                                 song = song,

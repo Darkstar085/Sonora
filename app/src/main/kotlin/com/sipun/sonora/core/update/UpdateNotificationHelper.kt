@@ -1,16 +1,16 @@
 package com.sipun.sonora.core.update
 
-import android.app.NotificationChannel
 import android.Manifest
+import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.content.pm.PackageManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
-import androidx.core.content.ContextCompat
 import androidx.core.app.NotificationCompat.ProgressStyle
+import androidx.core.content.ContextCompat
 import com.sipun.sonora.MainActivity
 import com.sipun.sonora.R
 import java.io.File
@@ -84,7 +84,7 @@ object UpdateNotificationHelper {
             .setContentText(fileName + " • " + percent + "%")
             .setSubText(
                 formatBytes(downloadedBytes) +
-                    if (totalBytes > 0) " / " + formatBytes(totalBytes) else ""
+                        if (totalBytes > 0) " / " + formatBytes(totalBytes) else ""
             )
             .setOngoing(true)
             .setOnlyAlertOnce(true)
@@ -154,8 +154,11 @@ object UpdateNotificationHelper {
     }
 
     private fun canNotify(context: Context): Boolean =
-        android.os.Build.VERSION.SDK_INT < 33 ||
-            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        Build.VERSION.SDK_INT < 33 ||
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED
 
     private fun formatBytes(value: Long): String {
         if (value < 1024L) return value.toString() + " B"

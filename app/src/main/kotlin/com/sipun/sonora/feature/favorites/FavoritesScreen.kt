@@ -1,7 +1,15 @@
 package com.sipun.sonora.feature.favorites
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -10,8 +18,19 @@ import androidx.compose.material.icons.filled.Album
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,10 +60,14 @@ fun FavoritesScreen(
     }
 
     Column(
-        Modifier.fillMaxSize().padding(horizontal = 16.dp),
+        Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp),
     ) {
         Row(
-            Modifier.fillMaxWidth().padding(top = 20.dp, bottom = 14.dp),
+            Modifier
+                .fillMaxWidth()
+                .padding(top = 20.dp, bottom = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(Modifier.weight(1f)) {
@@ -104,11 +127,14 @@ private fun FavoriteSongCard(
 ) {
     Card(onClick = onClick, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp)) {
         Row(
-            Modifier.fillMaxWidth().padding(10.dp),
+            Modifier
+                .fillMaxWidth()
+                .padding(10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
-                Modifier.size(60.dp)
+                Modifier
+                    .size(60.dp)
                     .clip(RoundedCornerShape(14.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center,
@@ -124,7 +150,9 @@ private fun FavoriteSongCard(
                 }
             }
             Column(
-                Modifier.padding(start = 12.dp).weight(1f),
+                Modifier
+                    .padding(start = 12.dp)
+                    .weight(1f),
                 verticalArrangement = Arrangement.spacedBy(3.dp),
             ) {
                 Text(
@@ -154,7 +182,9 @@ private fun FavoriteSongCard(
 @Composable
 private fun EmptyFavorites() {
     Column(
-        Modifier.fillMaxSize().padding(bottom = 72.dp),
+        Modifier
+            .fillMaxSize()
+            .padding(bottom = 72.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {

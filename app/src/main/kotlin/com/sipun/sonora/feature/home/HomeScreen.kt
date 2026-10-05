@@ -2,38 +2,63 @@
 
 package com.sipun.sonora.feature.home
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.QueueMusic
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.MusicOff
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.SearchOff
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PrimaryScrollableTabRow
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Tab
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
-import kotlinx.coroutines.launch
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
 import com.sipun.sonora.data.media.AndroidMusicRepository
 import com.sipun.sonora.data.preferences.SonoraPreferences
-import com.sipun.sonora.data.preferences.SonoraPlaylist
 import com.sipun.sonora.domain.model.Song
 import com.sipun.sonora.player.PlayerController
-import com.sipun.sonora.ui.components.SongMoreButton
 import com.sipun.sonora.ui.components.SonoraSearchBar
 import com.sipun.sonora.ui.theme.SonoraRed
+import kotlinx.coroutines.launch
+import com.sipun.sonora.R
 
-private val tabs = listOf("Overview", "Songs", "Albums", "Artists", "Favorites", "Playlists")
+private val tabs = listOf(
+    R.string.tab_overview,
+    R.string.tab_songs,
+    R.string.tab_albums,
+    R.string.tab_artists,
+    R.string.tab_favorites,
+    R.string.tab_playlists,
+)
 
 @Composable
 fun HomeScreen(
@@ -66,9 +91,9 @@ fun HomeScreen(
             favoriteIds = preferences.favoriteIds()
             playlists = preferences.playlists()
         } catch (error: SecurityException) {
-            loadError = "Sonora does not have permission to read your music."
+            loadError = context.getString(R.string.home_permission_error)
         } catch (error: Exception) {
-            loadError = error.message ?: "Unable to load your music library."
+            loadError = error.message ?: context.getString(R.string.home_load_error)
         } finally {
             isLoading = false
         }
@@ -76,9 +101,9 @@ fun HomeScreen(
 
     val filtered = songs.filter {
         query.isBlank() ||
-            it.title.contains(query, true) ||
-            it.artist.contains(query, true) ||
-            it.album.contains(query, true)
+                it.title.contains(query, true) ||
+                it.artist.contains(query, true) ||
+                it.album.contains(query, true)
     }
 
     Scaffold(
@@ -89,9 +114,9 @@ fun HomeScreen(
                 ),
                 title = {
                     Column {
-                        Text("Sonora", style = MaterialTheme.typography.headlineSmall)
+                        Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineSmall)
                         Text(
-                            "Your music, simply.",
+                            stringResource(R.string.home_tagline),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -101,16 +126,19 @@ fun HomeScreen(
                     IconButton(
                         onClick = {
                             searchActive = !searchActive
-                            if (searchActive) scope.launch { pagerState.animateScrollToPage(1) } else query = ""
+                            if (searchActive) scope.launch { pagerState.animateScrollToPage(1) } else query =
+                                ""
                         },
                     ) {
                         Icon(
                             if (searchActive) Icons.Default.Close else Icons.Default.Search,
-                            contentDescription = if (searchActive) "Close search" else "Search music",
+                            contentDescription = stringResource(
+                                if (searchActive) R.string.action_close_search else R.string.action_search_music
+                            ),
                         )
                     }
                     IconButton(onClick = onOpenSettings) {
-                        Icon(Icons.Default.Settings, "Settings")
+                        Icon(Icons.Default.Settings, stringResource(R.string.action_settings))
                     }
                 },
             )
@@ -141,7 +169,7 @@ fun HomeScreen(
                     Tab(
                         selected = pagerState.currentPage == index,
                         onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
-                        text = { Text(label) },
+                        text = { Text(stringResource(label)) },
                         selectedContentColor = SonoraRed,
                         unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -160,7 +188,7 @@ fun HomeScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,
                 ) {
-                    Text("Unable to load music", style = MaterialTheme.typography.titleLarge)
+                    Text(stringResource(R.string.home_load_title), style = MaterialTheme.typography.titleLarge)
                     Text(
                         loadError.orEmpty(),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -175,7 +203,18 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxSize(),
                 ) { page ->
                     when (page) {
-                        0 -> Overview(songs, favoriteIds.size, playlists.size, playerState.currentSong?.id, playerController, preferences, onOpenNowPlaying, onOpenAlbum, onOpenArtist)
+                        0 -> Overview(
+                            songs,
+                            favoriteIds.size,
+                            playlists.size,
+                            playerState.currentSong?.id,
+                            playerController,
+                            preferences,
+                            onOpenNowPlaying,
+                            onOpenAlbum,
+                            onOpenArtist
+                        )
+
                         1 -> if (filtered.isEmpty() && query.isNotBlank()) EmptySearchState(query)
                         else SongList(
                             filtered,
@@ -193,6 +232,7 @@ fun HomeScreen(
                                 }
                             },
                         )
+
                         2 -> AlbumList(filtered, onOpenAlbum)
                         3 -> ArtistList(filtered, onOpenArtist)
                         4 -> FavoriteList(
@@ -205,6 +245,7 @@ fun HomeScreen(
                         ) {
                             favoriteIds = preferences.favoriteIds()
                         }
+
                         else -> PlaylistList(playlists, onOpenPlaylist, onRefresh = {
                             playlists = preferences.playlists()
                         }, preferences = preferences)
@@ -223,9 +264,13 @@ private fun EmptyLibraryState() {
         verticalArrangement = Arrangement.Center,
     ) {
         Icon(Icons.Default.MusicOff, null, tint = SonoraRed, modifier = Modifier.size(48.dp))
-        Text("No music found", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(top = 12.dp))
         Text(
-            "Add music to your device and try again.",
+            stringResource(R.string.home_no_music),
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(top = 12.dp)
+        )
+        Text(
+            stringResource(R.string.home_add_music),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 4.dp),
         )
@@ -240,13 +285,23 @@ private fun EmptySearchState(query: String) {
         verticalArrangement = Arrangement.Center,
     ) {
         Icon(Icons.Default.SearchOff, null, tint = SonoraRed, modifier = Modifier.size(48.dp))
-        Text("No music found", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(top = 12.dp))
         Text(
-            "Nothing matches \"" + query + "\".",
+            stringResource(R.string.home_no_music),
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(top = 12.dp)
+        )
+        Text(
+            stringResource(R.string.home_no_search_results, query),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 4.dp),
         )
     }
 }
 
-internal fun songCountLabel(count: Int): String = if (count == 1) "1 song" else count.toString() + " songs"
+@Composable
+internal fun songCountLabel(count: Int): String =
+    if (count == 1) {
+        stringResource(R.string.song_count_one)
+    } else {
+        stringResource(R.string.song_count_other, count)
+    }

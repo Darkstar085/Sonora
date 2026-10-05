@@ -1,3 +1,4 @@
 <resources>
+
     <style name="Theme.Sonora" parent="android:style/Theme.Material.NoActionBar" />
 </resources>

@@ -219,7 +219,8 @@ class PlayerController(context: Context) {
             currentSong = currentSong,
             isPlaying = mediaController.isPlaying,
             positionMs = mediaController.currentPosition.coerceAtLeast(0L),
-            durationMs = mediaController.duration.takeIf { it != C.TIME_UNSET }?.coerceAtLeast(0L) ?: 0L,
+            durationMs = mediaController.duration.takeIf { it != C.TIME_UNSET }?.coerceAtLeast(0L)
+                ?: 0L,
             queue = resolvedQueue,
             queueIndex = currentSong?.let(resolvedQueue::indexOf) ?: -1,
             hasPrevious = mediaController.hasPreviousMediaItem(),

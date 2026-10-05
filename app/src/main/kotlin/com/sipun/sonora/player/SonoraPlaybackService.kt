@@ -13,7 +13,8 @@ class SonoraPlaybackService : MediaSessionService() {
         mediaSession = MediaSession.Builder(this, ExoPlayer.Builder(this).build()).build()
     }
 
-    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = mediaSession
+    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? =
+        mediaSession
 
     override fun onDestroy() {
         mediaSession?.run {

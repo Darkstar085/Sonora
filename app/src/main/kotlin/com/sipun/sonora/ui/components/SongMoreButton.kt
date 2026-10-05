@@ -32,9 +32,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -47,6 +53,7 @@ import com.sipun.sonora.ui.theme.SonoraSurface
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.sipun.sonora.R
 
 @Composable
 fun SongMoreButton(
@@ -72,7 +79,7 @@ fun SongMoreButton(
         onClick = { showMore = true },
         modifier = modifier,
     ) {
-        Icon(Icons.Default.MoreVert, contentDescription = "More options")
+        Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.more_options))
     }
 
     if (showMore) {
@@ -87,27 +94,27 @@ fun SongMoreButton(
                     .padding(horizontal = 12.dp, vertical = 8.dp),
             ) {
                 Text(
-                    "More options",
+                    stringResource(R.string.more_options),
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
                 )
 
                 if (actions.showPlayNext && playerController != null) {
-                    SongMoreOption(Icons.Default.PlayArrow, "Play next") {
+                    SongMoreOption(Icons.Default.PlayArrow, stringResource(R.string.play_next)) {
                         showMore = false
                         playerController.playNext(song)
                     }
                 }
 
                 if (actions.showAddToQueue && playerController != null) {
-                    SongMoreOption(Icons.AutoMirrored.Filled.QueueMusic, "Add to queue") {
+                    SongMoreOption(Icons.AutoMirrored.Filled.QueueMusic, stringResource(R.string.add_to_queue)) {
                         showMore = false
                         playerController.addToQueue(song)
                     }
                 }
 
                 if (actions.showPlaylist) {
-                    SongMoreOption(Icons.AutoMirrored.Filled.PlaylistAdd, "Add to playlist") {
+                    SongMoreOption(Icons.AutoMirrored.Filled.PlaylistAdd, stringResource(R.string.add_to_playlist)) {
                         showMore = false
                         showPlaylistDialog = true
                     }
@@ -116,7 +123,7 @@ fun SongMoreButton(
                 if (actions.showFavorite) {
                     SongMoreOption(
                         icon = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                        label = if (isFavorite) "Remove from favorites" else "Add to favorites",
+                        label = if (isFavorite) stringResource(R.string.remove_from_favorites) else stringResource(R.string.add_to_favorites),
                     ) {
                         showMore = false
                         preferences.toggleFavorite(song.id)
@@ -128,35 +135,35 @@ fun SongMoreButton(
                     if (actions.showPlaylist || actions.showFavorite) {
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                     }
-                    SongMoreOption(Icons.Default.RemoveCircleOutline, "Remove from playlist") {
+                    SongMoreOption(Icons.Default.RemoveCircleOutline, stringResource(R.string.remove_from_playlist)) {
                         showMore = false
                         onRemoveFromPlaylist?.invoke()
                     }
                 }
 
                 if (actions.showAlbum && onOpenAlbum != null) {
-                    SongMoreOption(Icons.Default.Album, "Open album") {
+                    SongMoreOption(Icons.Default.Album, stringResource(R.string.open_album)) {
                         showMore = false
                         onOpenAlbum(song.album)
                     }
                 }
 
                 if (actions.showArtist && onOpenArtist != null) {
-                    SongMoreOption(Icons.Default.Person, "Open artist") {
+                    SongMoreOption(Icons.Default.Person, stringResource(R.string.open_artist)) {
                         showMore = false
                         onOpenArtist(song.artist)
                     }
                 }
 
                 if (actions.showInfo) {
-                    SongMoreOption(Icons.Default.Info, "Song info") {
+                    SongMoreOption(Icons.Default.Info, stringResource(R.string.song_info)) {
                         showMore = false
                         showInfoDialog = true
                     }
                 }
 
                 if (actions.showRemoveFromDevice) {
-                    SongMoreOption(Icons.Default.Delete, "Remove from device") {
+                    SongMoreOption(Icons.Default.Delete, stringResource(R.string.remove_from_device)) {
                         showMore = false
                         showRemoveConfirmation = true
                     }
@@ -177,25 +184,29 @@ fun SongMoreButton(
     if (showRemoveConfirmation) {
         AlertDialog(
             onDismissRequest = { showRemoveConfirmation = false },
-            title = { Text("Remove from device?") },
-            text = { Text("This will permanently remove the audio file from your device.") },
+            title = { Text(stringResource(R.string.remove_from_device_question)) },
+            text = { Text(stringResource(R.string.remove_from_device_message)) },
             confirmButton = {
                 TextButton(
                     onClick = {
                         scope.launch {
                             val removed = withContext(Dispatchers.IO) {
                                 runCatching {
-                                    context.contentResolver.delete(Uri.parse(song.uri), null, null) > 0
+                                    context.contentResolver.delete(
+                                        Uri.parse(song.uri),
+                                        null,
+                                        null
+                                    ) > 0
                                 }.getOrDefault(false)
                             }
                             showRemoveConfirmation = false
                             if (removed) onChanged()
                         }
                     },
-                ) { Text("Remove", color = SonoraRed) }
+                ) { Text(stringResource(R.string.action_remove), color = SonoraRed) }
             },
             dismissButton = {
-                TextButton(onClick = { showRemoveConfirmation = false }) { Text("Cancel") }
+                TextButton(onClick = { showRemoveConfirmation = false }) { Text(stringResource(R.string.action_cancel)) }
             },
         )
     }
@@ -203,7 +214,7 @@ fun SongMoreButton(
     if (showInfoDialog) {
         AlertDialog(
             onDismissRequest = { showInfoDialog = false },
-            title = { Text("Song info") },
+            title = { Text(stringResource(R.string.song_info)) },
             text = {
                 Column {
                     Text(song.title, style = MaterialTheme.typography.titleMedium)
@@ -226,7 +237,7 @@ fun SongMoreButton(
                 }
             },
             confirmButton = {
-                TextButton(onClick = { showInfoDialog = false }) { Text("Close") }
+                TextButton(onClick = { showInfoDialog = false }) { Text(stringResource(R.string.action_close)) }
             },
         )
     }

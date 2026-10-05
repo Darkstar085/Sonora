@@ -18,6 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.sipun.sonora.BuildConfig
@@ -30,6 +31,7 @@ import com.sipun.sonora.ui.components.UpdateDialog
 import com.sipun.sonora.ui.theme.SonoraRed
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import com.sipun.sonora.R
 
 @Composable
 fun UpdateContent(
@@ -42,6 +44,10 @@ fun UpdateContent(
 ) {
     val context = LocalContext.current
     val installer = remember { UpdateInstaller(context.applicationContext) }
+    val updateDownloadFailedMessage = stringResource(R.string.update_download_failed)
+    val updateFileMissingMessage = stringResource(R.string.update_file_missing)
+    val updatePermissionRequiredMessage = stringResource(R.string.update_permission_required)
+    val updateInstallFailedMessage = stringResource(R.string.update_install_failed)
     var pendingUpdate by remember { mutableStateOf<AppUpdate?>(null) }
     var downloadedUpdate by remember { mutableStateOf<AppUpdate?>(null) }
     var downloading by remember { mutableStateOf(false) }
@@ -128,7 +134,7 @@ fun UpdateContent(
                 progress = null
                 Toast.makeText(
                     context,
-                    "Update download failed. Please try again.",
+                    updateDownloadFailedMessage,
                     Toast.LENGTH_LONG,
                 ).show()
             }
@@ -163,21 +169,23 @@ fun UpdateContent(
                         UpdateInstaller.Result.FileMissing ->
                             Toast.makeText(
                                 context,
-                                "Downloaded update is no longer available.",
+                                updateFileMissingMessage,
                                 Toast.LENGTH_LONG
                             ).show()
+
                         UpdateInstaller.Result.PermissionRequired -> {
                             Toast.makeText(
                                 context,
-                                "Allow Sonora to install updates, then try again.",
+                                updatePermissionRequiredMessage,
                                 Toast.LENGTH_LONG
                             ).show()
                             installer.openInstallPermissionSettings()
                         }
+
                         UpdateInstaller.Result.Failed ->
                             Toast.makeText(
                                 context,
-                                "Could not open the update installer.",
+                                updateInstallFailedMessage,
                                 Toast.LENGTH_LONG
                             ).show()
                     }
@@ -195,7 +203,7 @@ fun UpdateContent(
     if (checkingForUpdate) {
         AlertDialog(
             onDismissRequest = {},
-            title = { Text("Checking for updates") },
+            title = { Text(stringResource(R.string.update_checking)) },
             text = {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -206,7 +214,7 @@ fun UpdateContent(
                         color = SonoraRed,
                         strokeWidth = 2.5.dp,
                     )
-                    Text("Checking GitHub for the latest Sonora release.")
+                    Text(stringResource(R.string.update_checking_message))
                 }
             },
             confirmButton = {},
@@ -216,10 +224,10 @@ fun UpdateContent(
     if (updateCheckFailed) {
         AlertDialog(
             onDismissRequest = { updateCheckFailed = false },
-            title = { Text("Couldn't check for updates") },
+            title = { Text(stringResource(R.string.update_check_failed)) },
             text = {
                 Text(
-                    "Sonora couldn't reach GitHub right now. Check your internet connection and try again."
+                    stringResource(R.string.update_check_failed_message)
                 )
             },
             confirmButton = {
@@ -230,7 +238,7 @@ fun UpdateContent(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = SonoraRed),
                 ) {
-                    Text("Try again")
+                    Text(stringResource(R.string.action_try_again))
                 }
             },
         )
@@ -239,16 +247,16 @@ fun UpdateContent(
     if (showNoUpdate) {
         AlertDialog(
             onDismissRequest = { showNoUpdate = false },
-            title = { Text("You're up to date") },
+            title = { Text(stringResource(R.string.update_up_to_date)) },
             text = {
-                Text("You're already running the latest version, " + BuildConfig.VERSION_NAME + ".")
+                Text(stringResource(R.string.update_latest_prefix) + BuildConfig.VERSION_NAME + ".")
             },
             confirmButton = {
                 Button(
                     onClick = { showNoUpdate = false },
                     colors = ButtonDefaults.buttonColors(containerColor = SonoraRed),
                 ) {
-                    Text("OK")
+                    Text(stringResource(R.string.action_ok))
                 }
             },
         )

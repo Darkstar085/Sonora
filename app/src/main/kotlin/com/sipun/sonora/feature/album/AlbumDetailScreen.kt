@@ -3,17 +3,40 @@
 package com.sipun.sonora.feature.album
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Album
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Album
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,8 +48,8 @@ import coil3.compose.AsyncImage
 import com.sipun.sonora.data.media.AndroidMusicRepository
 import com.sipun.sonora.domain.model.Song
 import com.sipun.sonora.player.PlayerController
-import com.sipun.sonora.ui.components.SongMoreButton
 import com.sipun.sonora.ui.components.SongActionConfig
+import com.sipun.sonora.ui.components.SongMoreButton
 import com.sipun.sonora.ui.theme.SonoraRed
 
 @Composable
@@ -40,7 +63,8 @@ fun AlbumDetailScreen(
     val context = LocalContext.current
     val repository = remember(context) { AndroidMusicRepository(context.contentResolver) }
     var songs by remember { mutableStateOf<List<Song>>(emptyList()) }
-    val preferences = remember(context) { com.sipun.sonora.data.preferences.SonoraPreferences(context) }
+    val preferences =
+        remember(context) { com.sipun.sonora.data.preferences.SonoraPreferences(context) }
 
     LaunchedEffect(albumName) {
         songs = repository.songs().filter { it.album.equals(albumName, ignoreCase = true) }
@@ -60,7 +84,9 @@ fun AlbumDetailScreen(
     ) { padding ->
         if (songs.isEmpty()) {
             Box(
-                Modifier.fillMaxSize().padding(padding),
+                Modifier
+                    .fillMaxSize()
+                    .padding(padding),
                 contentAlignment = Alignment.Center,
             ) {
                 CircularProgressIndicator(color = SonoraRed)
@@ -68,7 +94,9 @@ fun AlbumDetailScreen(
         } else {
             val first = songs.first()
             LazyColumn(
-                Modifier.fillMaxSize().padding(padding),
+                Modifier
+                    .fillMaxSize()
+                    .padding(padding),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
@@ -78,7 +106,9 @@ fun AlbumDetailScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Box(
-                            Modifier.fillMaxWidth(0.72f).aspectRatio(1f)
+                            Modifier
+                                .fillMaxWidth(0.72f)
+                                .aspectRatio(1f)
                                 .clip(RoundedCornerShape(28.dp))
                                 .background(MaterialTheme.colorScheme.surfaceVariant),
                             contentAlignment = Alignment.Center,
@@ -147,7 +177,9 @@ fun AlbumDetailScreen(
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Row(
-                            Modifier.fillMaxWidth().padding(10.dp),
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(10.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(

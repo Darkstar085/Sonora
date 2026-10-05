@@ -1,7 +1,15 @@
 package com.sipun.sonora.feature.playlists
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -9,16 +17,29 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.LibraryMusic
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.sipun.sonora.data.preferences.SonoraPlaylist
 import com.sipun.sonora.data.preferences.SonoraPreferences
 import com.sipun.sonora.player.PlayerController
 import com.sipun.sonora.ui.theme.SonoraRed
+import com.sipun.sonora.R
 
 @Composable
 fun PlaylistsScreen(
@@ -30,15 +51,23 @@ fun PlaylistsScreen(
     var playlists by remember { mutableStateOf(preferences.playlists()) }
     var showCreate by remember { mutableStateOf(false) }
 
-    Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
+    Column(Modifier
+        .fillMaxSize()
+        .padding(horizontal = 16.dp)) {
         Row(
-            Modifier.fillMaxWidth().padding(top = 20.dp, bottom = 14.dp),
+            Modifier
+                .fillMaxWidth()
+                .padding(top = 20.dp, bottom = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(Modifier.weight(1f)) {
-                Text("Your playlists", style = MaterialTheme.typography.headlineSmall)
+                Text(stringResource(R.string.your_playlists), style = MaterialTheme.typography.headlineSmall)
                 Text(
-                    playlists.size.toString() + if (playlists.size == 1) " playlist" else " playlists",
+                    if (playlists.size == 1) {
+                        stringResource(R.string.playlist_count_one)
+                    } else {
+                        stringResource(R.string.playlist_count_other, playlists.size)
+                    },
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
@@ -48,19 +77,30 @@ fun PlaylistsScreen(
                     containerColor = SonoraRed,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
                 ),
-            ) { Icon(Icons.Default.Add, "Create playlist") }
+            ) { Icon(Icons.Default.Add, stringResource(R.string.action_create_playlist)) }
         }
 
         if (playlists.isEmpty()) {
             Column(
-                Modifier.fillMaxSize().padding(bottom = 72.dp),
+                Modifier
+                    .fillMaxSize()
+                    .padding(bottom = 72.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
             ) {
-                Icon(Icons.Default.LibraryMusic, null, tint = SonoraRed, modifier = Modifier.size(56.dp))
-                Text("Create your first playlist", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(top = 14.dp))
+                Icon(
+                    Icons.Default.LibraryMusic,
+                    null,
+                    tint = SonoraRed,
+                    modifier = Modifier.size(56.dp)
+                )
                 Text(
-                    "Build collections from your local music.",
+                    stringResource(R.string.create_first_playlist),
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(top = 14.dp)
+                )
+                Text(
+                    stringResource(R.string.build_collections),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 4.dp),
                 )
@@ -77,22 +117,32 @@ fun PlaylistsScreen(
                         shape = RoundedCornerShape(22.dp),
                     ) {
                         Row(
-                            Modifier.fillMaxWidth().padding(14.dp),
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(14.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Box(
-                                Modifier.size(58.dp).background(
-                                    SonoraRed.copy(alpha = 0.10f),
-                                    RoundedCornerShape(16.dp),
-                                ),
+                                Modifier
+                                    .size(58.dp)
+                                    .background(
+                                        SonoraRed.copy(alpha = 0.10f),
+                                        RoundedCornerShape(16.dp),
+                                    ),
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Icon(Icons.Default.LibraryMusic, null, tint = SonoraRed)
                             }
-                            Column(Modifier.padding(start = 12.dp).weight(1f)) {
+                            Column(Modifier
+                                .padding(start = 12.dp)
+                                .weight(1f)) {
                                 Text(playlist.name, style = MaterialTheme.typography.titleMedium)
                                 Text(
-                                    playlist.songIds.size.toString() + if (playlist.songIds.size == 1) " song" else " songs",
+                                    if (playlist.songIds.size == 1) {
+                                        stringResource(R.string.song_count_one)
+                                    } else {
+                                        stringResource(R.string.song_count_other, playlist.songIds.size)
+                                    },
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
@@ -100,7 +150,7 @@ fun PlaylistsScreen(
                                 preferences.deletePlaylist(playlist.id)
                                 playlists = preferences.playlists()
                             }) {
-                                Icon(Icons.Default.DeleteOutline, "Delete playlist")
+                                Icon(Icons.Default.DeleteOutline, stringResource(R.string.action_delete_playlist))
                             }
                         }
                     }
@@ -126,18 +176,18 @@ private fun CreatePlaylistDialog(onDismiss: () -> Unit, onCreate: (String) -> Un
     var name by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("New playlist") },
+        title = { Text(stringResource(R.string.new_playlist)) },
         text = {
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("Playlist name") },
+                label = { Text(stringResource(R.string.playlist_name)) },
                 singleLine = true,
             )
         },
         confirmButton = {
-            TextButton(onClick = { onCreate(name) }, enabled = name.isNotBlank()) { Text("Create") }
+            TextButton(onClick = { onCreate(name) }, enabled = name.isNotBlank()) { Text(stringResource(R.string.action_create)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
     )
 }

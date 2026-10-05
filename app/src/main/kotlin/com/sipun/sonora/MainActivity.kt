@@ -28,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
@@ -64,7 +65,7 @@ class MainActivity : ComponentActivity() {
         var permissionGranted by remember {
             mutableStateOf(
                 ContextCompat.checkSelfPermission(this, permission) ==
-                    PackageManager.PERMISSION_GRANTED
+                        PackageManager.PERMISSION_GRANTED
             )
         }
         var showExplanation by remember { mutableStateOf(!permissionGranted) }
@@ -84,10 +85,10 @@ class MainActivity : ComponentActivity() {
             if (showExplanation) {
                 AlertDialog(
                     onDismissRequest = { showExplanation = false },
-                    title = { Text("Access your music") },
+                    title = { Text(stringResource(R.string.permission_title)) },
                     text = {
                         Text(
-                            "Sonora needs access to your audio files to find and play the music stored on your device."
+                            stringResource(R.string.permission_explanation)
                         )
                     },
                     confirmButton = {
@@ -97,12 +98,12 @@ class MainActivity : ComponentActivity() {
                                 launcher.launch(permission)
                             }
                         ) {
-                            Text("Allow")
+                            Text(stringResource(R.string.action_allow))
                         }
                     },
                     dismissButton = {
                         TextButton(onClick = { showExplanation = false }) {
-                            Text("Not now")
+                            Text(stringResource(R.string.action_not_now))
                         }
                     },
                 )
@@ -187,11 +188,11 @@ class MainActivity : ComponentActivity() {
             verticalArrangement = Arrangement.Center,
         ) {
             Text(
-                "Music access is required",
+                stringResource(R.string.permission_required_title),
                 style = MaterialTheme.typography.headlineSmall
             )
             Text(
-                "Allow Sonora to access your music library to load your songs.",
+                stringResource(R.string.permission_required_message),
                 modifier = Modifier.padding(top = 8.dp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -199,7 +200,7 @@ class MainActivity : ComponentActivity() {
                 onClick = onRequest,
                 modifier = Modifier.padding(top = 20.dp)
             ) {
-                Text("Allow access")
+                Text(stringResource(R.string.action_allow_access))
             }
         }
     }

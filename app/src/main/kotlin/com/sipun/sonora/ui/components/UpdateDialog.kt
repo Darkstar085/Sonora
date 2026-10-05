@@ -1,7 +1,15 @@
 package com.sipun.sonora.ui.components
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -9,7 +17,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.NewReleases
-import androidx.compose.material3.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -107,7 +124,9 @@ fun UpdateDialog(
             ) {
                 OutlinedButton(
                     onClick = onDismiss,
-                    modifier = Modifier.weight(0.85f).height(44.dp),
+                    modifier = Modifier
+                        .weight(0.85f)
+                        .height(44.dp),
                     shape = RoundedCornerShape(14.dp),
                 ) {
                     Text("Later")
@@ -115,7 +134,9 @@ fun UpdateDialog(
                 Button(
                     onClick = if (isDownloaded) onInstall else onDownload,
                     enabled = !isDownloading,
-                    modifier = Modifier.weight(1.25f).height(44.dp),
+                    modifier = Modifier
+                        .weight(1.25f)
+                        .height(44.dp),
                     shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = SonoraRed,
@@ -172,7 +193,9 @@ fun DownloadProgressDialog(
                 )
                 LinearProgressIndicator(
                     progress = { (progress.percent / 100f).coerceIn(0f, 1f) },
-                    modifier = Modifier.fillMaxWidth().height(8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(8.dp),
                     color = SonoraRed,
                     trackColor = SonoraRed.copy(alpha = 0.12f),
                 )
@@ -182,7 +205,7 @@ fun DownloadProgressDialog(
                 ) {
                     Text(
                         formatSize(progress.downloadedBytes) + " / " +
-                            formatSize(if (progress.totalBytes > 0L) progress.totalBytes else update.size),
+                                formatSize(if (progress.totalBytes > 0L) progress.totalBytes else update.size),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 13.sp,
                     )
@@ -197,7 +220,9 @@ fun DownloadProgressDialog(
         confirmButton = {
             OutlinedButton(
                 onClick = onCancel,
-                modifier = Modifier.fillMaxWidth().height(44.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(44.dp),
                 shape = RoundedCornerShape(14.dp),
             ) {
                 Text("Cancel")

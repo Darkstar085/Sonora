@@ -2,8 +2,8 @@ package com.sipun.sonora.core.update
 
 import android.content.Context
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.withContext
 import java.io.File
 
 data class DownloadProgress(
@@ -86,8 +86,8 @@ object UpdateManager {
         val apk = File(File(context.filesDir, "updates"), update.fileName)
         return update.takeIf {
             apk.isFile &&
-                apk.length() > 0L &&
-                UpdateVerifier.verifyDigest(apk, update.digest)
+                    apk.length() > 0L &&
+                    UpdateVerifier.verifyDigest(apk, update.digest)
         }
     }
 

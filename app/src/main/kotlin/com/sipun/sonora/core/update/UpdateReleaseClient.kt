@@ -83,7 +83,7 @@ internal class UpdateReleaseClient(
         val fileName = URLDecoder.decode(path.last(), StandardCharsets.UTF_8.name())
         val endpoint =
             "https://api.github.com/repos/" + owner + "/" + repository +
-                "/releases/tags/" + encodePath(tag)
+                    "/releases/tags/" + encodePath(tag)
         val connection = openMetadataConnection(endpoint)
         return try {
             if (connection.responseCode != HttpURLConnection.HTTP_OK) return browserDownloadUrl
@@ -107,6 +107,7 @@ internal class UpdateReleaseClient(
                     }
                     release.toAppUpdate(currentVersion)
                 }
+
                 HttpURLConnection.HTTP_NOT_FOUND -> null
                 else -> fallback
             }
@@ -134,11 +135,11 @@ internal class UpdateReleaseClient(
         if (!UpdateVersioning.isNewerVersion(currentVersion, version)) return null
         val asset = assets.firstOrNull {
             it.name.endsWith(".apk", ignoreCase = true) &&
-                it.contentType.equals(
-                    "application/vnd.android.package-archive",
-                    ignoreCase = true
-                ) &&
-                it.digest?.startsWith("sha256:", ignoreCase = true) == true
+                    it.contentType.equals(
+                        "application/vnd.android.package-archive",
+                        ignoreCase = true
+                    ) &&
+                    it.digest?.startsWith("sha256:", ignoreCase = true) == true
         } ?: return null
         return AppUpdate(
             tag = tagName,

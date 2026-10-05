@@ -5,13 +5,7 @@
 
 package com.sipun.sonora.feature.nowplaying
 
-import android.content.ContentValues
-import android.content.Intent
-import android.media.RingtoneManager
 import android.net.Uri
-import android.os.Build
-import android.provider.MediaStore
-import android.provider.Settings
 import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
@@ -22,30 +16,69 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
-import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.automirrored.filled.QueueMusic
+import androidx.compose.material.icons.filled.Album
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.material.icons.filled.RepeatOne
+import androidx.compose.material.icons.filled.Shuffle
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.sipun.sonora.data.preferences.SonoraPreferences
-import com.sipun.sonora.domain.model.Song
 import com.sipun.sonora.player.PlayerController
 import com.sipun.sonora.player.RepeatMode
 import com.sipun.sonora.ui.components.AddToPlaylistDialog
@@ -208,7 +241,11 @@ fun NowPlayingScreen(
                             scope.launch {
                                 val removed = withContext(Dispatchers.IO) {
                                     runCatching {
-                                        context.contentResolver.delete(Uri.parse(song.uri), null, null) > 0
+                                        context.contentResolver.delete(
+                                            Uri.parse(song.uri),
+                                            null,
+                                            null
+                                        ) > 0
                                     }.getOrDefault(false)
                                 }
                                 Toast.makeText(
@@ -320,7 +357,12 @@ fun NowPlayingScreen(
                         .background(MaterialTheme.colorScheme.surfaceVariant),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(Icons.Default.Album, null, tint = SonoraRed, modifier = Modifier.size(72.dp))
+                    Icon(
+                        Icons.Default.Album,
+                        null,
+                        tint = SonoraRed,
+                        modifier = Modifier.size(72.dp)
+                    )
                     song?.albumArtUri?.let {
                         AsyncImage(
                             model = it,
@@ -344,7 +386,9 @@ fun NowPlayingScreen(
                 shadowElevation = 2.dp,
             ) {
                 Column(
-                    Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Spacer(Modifier.height(16.dp))
@@ -360,11 +404,19 @@ fun NowPlayingScreen(
                         ),
                     )
                     Row(
-                        Modifier.fillMaxWidth().padding(horizontal = 2.dp),
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 2.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
-                        Text(formatPlaybackTime(state.positionMs), style = MaterialTheme.typography.labelMedium)
-                        Text(formatPlaybackTime(state.durationMs), style = MaterialTheme.typography.labelMedium)
+                        Text(
+                            formatPlaybackTime(state.positionMs),
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                        Text(
+                            formatPlaybackTime(state.durationMs),
+                            style = MaterialTheme.typography.labelMedium
+                        )
                     }
 
                     Spacer(Modifier.height(34.dp))
@@ -422,9 +474,15 @@ fun NowPlayingScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         QuickAction(Icons.Default.Description, "Lyrics") {
-                            Toast.makeText(context, "Lyrics are not available for this song", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                context,
+                                "Lyrics are not available for this song",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
-                        QuickAction(Icons.AutoMirrored.Filled.QueueMusic, "Queue") { showQueue = true }
+                        QuickAction(Icons.AutoMirrored.Filled.QueueMusic, "Queue") {
+                            showQueue = true
+                        }
                         QuickAction(
                             if (favorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                             "Add to Favorite",
