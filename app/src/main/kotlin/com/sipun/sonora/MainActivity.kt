@@ -37,6 +37,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import com.sipun.sonora.core.update.UpdateInstaller
 import com.sipun.sonora.core.update.UpdateManager
 import com.sipun.sonora.core.update.UpdateNotificationHelper
+import com.sipun.sonora.data.media.AndroidMusicRepository
 import com.sipun.sonora.navigation.SonoraApp
 import com.sipun.sonora.ui.theme.SonoraTheme
 import com.sipun.sonora.ui.update.UpdateContent
@@ -47,6 +48,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        AndroidMusicRepository.notifyMetadataChanged()
         configureSystemBars()
         UpdateNotificationHelper.createChannel(this)
         handleUpdateIntent(intent)
@@ -65,7 +67,7 @@ class MainActivity : ComponentActivity() {
         var permissionGranted by remember {
             mutableStateOf(
                 ContextCompat.checkSelfPermission(this, permission) ==
-                        PackageManager.PERMISSION_GRANTED
+                    PackageManager.PERMISSION_GRANTED
             )
         }
         var showExplanation by remember { mutableStateOf(!permissionGranted) }
