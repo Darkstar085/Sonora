@@ -44,6 +44,20 @@ private val SonoraDarkColors = darkColorScheme(
     outline = Color(0xFFA08C89),
 )
 
+private val SonoraPureBlackColors = darkColorScheme(
+    primary = SonoraRed,
+    onPrimary = Color.White,
+    primaryContainer = Color(0xFF5F0000),
+    onPrimaryContainer = Color(0xFFFFDAD6),
+    background = Color.Black,
+    onBackground = Color(0xFFF5F5F5),
+    surface = Color.Black,
+    onSurface = Color(0xFFF5F5F5),
+    surfaceVariant = Color(0xFF121212),
+    onSurfaceVariant = Color(0xFFBDBDBD),
+    outline = Color(0xFF3A3A3A),
+)
+
 @Composable
 fun SonoraTheme(
     content: @Composable () -> Unit,
@@ -54,13 +68,18 @@ fun SonoraTheme(
         ThemePreferences.from(context.applicationContext)
     }
     val selectedTheme by preferences.theme.collectAsStateWithLifecycle()
-    val darkTheme = when (selectedTheme) {
+    val pureBlack by preferences.pureBlack.collectAsStateWithLifecycle()
+    val darkTheme = pureBlack || when (selectedTheme) {
         AppTheme.SYSTEM -> isSystemInDarkTheme()
         AppTheme.LIGHT -> false
         AppTheme.DARK -> true
     }
 
-    val colorScheme = if (darkTheme) SonoraDarkColors else SonoraLightColors
+    val colorScheme = when {
+        pureBlack -> SonoraPureBlackColors
+        darkTheme -> SonoraDarkColors
+        else -> SonoraLightColors
+    }
 
     SideEffect {
         val window = (view.context as? Activity)?.window ?: return@SideEffect

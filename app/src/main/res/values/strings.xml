@@ -33,6 +33,8 @@
     <string name="settings_theme_light">Light</string>
     <string name="settings_theme_dark">Dark</string>
     <string name="settings_theme_device_default">Device default</string>
+    <string name="settings_pure_black">Pure black</string>
+    <string name="settings_pure_black_detail">Use pure black surfaces in dark mode</string>
     <string name="settings_updates">Updates</string>
     <string name="settings_check_updates">Check for updates</string>
     <string name="settings_check_updates_detail">Check GitHub for the latest Sonora release</string>

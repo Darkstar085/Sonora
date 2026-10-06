@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.SystemUpdate
@@ -26,6 +27,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -53,6 +55,7 @@ fun SettingsScreen(onCheckForUpdates: () -> Unit = {}) {
         ThemePreferences.from(context.applicationContext)
     }
     val selectedTheme by themePreferences.theme.collectAsStateWithLifecycle()
+    val pureBlack by themePreferences.pureBlack.collectAsStateWithLifecycle()
     var showThemeDialog by remember { mutableStateOf(false) }
 
     val themeLabel = when (selectedTheme) {
@@ -71,6 +74,7 @@ fun SettingsScreen(onCheckForUpdates: () -> Unit = {}) {
         Column(Modifier.padding(top = 20.dp, bottom = 18.dp)) {
             Text(
                 stringResource(R.string.settings_title),
+                color = MaterialTheme.colorScheme.onBackground,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
             )
@@ -82,23 +86,36 @@ fun SettingsScreen(onCheckForUpdates: () -> Unit = {}) {
         }
 
         SettingsSection(stringResource(R.string.settings_appearance)) {
+            if (!pureBlack) {
+                SettingsRow(
+                    icon = Icons.Default.LightMode,
+                    title = stringResource(R.string.settings_theme),
+                    subtitle = themeLabel,
+                    onClick = { showThemeDialog = true },
+                    trailing = {
+                        Surface(
+                            color = SonoraRed.copy(alpha = 0.10f),
+                            shape = RoundedCornerShape(50),
+                        ) {
+                            Text(
+                                themeLabel,
+                                color = SonoraRed,
+                                style = MaterialTheme.typography.labelLarge,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp)
+                            )
+                        }
+                    },
+                )
+            }
             SettingsRow(
-                icon = Icons.Default.LightMode,
-                title = stringResource(R.string.settings_theme),
-                subtitle = themeLabel,
-                onClick = { showThemeDialog = true },
+                icon = Icons.Default.DarkMode,
+                title = stringResource(R.string.settings_pure_black),
+                subtitle = stringResource(R.string.settings_pure_black_detail),
                 trailing = {
-                    Surface(
-                        color = SonoraRed.copy(alpha = 0.10f),
-                        shape = RoundedCornerShape(50),
-                    ) {
-                        Text(
-                            themeLabel,
-                            color = SonoraRed,
-                            style = MaterialTheme.typography.labelLarge,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp)
-                        )
-                    }
+                    Switch(
+                        checked = pureBlack,
+                        onCheckedChange = themePreferences::setPureBlack,
+                    )
                 },
             )
         }
@@ -129,12 +146,13 @@ fun SettingsScreen(onCheckForUpdates: () -> Unit = {}) {
         }
     }
 
-    if (showThemeDialog) {
+    if (!pureBlack && showThemeDialog) {
         AlertDialog(
             onDismissRequest = { showThemeDialog = false },
             title = {
                 Text(
                     stringResource(R.string.settings_theme),
+                    color = MaterialTheme.colorScheme.onSurface,
                     style = MaterialTheme.typography.headlineSmall,
                 )
             },
@@ -194,6 +212,7 @@ private fun ThemeOption(
         )
         Text(
             title,
+            color = MaterialTheme.colorScheme.onSurface,
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.padding(start = 8.dp),
         )
@@ -204,8 +223,8 @@ private fun ThemeOption(
 private fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) {
     Text(
         title,
-        style = MaterialTheme.typography.labelLarge,
         color = SonoraRed,
+        style = MaterialTheme.typography.labelLarge,
         modifier = Modifier.padding(start = 4.dp, bottom = 8.dp, top = 8.dp)
     )
     Card(
@@ -245,7 +264,11 @@ private fun SettingsRow(
                 .padding(start = 12.dp)
                 .weight(1f)
         ) {
-            Text(title, style = MaterialTheme.typography.titleMedium)
+            Text(
+                title,
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.titleMedium
+            )
             Text(
                 subtitle,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,

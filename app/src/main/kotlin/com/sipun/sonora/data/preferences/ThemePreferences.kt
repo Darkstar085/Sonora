@@ -18,10 +18,21 @@ class ThemePreferences private constructor(context: Context) {
     private val _theme = MutableStateFlow(readTheme())
     val theme: StateFlow<AppTheme> = _theme.asStateFlow()
 
+    private val _pureBlack = MutableStateFlow(readPureBlack())
+    val pureBlack: StateFlow<Boolean> = _pureBlack.asStateFlow()
+
     fun setTheme(theme: AppTheme) {
         preferences.edit().putString(KEY_THEME, theme.name).apply()
         _theme.value = theme
     }
+
+    fun setPureBlack(enabled: Boolean) {
+        preferences.edit().putBoolean(KEY_PURE_BLACK, enabled).apply()
+        _pureBlack.value = enabled
+    }
+
+    private fun readPureBlack(): Boolean =
+        preferences.getBoolean(KEY_PURE_BLACK, false)
 
     private fun readTheme(): AppTheme =
         runCatching {
@@ -34,6 +45,7 @@ class ThemePreferences private constructor(context: Context) {
     companion object {
         private const val PREFERENCES_NAME = "sonora_preferences"
         private const val KEY_THEME = "app_theme"
+        private const val KEY_PURE_BLACK = "pure_black"
 
         @Volatile
         private var instance: ThemePreferences? = null
