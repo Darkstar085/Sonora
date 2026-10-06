@@ -23,7 +23,7 @@ A beautiful, privacy-friendly music player for Android, built around your local 
     <img src="https://img.shields.io/github/v/release/Darkstar085/Sonora?style=for-the-badge&label=Latest%20Release&color=FF6F00" alt="Latest Release">
   </a>
   <a href="https://github.com/Darkstar085/Sonora/releases">
-    <img src="https://img.shields.io/github/downloads/Darkstar085/Sonora/total?style=for-the-badge&label=Downloads&color=00ACC1" alt="Total Downloads">
+    <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Darkstar085/Sonora/main/.github/badges/downloads.json&style=for-the-badge&label=APK%20Downloads" alt="APK Downloads">
   </a>
   <a href="https://github.com/Darkstar085/Sonora/blob/main/LICENSE">
     <img src="https://img.shields.io/github/license/Darkstar085/Sonora?style=for-the-badge&color=E91E63" alt="MIT License">
