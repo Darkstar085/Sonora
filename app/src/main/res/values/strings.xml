@@ -49,6 +49,17 @@
     <string name="settings_check_updates">Check for updates</string>
     <string name="settings_check_updates_detail">Check GitHub for the latest Sonora release</string>
     <string name="settings_about">About</string>
+    <string name="action_back">Back</string>
+    <string name="about_tagline">App information and support.</string>
+    <string name="about_sonora">Sonora</string>
+    <string name="about_sonora_detail">A simple local music player for Android.</string>
+    <string name="about_sonora_description">Your music, simply.</string>
+    <string name="about_made_with">Made with ♥ by Sipun</string>
+    <string name="about_open_source">Open source</string>
+    <string name="about_open_source_detail">View the source code on GitHub.</string>
+    <string name="about_open_source_dialog">Sonora is open source. Explore the code, follow development, and contribute on GitHub.</string>
+    <string name="about_open_github">Open GitHub</string>
+    <string name="about_version">Version %1$s</string>
     <string name="settings_local_player">Local music player • v%1$s</string>
     <string name="action_create_playlist">Create playlist</string>
     <string name="action_delete_playlist">Delete playlist</string>

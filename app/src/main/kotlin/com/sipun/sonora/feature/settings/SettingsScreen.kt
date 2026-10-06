@@ -4,6 +4,8 @@ import android.app.WallpaperManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -29,14 +31,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
-import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.ui.window.Dialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
@@ -60,6 +64,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -70,9 +75,15 @@ import com.sipun.sonora.data.preferences.DynamicPalette
 import com.sipun.sonora.data.preferences.ThemePreferences
 import com.sipun.sonora.ui.theme.WallpaperPalette
 import com.sipun.sonora.ui.theme.wallpaperPalette
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.animateLottieCompositionAsState
+import com.airbnb.lottie.compose.rememberLottieComposition
 
 @Composable
-fun SettingsScreen(onCheckForUpdates: () -> Unit = {}) {
+fun SettingsScreen(
+    onCheckForUpdates: () -> Unit = {},
+) {
     val context = LocalContext.current
     val themePreferences = remember(context) {
         ThemePreferences.from(context.applicationContext)
@@ -83,6 +94,7 @@ fun SettingsScreen(onCheckForUpdates: () -> Unit = {}) {
     val selectedPalette by themePreferences.dynamicPalette.collectAsStateWithLifecycle()
     val customColor by themePreferences.customColor.collectAsStateWithLifecycle()
     var showThemeDialog by remember { mutableStateOf(false) }
+    var showSonoraDialog by remember { mutableStateOf(false) }
     var wallpaperSeed by remember(context) { mutableStateOf(readWallpaperSeed(context)) }
 
     DisposableEffect(context, dynamicColor) {
@@ -197,30 +209,47 @@ fun SettingsScreen(onCheckForUpdates: () -> Unit = {}) {
 
         }
 
-        SettingsSection(stringResource(R.string.settings_updates)) {
+        SettingsSection(stringResource(R.string.settings_about)) {
             SettingsRow(
-                icon = Icons.Default.SystemUpdate,
-                title = stringResource(R.string.settings_check_updates),
-                subtitle = stringResource(R.string.settings_check_updates_detail),
-                onClick = onCheckForUpdates,
+                icon = Icons.Default.Info,
+                title = stringResource(R.string.about_sonora),
+                subtitle = stringResource(R.string.about_sonora_detail),
+                onClick = { showSonoraDialog = true },
                 trailing = {
                     Icon(
                         Icons.Default.ChevronRight,
                         null,
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(20.dp),
+                    )
+                },
+            )
+            SettingsRow(
+                icon = Icons.Default.Code,
+                title = stringResource(R.string.about_open_source),
+                subtitle = stringResource(R.string.about_open_source_detail),
+                onClick = {
+                    context.startActivity(
+                        Intent(Intent.ACTION_VIEW, Uri.parse(SONORA_REPOSITORY)),
+                    )
+                },
+                trailing = {
+                    Icon(
+                        Icons.Default.ChevronRight,
+                        null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp),
                     )
                 },
             )
         }
+    }
 
-        SettingsSection(stringResource(R.string.settings_about)) {
-            SettingsRow(
-                Icons.Default.MusicNote,
-                stringResource(R.string.app_name),
-                stringResource(R.string.settings_local_player, BuildConfig.VERSION_NAME)
-            )
-        }
+    if (showSonoraDialog) {
+        SonoraAboutDialog(
+            onDismiss = { showSonoraDialog = false },
+            onCheckForUpdates = onCheckForUpdates,
+        )
     }
 
     if (!pureBlack && showThemeDialog) {
@@ -539,6 +568,103 @@ private fun readWallpaperSeed(context: android.content.Context): Color =
     } else {
         Color(0xFFE92B2B)
     }
+
+private const val SONORA_REPOSITORY = "https://github.com/Darkstar085/Sonora"
+
+@Composable
+private fun SonoraAboutDialog(
+    onDismiss: () -> Unit,
+    onCheckForUpdates: () -> Unit,
+) {
+    val composition by rememberLottieComposition(
+        LottieCompositionSpec.RawRes(R.raw.opensource_animation),
+    )
+    val progress by animateLottieCompositionAsState(
+        composition = composition,
+        iterations = Int.MAX_VALUE,
+    )
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp),
+            shape = RoundedCornerShape(30.dp),
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 8.dp,
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 22.dp, vertical = 18.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Surface(
+                    modifier = Modifier.size(72.dp),
+                    shape = RoundedCornerShape(24.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        androidx.compose.foundation.Image(
+                            painter = painterResource(R.drawable.sonora_launcher_logo),
+                            contentDescription = stringResource(R.string.about_sonora),
+                            modifier = Modifier.size(54.dp),
+                        )
+                    }
+                }
+
+                Text(
+                    text = stringResource(R.string.about_sonora),
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(top = 12.dp),
+                )
+
+                Text(
+                    text = stringResource(R.string.about_sonora_description),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+
+                LottieAnimation(
+                    composition = composition,
+                    progress = { progress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(72.dp)
+                        .padding(top = 14.dp),
+                )
+
+Surface(
+                    modifier = Modifier
+                        .padding(top = 8.dp)
+                        .clickable(onClick = onCheckForUpdates),
+                    shape = RoundedCornerShape(50),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.72f),
+                    border = androidx.compose.foundation.BorderStroke(
+                        1.dp,
+                        MaterialTheme.colorScheme.outline.copy(alpha = 0.35f),
+                    ),
+                ) {
+                    Text(
+                        text = stringResource(R.string.about_version, BuildConfig.VERSION_NAME),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 9.dp),
+                    )
+                }
+
+                Text(
+                    text = stringResource(R.string.about_made_with),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(top = 12.dp),
+                )
+            }
+        }
+    }
+}
 
 @Composable
 private fun ThemeOption(

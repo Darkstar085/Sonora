@@ -56,7 +56,9 @@ internal fun SonoraNavGraph(
             )
         }
         composable(SonoraRoute.Settings.route) {
-            SettingsScreen(onCheckForUpdates = onCheckForUpdates)
+            SettingsScreen(
+                onCheckForUpdates = onCheckForUpdates,
+            )
         }
         composable(
             SonoraRoute.Album.route,
