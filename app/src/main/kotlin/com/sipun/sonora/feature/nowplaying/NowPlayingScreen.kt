@@ -5,6 +5,9 @@
 
 package com.sipun.sonora.feature.nowplaying
 
+import android.media.MediaExtractor
+import android.media.MediaFormat
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
@@ -31,6 +34,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -38,6 +42,8 @@ import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.filled.Album
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Pause
@@ -117,6 +123,15 @@ fun NowPlayingScreen(
         mutableStateOf(state.currentSong?.id?.let { it in preferences.favoriteIds() } == true)
     }
     var sleepTimerJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
+    var audioInfo by remember(state.currentSong?.uri) {
+        mutableStateOf<AudioInfo?>(null)
+    }
+
+    LaunchedEffect(state.currentSong?.uri) {
+        audioInfo = state.currentSong?.uri?.let { uri ->
+            withContext(Dispatchers.IO) { loadAudioInfo(context, uri) }
+        }
+    }
 
     LaunchedEffect(Unit) {
         while (isActive) {
@@ -328,7 +343,7 @@ fun NowPlayingScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(64.dp),
+                            .height(48.dp),
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
@@ -353,7 +368,7 @@ fun NowPlayingScreen(
                         textAlign = TextAlign.Center,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(top = 4.dp),
+                        modifier = Modifier.padding(top = 0.dp),
                     )
                 }
             }
@@ -410,6 +425,7 @@ fun NowPlayingScreen(
                     ExpressiveSeekBar(
                         positionMs = state.positionMs,
                         durationMs = state.durationMs,
+                        isPlaying = state.isPlaying,
                         enabled = song != null && state.durationMs > 0,
                         onSeek = playerController::seekTo,
                     )
@@ -429,7 +445,18 @@ fun NowPlayingScreen(
                         )
                     }
 
-                    Spacer(Modifier.height(34.dp))
+                    Spacer(Modifier.height(14.dp))
+
+                    audioInfo?.let { info ->
+                        AudioInfoPill(
+                            info = info,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 18.dp),
+                        )
+                    }
+
+                    Spacer(Modifier.height(20.dp))
 
                     Row(
                         Modifier.fillMaxWidth(),
@@ -505,6 +532,7 @@ fun NowPlayingScreen(
 private fun ExpressiveSeekBar(
     positionMs: Long,
     durationMs: Long,
+    isPlaying: Boolean,
     enabled: Boolean,
     onSeek: (Long) -> Unit,
 ) {
@@ -513,7 +541,11 @@ private fun ExpressiveSeekBar(
     } else {
         0f
     }
-    val primary = MaterialTheme.colorScheme.primary
+    val primary = if (isPlaying) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        Color.White
+    }
     val track = MaterialTheme.colorScheme.surfaceVariant
 
     Column(Modifier.fillMaxWidth()) {
@@ -546,14 +578,6 @@ private fun ExpressiveSeekBar(
                 val trackEnd = size.width
                 val thumbX = trackStart + (trackEnd - trackStart) * progress
 
-                drawLine(
-                    color = track,
-                    start = androidx.compose.ui.geometry.Offset(trackStart, centerY),
-                    end = androidx.compose.ui.geometry.Offset(trackEnd, centerY),
-                    strokeWidth = 4.dp.toPx(),
-                    cap = androidx.compose.ui.graphics.StrokeCap.Round,
-                )
-
                 val wavePath = androidx.compose.ui.graphics.Path()
                 val waveLength = 34.dp.toPx()
                 val amplitude = 4.dp.toPx()
@@ -579,6 +603,16 @@ private fun ExpressiveSeekBar(
                     )
                 }
 
+                if (thumbX < trackEnd) {
+                    drawLine(
+                        color = track,
+                        start = androidx.compose.ui.geometry.Offset(thumbX, centerY),
+                        end = androidx.compose.ui.geometry.Offset(trackEnd, centerY),
+                        strokeWidth = 4.dp.toPx(),
+                        cap = androidx.compose.ui.graphics.StrokeCap.Round,
+                    )
+                }
+
                 drawLine(
                     color = primary,
                     start = androidx.compose.ui.geometry.Offset(thumbX, centerY - 11.dp.toPx()),
@@ -589,4 +623,126 @@ private fun ExpressiveSeekBar(
             }
         }
     }
+}
+
+private data class AudioInfo(
+    val bitrate: String,
+    val format: String,
+    val sampleRate: String,
+)
+
+private fun loadAudioInfo(context: android.content.Context, uriString: String): AudioInfo? {
+    val uri = Uri.parse(uriString)
+    return runCatching {
+        val retriever = MediaMetadataRetriever()
+        val extractor = MediaExtractor()
+        try {
+            context.contentResolver.openFileDescriptor(uri, "r")?.use { descriptor ->
+                retriever.setDataSource(descriptor.fileDescriptor)
+                extractor.setDataSource(descriptor.fileDescriptor)
+            } ?: return null
+            val mimeType = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_MIMETYPE)
+            val bitrate = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE)
+                ?.toLongOrNull()?.div(1000)?.takeIf { it > 0 }
+            var sampleRate = 0
+            for (index in 0 until extractor.trackCount) {
+                val format = extractor.getTrackFormat(index)
+                if (format.getString(MediaFormat.KEY_MIME)?.startsWith("audio/") == true) {
+                    if (format.containsKey(MediaFormat.KEY_SAMPLE_RATE)) {
+                        sampleRate = format.getInteger(MediaFormat.KEY_SAMPLE_RATE)
+                    }
+                    break
+                }
+            }
+            AudioInfo(
+                bitrate = bitrate?.let { it.toString() + " kbps" } ?: "—",
+                format = audioFormatLabel(mimeType),
+                sampleRate = if (sampleRate > 0) {
+                    val khz = sampleRate / 1000f
+                    if (khz % 1f == 0f) {
+                        khz.toInt().toString() + " kHz"
+                    } else {
+                        khz.toString() + " kHz"
+                    }
+                } else "—",
+            )
+        } finally {
+            extractor.release()
+            retriever.release()
+        }
+    }.getOrNull()
+}
+
+private fun audioFormatLabel(mimeType: String?): String = when (mimeType?.lowercase()) {
+    "audio/mpeg" -> "MP3"
+    "audio/mp4", "audio/x-m4a" -> "M4A"
+    "audio/flac" -> "FLAC"
+    "audio/ogg", "audio/vorbis" -> "OGG"
+    "audio/wav", "audio/x-wav" -> "WAV"
+    "audio/aac", "audio/aacp" -> "AAC"
+    "audio/opus" -> "OPUS"
+    else -> mimeType?.substringAfterLast('/')?.uppercase()?.takeIf { it.isNotBlank() } ?: "AUDIO"
+}
+
+@Composable
+private fun AudioInfoPill(info: AudioInfo, modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(18.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+        tonalElevation = 0.dp,
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f),
+        ),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 9.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            AudioInfoItem(Icons.Default.MusicNote, info.bitrate)
+            AudioInfoDivider()
+            AudioInfoItem(Icons.Default.GraphicEq, info.format)
+            AudioInfoDivider()
+            AudioInfoItem(Icons.Default.GraphicEq, info.sampleRate)
+        }
+    }
+}
+
+@Composable
+private fun AudioInfoItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    value: String,
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(17.dp),
+            tint = MaterialTheme.colorScheme.primary,
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+        )
+    }
+}
+
+@Composable
+private fun AudioInfoDivider() {
+    Box(
+        modifier = Modifier
+            .width(1.dp)
+            .height(20.dp)
+            .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)),
+    )
 }

@@ -36,6 +36,7 @@ private val SonoraLightColors = lightColorScheme(
     onSurface = Color(0xFF202124),
     surfaceVariant = Color(0xFFF0F1F5),
     onSurfaceVariant = Color(0xFF777A83),
+    surfaceContainerLow = Color.White,
     outline = Color(0xFFE0E1E6),
 )
 
@@ -48,8 +49,9 @@ private val SonoraDarkColors = darkColorScheme(
     onBackground = Color(0xFFEDE0DD),
     surface = Color(0xFF1C1B1B),
     onSurface = Color(0xFFEDE0DD),
-    surfaceVariant = Color(0xFF534341),
+    surfaceVariant = Color(0xFF2A282B),
     onSurfaceVariant = Color(0xFFD8C2BE),
+    surfaceContainerLow = Color(0xFF1C1B1F),
     outline = Color(0xFFA08C89),
 )
 
@@ -62,8 +64,9 @@ private val SonoraPureBlackColors = darkColorScheme(
     onBackground = Color(0xFFF5F5F5),
     surface = Color.Black,
     onSurface = Color(0xFFF5F5F5),
-    surfaceVariant = Color(0xFF121212),
+    surfaceVariant = Color(0xFF181818),
     onSurfaceVariant = Color(0xFFBDBDBD),
+    surfaceContainerLow = Color(0xFF121212),
     outline = Color(0xFF3A3A3A),
 )
 
@@ -114,8 +117,9 @@ fun SonoraTheme(
             onBackground = Color(0xFFF5F5F5),
             surface = Color.Black,
             onSurface = Color(0xFFF5F5F5),
-            surfaceVariant = Color(0xFF121212),
+            surfaceVariant = Color(0xFF181818),
             onSurfaceVariant = Color(0xFFBDBDBD),
+            surfaceContainerLow = Color(0xFF121212),
             outline = Color(0xFF3A3A3A),
         )
         dynamicScheme != null -> dynamicScheme

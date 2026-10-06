@@ -179,6 +179,21 @@ fun SettingsScreen(
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
                             checkedTrackColor = MaterialTheme.colorScheme.primary,
+                            uncheckedThumbColor = if (darkTheme) {
+                                MaterialTheme.colorScheme.onSurface
+                            } else {
+                                Color.White
+                            },
+                            uncheckedTrackColor = if (darkTheme) {
+                                MaterialTheme.colorScheme.surfaceVariant
+                            } else {
+                                Color(0xFFE3E3E8)
+                            },
+                            uncheckedBorderColor = if (darkTheme) {
+                                MaterialTheme.colorScheme.outline
+                            } else {
+                                Color(0xFFC1C1C8)
+                            },
                         ),
                     )
                 },
@@ -203,6 +218,21 @@ fun SettingsScreen(
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
                             checkedTrackColor = MaterialTheme.colorScheme.primary,
+                            uncheckedThumbColor = if (darkTheme) {
+                                MaterialTheme.colorScheme.onSurface
+                            } else {
+                                Color.White
+                            },
+                            uncheckedTrackColor = if (darkTheme) {
+                                MaterialTheme.colorScheme.surfaceVariant
+                            } else {
+                                Color(0xFFE3E3E8)
+                            },
+                            uncheckedBorderColor = if (darkTheme) {
+                                MaterialTheme.colorScheme.outline
+                            } else {
+                                Color(0xFFC1C1C8)
+                            },
                         ),
                     )
                 },
@@ -245,41 +275,28 @@ fun SettingsScreen(
     }
 
     if (!pureBlack && showThemeDialog) {
-        Dialog(onDismissRequest = { showThemeDialog = false }) {
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
-                shape = RoundedCornerShape(30.dp),
-                color = MaterialTheme.colorScheme.surfaceContainerLow,
-                tonalElevation = 6.dp,
-            ) {
+        AlertDialog(
+            onDismissRequest = { showThemeDialog = false },
+            shape = RoundedCornerShape(28.dp),
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            tonalElevation = 6.dp,
+            title = {
+                Text(
+                    text = stringResource(R.string.settings_theme),
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+            },
+            text = {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 18.dp, vertical = 18.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.CenterHorizontally)
-                            .width(36.dp)
-                            .height(4.dp)
-                            .background(
-                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f),
-                                RoundedCornerShape(50),
-                            ),
-                    )
                     Text(
-                        stringResource(R.string.settings_theme),
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.padding(top = 16.dp, start = 4.dp),
-                    )
-                    Text(
-                        "Choose how Sonora looks on your device.",
+                        text = "Choose how Sonora looks on your device.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 4.dp, start = 4.dp, end = 4.dp, bottom = 14.dp),
+                        modifier = Modifier.padding(bottom = 8.dp),
                     )
                     ThemeOption(
                         title = stringResource(R.string.settings_theme_light),
@@ -305,15 +322,16 @@ fun SettingsScreen(
                             showThemeDialog = false
                         },
                     )
-                    TextButton(
-                        onClick = { showThemeDialog = false },
-                        modifier = Modifier.align(Alignment.End).padding(top = 8.dp),
-                    ) {
-                        Text(stringResource(R.string.action_cancel))
-                    }
                 }
-            }
-        }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = { showThemeDialog = false },
+                ) {
+                    Text(stringResource(R.string.action_cancel))
+                }
+            },
+        )
     }
 }
 
@@ -694,15 +712,23 @@ private fun ThemeOption(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(18.dp),
         color = if (selected) {
-            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.72f)
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.22f)
         } else {
             Color.Transparent
         },
+        border = if (selected) {
+            BorderStroke(
+                1.dp,
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.35f),
+            )
+        } else {
+            null
+        },
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             RadioButton(
@@ -710,10 +736,10 @@ private fun ThemeOption(
                 onClick = onClick,
             )
             Text(
-                title,
+                text = title,
                 color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(start = 8.dp),
+                modifier = Modifier.padding(start = 6.dp),
             )
         }
     }
@@ -730,7 +756,14 @@ private fun SettingsSection(title: String, content: @Composable ColumnScope.() -
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        ),
+        border = BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outline.copy(alpha = 0.18f),
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
     ) {
         Column(content = content)
     }
