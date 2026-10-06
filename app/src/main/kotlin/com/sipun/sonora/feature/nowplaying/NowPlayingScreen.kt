@@ -10,13 +10,7 @@ import android.media.MediaFormat
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.widget.Toast
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.SizeTransform
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.togetherWith
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
@@ -71,6 +65,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -123,13 +118,15 @@ fun NowPlayingScreen(
         mutableStateOf(state.currentSong?.id?.let { it in preferences.favoriteIds() } == true)
     }
     var sleepTimerJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
-    var audioInfo by remember(state.currentSong?.uri) {
-        mutableStateOf<AudioInfo?>(null)
+    var audioInfo by remember {
+        mutableStateOf(AudioInfo(bitrate = "—", format = "AUDIO", sampleRate = "—"))
     }
 
     LaunchedEffect(state.currentSong?.uri) {
-        audioInfo = state.currentSong?.uri?.let { uri ->
-            withContext(Dispatchers.IO) { loadAudioInfo(context, uri) }
+        state.currentSong?.uri?.let { uri ->
+            loadAudioInfo(context, uri)?.let { loadedInfo ->
+                audioInfo = loadedInfo
+            }
         }
     }
 
@@ -327,15 +324,7 @@ fun NowPlayingScreen(
                 .padding(horizontal = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            AnimatedContent(
-                targetState = song?.id,
-                transitionSpec = {
-                    (fadeIn() + scaleIn(initialScale = 0.94f))
-                        .togetherWith(fadeOut() + scaleOut(targetScale = 1.04f))
-                        .using(SizeTransform(clip = false))
-                },
-                label = "now_playing_track_transition",
-            ) {
+            key(song?.id) {
                 Column(
                     Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -375,15 +364,10 @@ fun NowPlayingScreen(
 
             Spacer(Modifier.height(14.dp))
 
-            AnimatedContent(
+            Crossfade(
                 targetState = song?.id,
-                transitionSpec = {
-                    (fadeIn() + scaleIn(initialScale = 0.96f))
-                        .togetherWith(fadeOut() + scaleOut(targetScale = 1.03f))
-                        .using(SizeTransform(clip = false))
-                },
                 label = "album_art_transition",
-            ) {
+            ) { currentSongId ->
                 Box(
                     Modifier
                         .fillMaxWidth(0.82f)
@@ -393,9 +377,9 @@ fun NowPlayingScreen(
                         .background(MaterialTheme.colorScheme.surfaceVariant),
                     contentAlignment = Alignment.Center,
                 ) {
-                    song?.let {
+                    if (currentSongId != null && song?.id == currentSongId) {
                         SongArtworkImage(
-                            song = it,
+                            song = song,
                             modifier = Modifier.fillMaxSize(),
                             artworkData = state.artworkData,
                         )
@@ -447,14 +431,12 @@ fun NowPlayingScreen(
 
                     Spacer(Modifier.height(14.dp))
 
-                    audioInfo?.let { info ->
-                        AudioInfoPill(
-                            info = info,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 18.dp),
-                        )
-                    }
+                    AudioInfoPill(
+                        info = audioInfo,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 18.dp),
+                    )
 
                     Spacer(Modifier.height(20.dp))
 
