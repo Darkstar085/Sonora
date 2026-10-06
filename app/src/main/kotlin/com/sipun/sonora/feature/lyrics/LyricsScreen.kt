@@ -28,10 +28,7 @@ import com.sipun.sonora.data.lyrics.Lyrics
 import com.sipun.sonora.data.lyrics.LyricsRepository
 import com.sipun.sonora.player.PlayerController
 import com.sipun.sonora.ui.components.SongArtworkImage
-import com.sipun.sonora.ui.theme.SonoraBackground
 import com.sipun.sonora.ui.theme.SonoraRed
-import com.sipun.sonora.ui.theme.SonoraSurface
-import com.sipun.sonora.ui.theme.SonoraSurfaceVariant
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 
@@ -67,7 +64,7 @@ fun LyricsScreen(playerController: PlayerController, onBack: () -> Unit) {
     }
 
     Scaffold(
-        containerColor = SonoraBackground,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -90,7 +87,7 @@ fun LyricsScreen(playerController: PlayerController, onBack: () -> Unit) {
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = SonoraBackground,
+                    containerColor = MaterialTheme.colorScheme.background,
                 ),
             )
         },
@@ -126,7 +123,7 @@ fun LyricsScreen(playerController: PlayerController, onBack: () -> Unit) {
                     Modifier
                         .size(120.dp)
                         .clip(RoundedCornerShape(22.dp))
-                        .background(SonoraSurfaceVariant),
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
                     contentAlignment = Alignment.Center,
                 ) {
                     SongArtworkImage(
@@ -219,7 +216,7 @@ private fun LyricsCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(30.dp),
-        colors = CardDefaults.cardColors(containerColor = SonoraSurface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Box(Modifier.fillMaxSize()) {
@@ -275,8 +272,8 @@ private fun LyricsCard(
                     .align(Alignment.TopCenter)
                     .background(
                         Brush.verticalGradient(
-                            0f to SonoraSurface,
-                            1f to SonoraSurface.copy(alpha = 0f),
+                            0f to MaterialTheme.colorScheme.surface,
+                            1f to MaterialTheme.colorScheme.surface.copy(alpha = 0f),
                         )
                     ),
             )
@@ -287,8 +284,8 @@ private fun LyricsCard(
                     .align(Alignment.BottomCenter)
                     .background(
                         Brush.verticalGradient(
-                            0f to SonoraSurface.copy(alpha = 0f),
-                            1f to SonoraSurface,
+                            0f to MaterialTheme.colorScheme.surface.copy(alpha = 0f),
+                            1f to MaterialTheme.colorScheme.surface,
                         )
                     ),
             )

@@ -50,7 +50,6 @@ import com.sipun.sonora.data.preferences.SonoraPreferences
 import com.sipun.sonora.domain.model.Song
 import com.sipun.sonora.player.PlayerController
 import com.sipun.sonora.ui.theme.SonoraRed
-import com.sipun.sonora.ui.theme.SonoraSurface
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -87,7 +86,7 @@ fun SongMoreButton(
     if (showMore) {
         ModalBottomSheet(
             onDismissRequest = { showMore = false },
-            containerColor = SonoraSurface,
+            containerColor = MaterialTheme.colorScheme.surface,
             shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
         ) {
             Column(

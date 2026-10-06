@@ -37,7 +37,6 @@ import androidx.compose.ui.unit.sp
 import com.sipun.sonora.core.update.AppUpdate
 import com.sipun.sonora.core.update.DownloadProgress
 import com.sipun.sonora.ui.theme.SonoraRed
-import com.sipun.sonora.ui.theme.SonoraSurface
 
 @Composable
 fun UpdateDialog(
@@ -157,7 +156,7 @@ fun UpdateDialog(
             }
         },
         shape = RoundedCornerShape(28.dp),
-        containerColor = SonoraSurface,
+        containerColor = MaterialTheme.colorScheme.surface,
         tonalElevation = 6.dp,
     )
 }
@@ -229,7 +228,7 @@ fun DownloadProgressDialog(
             }
         },
         shape = RoundedCornerShape(28.dp),
-        containerColor = SonoraSurface,
+        containerColor = MaterialTheme.colorScheme.surface,
         tonalElevation = 6.dp,
     )
 }

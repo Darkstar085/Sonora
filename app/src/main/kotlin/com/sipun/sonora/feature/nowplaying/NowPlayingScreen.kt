@@ -83,9 +83,7 @@ import com.sipun.sonora.player.PlayerController
 import com.sipun.sonora.ui.components.SongArtworkImage
 import com.sipun.sonora.player.RepeatMode
 import com.sipun.sonora.ui.components.AddToPlaylistDialog
-import com.sipun.sonora.ui.theme.SonoraBackground
 import com.sipun.sonora.ui.theme.SonoraRed
-import com.sipun.sonora.ui.theme.SonoraSurface
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -287,10 +285,10 @@ fun NowPlayingScreen(
     }
 
     Scaffold(
-        containerColor = SonoraBackground,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = SonoraBackground),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
                 title = {},
                 navigationIcon = {
                     IconButton(onClick = onBack) {
@@ -394,7 +392,7 @@ fun NowPlayingScreen(
                     .fillMaxWidth()
                     .height(520.dp),
                 shape = RoundedCornerShape(28.dp),
-                color = SonoraSurface,
+                color = MaterialTheme.colorScheme.surface,
                 tonalElevation = 0.dp,
                 shadowElevation = 2.dp,
             ) {

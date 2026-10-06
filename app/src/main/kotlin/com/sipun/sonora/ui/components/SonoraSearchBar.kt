@@ -6,6 +6,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -31,19 +32,19 @@ fun SonoraSearchBar(
             .heightIn(min = 52.dp),
         singleLine = true,
         leadingIcon = {
-            Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFF8E9199))
+            Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
         },
         placeholder = {
-            Text(stringResource(R.string.search_music), color = Color(0xFF9A9CA3))
+            Text(stringResource(R.string.search_music), color = MaterialTheme.colorScheme.onSurfaceVariant)
         },
         shape = RoundedCornerShape(20.dp),
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = SonoraRed,
             unfocusedBorderColor = Color.Transparent,
-            focusedContainerColor = Color.White,
-            unfocusedContainerColor = Color.White,
-            focusedTextColor = Color(0xFF202124),
-            unfocusedTextColor = Color(0xFF202124),
+            focusedContainerColor = MaterialTheme.colorScheme.surface,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
         ),
     )
 }

@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,7 +26,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -66,7 +66,7 @@ fun SonoraBottomBar(
                 .fillMaxWidth()
                 .padding(horizontal = 18.dp, vertical = 10.dp),
             shape = RoundedCornerShape(34.dp),
-            color = Color.White,
+            color = MaterialTheme.colorScheme.surface,
             tonalElevation = 0.dp,
             shadowElevation = 6.dp,
         ) {
@@ -116,7 +116,7 @@ fun SonoraBottomBar(
                                 tint = if (selected) {
                                     SonoraRed
                                 } else {
-                                    Color(0xFF9A9CA3)
+                                    MaterialTheme.colorScheme.onSurfaceVariant
                                 },
                                 modifier = Modifier.size(25.dp),
                             )
@@ -132,7 +132,7 @@ fun SonoraBottomBar(
                                 color = if (selected) {
                                     SonoraRed
                                 } else {
-                                    Color(0xFF777A83)
+                                    MaterialTheme.colorScheme.onSurfaceVariant
                                 },
                                 style = MaterialTheme.typography.bodySmall,
                             )

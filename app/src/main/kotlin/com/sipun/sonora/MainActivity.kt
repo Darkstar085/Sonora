@@ -6,7 +6,6 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.SystemBarStyle
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -32,8 +31,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import com.sipun.sonora.core.update.UpdateInstaller
 import com.sipun.sonora.core.update.UpdateManager
 import com.sipun.sonora.core.update.UpdateNotificationHelper
@@ -146,20 +143,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun configureSystemBars() {
-        enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.light(
-                0xFFF6F7FA.toInt(),
-                0xFFF6F7FA.toInt(),
-            ),
-            navigationBarStyle = SystemBarStyle.light(
-                0xFFF6F7FA.toInt(),
-                0xFFF6F7FA.toInt(),
-            ),
-        )
-        WindowCompat.getInsetsController(window, window.decorView)
-            .isAppearanceLightStatusBars = true
-        WindowInsetsControllerCompat(window, window.decorView)
-            .isAppearanceLightNavigationBars = true
+        enableEdgeToEdge()
     }
 
     private fun handleUpdateIntent(intent: Intent?) {

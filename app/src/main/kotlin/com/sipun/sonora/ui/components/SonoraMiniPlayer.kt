@@ -32,7 +32,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.sipun.sonora.player.PlayerController
 import com.sipun.sonora.ui.theme.SonoraRed
-import com.sipun.sonora.ui.theme.SonoraSurface
 
 @Composable
 fun SonoraMiniPlayer(
@@ -47,7 +46,7 @@ fun SonoraMiniPlayer(
             .fillMaxWidth()
             .padding(horizontal = 12.dp),
         shape = RoundedCornerShape(18.dp),
-        color = SonoraSurface,
+        color = MaterialTheme.colorScheme.surface,
         tonalElevation = 0.dp,
         shadowElevation = 5.dp,
         onClick = onOpenNowPlaying,
@@ -127,7 +126,7 @@ fun SonoraMiniPlayer(
                     .fillMaxWidth()
                     .height(2.dp),
                 color = SonoraRed,
-                trackColor = SonoraSurface,
+                trackColor = MaterialTheme.colorScheme.surface,
             )
         }
     }
