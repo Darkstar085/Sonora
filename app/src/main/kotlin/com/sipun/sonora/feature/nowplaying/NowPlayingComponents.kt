@@ -29,7 +29,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.filled.Album
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Equalizer
@@ -39,7 +38,6 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -126,7 +124,6 @@ internal fun MoreOptionsSheet(
             MoreOption(Icons.Default.Equalizer, "Equalizer", onEqualizer)
             MoreOption(Icons.Default.Edit, "Edit metadata", onEditMetadata)
             MoreOption(Icons.Default.Info, "Show song info", onInfo)
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             MoreOption(
                 Icons.Default.DeleteOutline,
                 "Remove from library",
@@ -159,7 +156,6 @@ private fun MoreOption(
                 tint = if (destructive) MaterialTheme.colorScheme.primary else LocalContentColor.current
             )
         },
-        trailingContent = { Icon(Icons.Default.ChevronRight, null) },
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),

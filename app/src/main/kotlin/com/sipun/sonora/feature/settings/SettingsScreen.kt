@@ -28,7 +28,6 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Check
@@ -215,14 +214,6 @@ fun SettingsScreen(
                 title = stringResource(R.string.about_sonora),
                 subtitle = stringResource(R.string.about_sonora_detail),
                 onClick = { showSonoraDialog = true },
-                trailing = {
-                    Icon(
-                        Icons.Default.ChevronRight,
-                        null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(20.dp),
-                    )
-                },
             )
             SettingsRow(
                 icon = Icons.Default.Code,
@@ -231,14 +222,6 @@ fun SettingsScreen(
                 onClick = {
                     context.startActivity(
                         Intent(Intent.ACTION_VIEW, Uri.parse(SONORA_REPOSITORY)),
-                    )
-                },
-                trailing = {
-                    Icon(
-                        Icons.Default.ChevronRight,
-                        null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(20.dp),
                     )
                 },
             )
