@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Album
 import androidx.compose.material.icons.filled.Pause
@@ -44,8 +43,8 @@ fun SonoraMiniPlayer(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp),
-        shape = RoundedCornerShape(18.dp),
-        color = MaterialTheme.colorScheme.surface,
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceContainer,
         tonalElevation = 0.dp,
         shadowElevation = 5.dp,
         onClick = onOpenNowPlaying,
@@ -60,7 +59,7 @@ fun SonoraMiniPlayer(
                 Box(
                     Modifier
                         .size(46.dp)
-                        .clip(RoundedCornerShape(12.dp)),
+                        .clip(MaterialTheme.shapes.medium),
                     contentAlignment = Alignment.Center,
                 ) {
                     SongArtworkImage(
@@ -125,7 +124,7 @@ fun SonoraMiniPlayer(
                     .fillMaxWidth()
                     .height(2.dp),
                 color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.surface,
+                trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
             )
         }
     }

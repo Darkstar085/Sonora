@@ -144,6 +144,7 @@ fun SonoraTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = SonoraTypography,
+        shapes = SonoraShapes,
         content = content,
     )
 }

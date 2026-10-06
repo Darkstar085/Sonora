@@ -2,8 +2,7 @@ package com.sipun.sonora.navigation
 
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -47,7 +46,7 @@ fun SonoraApp(onCheckForUpdates: () -> Unit = {}) {
         if (currentRoute == SonoraRoute.NowPlaying.route) {
             miniPlayerVisible = false
         } else {
-            delay(460)
+            delay(200)
             miniPlayerVisible = true
         }
     }
@@ -65,10 +64,7 @@ fun SonoraApp(onCheckForUpdates: () -> Unit = {}) {
             enterTransition = {
                 if (targetState.destination.route == SonoraRoute.NowPlaying.route) {
                     fadeIn(
-                        animationSpec = tween(
-                            durationMillis = 360,
-                            easing = FastOutSlowInEasing,
-                        ),
+                        animationSpec = spring(dampingRatio = 0.8f, stiffness = 380f),
                     ) + scaleIn(
                         initialScale = 0.94f,
                         animationSpec = tween(
@@ -89,10 +85,7 @@ fun SonoraApp(onCheckForUpdates: () -> Unit = {}) {
             exitTransition = {
                 if (initialState.destination.route == SonoraRoute.NowPlaying.route) {
                     fadeOut(
-                        animationSpec = tween(
-                            durationMillis = 460,
-                            easing = FastOutSlowInEasing,
-                        ),
+                        animationSpec = spring(dampingRatio = 0.8f, stiffness = 200f),
                     ) + scaleOut(
                         targetScale = 0.94f,
                         animationSpec = tween(

@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
@@ -64,8 +63,8 @@ fun SonoraBottomBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 18.dp, vertical = 10.dp),
-            shape = RoundedCornerShape(34.dp),
-            color = MaterialTheme.colorScheme.surface,
+            shape = MaterialTheme.shapes.extraLarge,
+            color = MaterialTheme.colorScheme.surfaceContainer,
             tonalElevation = 0.dp,
             shadowElevation = 6.dp,
         ) {
@@ -83,7 +82,7 @@ fun SonoraBottomBar(
 
                     Surface(
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(28.dp),
+                        shape = MaterialTheme.shapes.large,
                         color = if (selected) {
                             MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                         } else {
@@ -105,7 +104,7 @@ fun SonoraBottomBar(
                                         }
                                     }
                                 }
-                                .padding(vertical = 8.dp),
+                                .padding(vertical = 7.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(2.dp),
                         ) {
@@ -117,7 +116,7 @@ fun SonoraBottomBar(
                                 } else {
                                     MaterialTheme.colorScheme.onSurfaceVariant
                                 },
-                                modifier = Modifier.size(25.dp),
+                                modifier = Modifier.size(24.dp),
                             )
                             Text(
                                 text = destination.label,
