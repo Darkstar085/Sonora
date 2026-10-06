@@ -35,7 +35,9 @@ import com.sipun.sonora.core.update.UpdateInstaller
 import com.sipun.sonora.core.update.UpdateManager
 import com.sipun.sonora.core.update.UpdateNotificationHelper
 import com.sipun.sonora.data.media.AndroidMusicRepository
+import com.sipun.sonora.data.preferences.OnboardingPreferences
 import com.sipun.sonora.navigation.SonoraApp
+import com.sipun.sonora.ui.onboarding.WelcomeScreen
 import com.sipun.sonora.ui.theme.SonoraTheme
 import com.sipun.sonora.ui.update.UpdateContent
 
@@ -54,58 +56,93 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     private fun SonoraPermissionGate() {
-        val permission = remember {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                Manifest.permission.READ_MEDIA_AUDIO
-            } else {
-                Manifest.permission.READ_EXTERNAL_STORAGE
+        val permissions = remember {
+            buildList {
+                add(
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        Manifest.permission.READ_MEDIA_AUDIO
+                    } else {
+                        Manifest.permission.READ_EXTERNAL_STORAGE
+                    }
+                )
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    add(Manifest.permission.READ_MEDIA_IMAGES)
+                    add(Manifest.permission.READ_MEDIA_VIDEO)
+                    add(Manifest.permission.POST_NOTIFICATIONS)
+                }
             }
+        }
+        val musicPermission = permissions.first()
+        val onboardingPreferences = remember(this) {
+            OnboardingPreferences(applicationContext)
+        }
+        val initialPermissionGranted = remember {
+            ContextCompat.checkSelfPermission(this, musicPermission) ==
+                PackageManager.PERMISSION_GRANTED
         }
         var permissionGranted by remember {
+            mutableStateOf(initialPermissionGranted)
+        }
+        var welcomeComplete by remember {
             mutableStateOf(
-                ContextCompat.checkSelfPermission(this, permission) ==
-                    PackageManager.PERMISSION_GRANTED
+                onboardingPreferences.isWelcomeComplete() || initialPermissionGranted
             )
         }
-        var showExplanation by remember { mutableStateOf(!permissionGranted) }
+        var showExplanation by remember { mutableStateOf(false) }
+
         val launcher = rememberLauncherForActivityResult(
-            ActivityResultContracts.RequestPermission()
-        ) { granted ->
-            permissionGranted = granted
-            showExplanation = !granted
+            ActivityResultContracts.RequestMultiplePermissions()
+        ) { result ->
+            val musicGranted = result[musicPermission] == true
+            permissionGranted = musicGranted
+            if (musicGranted) {
+                onboardingPreferences.setWelcomeComplete()
+                welcomeComplete = true
+            } else {
+                showExplanation = false
+            }
         }
 
-        if (permissionGranted) {
-            SonoraContent()
-        } else {
-            if (!showExplanation) {
-                PermissionRequiredScreen { launcher.launch(permission) }
-            }
-            if (showExplanation) {
-                AlertDialog(
-                    onDismissRequest = { showExplanation = false },
-                    title = { Text(stringResource(R.string.permission_title)) },
-                    text = {
-                        Text(
-                            stringResource(R.string.permission_explanation)
-                        )
-                    },
-                    confirmButton = {
-                        Button(
-                            onClick = {
-                                showExplanation = false
-                                launcher.launch(permission)
-                            }
-                        ) {
-                            Text(stringResource(R.string.action_allow))
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showExplanation = false }) {
-                            Text(stringResource(R.string.action_not_now))
-                        }
-                    },
+        when {
+            !welcomeComplete -> {
+                WelcomeScreen(
+                    onRequestMusicAccess = { launcher.launch(permissions.toTypedArray()) },
                 )
+            }
+
+            permissionGranted -> {
+                SonoraContent()
+            }
+
+            else -> {
+                if (!showExplanation) {
+                    PermissionRequiredScreen {
+                        showExplanation = true
+                    }
+                } else {
+                    AlertDialog(
+                        onDismissRequest = { showExplanation = false },
+                        title = { Text(stringResource(R.string.permission_title)) },
+                        text = {
+                            Text(stringResource(R.string.permission_explanation))
+                        },
+                        confirmButton = {
+                            Button(
+                                onClick = {
+                                    showExplanation = false
+                                    launcher.launch(permissions.toTypedArray())
+                                },
+                            ) {
+                                Text(stringResource(R.string.action_allow))
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showExplanation = false }) {
+                                Text(stringResource(R.string.action_not_now))
+                            }
+                        },
+                    )
+                }
             }
         }
     }
