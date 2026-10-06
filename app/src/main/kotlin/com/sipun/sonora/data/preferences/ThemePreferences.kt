@@ -35,6 +35,9 @@ class ThemePreferences private constructor(context: Context) {
     private val _dynamicPalette = MutableStateFlow(readDynamicPalette())
     val dynamicPalette: StateFlow<DynamicPalette> = _dynamicPalette.asStateFlow()
 
+    private val _customColor = MutableStateFlow(readCustomColor())
+    val customColor: StateFlow<Int> = _customColor.asStateFlow()
+
     fun setTheme(theme: AppTheme) {
         preferences.edit().putString(KEY_THEME, theme.name).apply()
         _theme.value = theme
@@ -55,11 +58,18 @@ class ThemePreferences private constructor(context: Context) {
         _dynamicPalette.value = palette
     }
 
+    fun setCustomColor(color: Int) {
+        preferences.edit().putInt(KEY_CUSTOM_COLOR, color).apply()
+        _customColor.value = color
+    }
+
     private fun readPureBlack(): Boolean =
         preferences.getBoolean(KEY_PURE_BLACK, false)
 
     private fun readDynamicColor(): Boolean =
         preferences.getBoolean(KEY_DYNAMIC_COLOR, false)
+
+    private fun readCustomColor(): Int = preferences.getInt(KEY_CUSTOM_COLOR, 0xFFE92B2B.toInt())
 
     private fun readDynamicPalette(): DynamicPalette =
         runCatching {
@@ -83,6 +93,7 @@ class ThemePreferences private constructor(context: Context) {
         private const val KEY_PURE_BLACK = "pure_black"
         private const val KEY_DYNAMIC_COLOR = "dynamic_color"
         private const val KEY_DYNAMIC_PALETTE = "dynamic_palette"
+        private const val KEY_CUSTOM_COLOR = "custom_color"
 
         @Volatile
         private var instance: ThemePreferences? = null

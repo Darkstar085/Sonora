@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -33,6 +34,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -40,6 +42,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -50,7 +54,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -75,6 +81,7 @@ fun SettingsScreen(onCheckForUpdates: () -> Unit = {}) {
     val pureBlack by themePreferences.pureBlack.collectAsStateWithLifecycle()
     val dynamicColor by themePreferences.dynamicColor.collectAsStateWithLifecycle()
     val selectedPalette by themePreferences.dynamicPalette.collectAsStateWithLifecycle()
+    val customColor by themePreferences.customColor.collectAsStateWithLifecycle()
     var showThemeDialog by remember { mutableStateOf(false) }
     var wallpaperSeed by remember(context) { mutableStateOf(readWallpaperSeed(context)) }
 
@@ -180,6 +187,14 @@ fun SettingsScreen(onCheckForUpdates: () -> Unit = {}) {
                     )
                 },
             )
+
+            if (!dynamicColor) {
+                CustomColorSelector(
+                    color = Color(customColor),
+                    onColorChange = { themePreferences.setCustomColor(it) },
+                )
+            }
+
         }
 
         SettingsSection(stringResource(R.string.settings_updates)) {
@@ -252,6 +267,136 @@ fun SettingsScreen(onCheckForUpdates: () -> Unit = {}) {
                 }
             },
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CustomColorSelector(
+    color: Color,
+    onColorChange: (Int) -> Unit,
+) {
+    val presetColors = listOf(
+        Color(0xFFE92B2B),
+        Color(0xFFE57373),
+        Color(0xFF42A5F5),
+        Color(0xFF26A69A),
+        Color(0xFF66BB6A),
+        Color(0xFF9CCC65),
+        Color(0xFFFFB74D),
+        Color(0xFFFF7043),
+        Color(0xFFAB47BC),
+        Color(0xFF7E57C2),
+        Color(0xFF5C6BC0),
+        Color(0xFF26C6DA),
+        Color(0xFF26A69A),
+        Color(0xFF8BC34A),
+        Color(0xFFD4E157),
+        Color(0xFFFFCA28),
+        Color(0xFFFFA726),
+    )
+    val hsv = remember(color) {
+        FloatArray(3).also { android.graphics.Color.colorToHSV(color.toArgb(), it) }
+    }
+    var hue by remember(color) { mutableStateOf(hsv[0]) }
+
+    val hueColors = remember {
+        (0..360 step 30).map { Color.hsv(it.toFloat(), 0.78f, 0.92f) }
+    }
+
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+    ) {
+        Text(
+            stringResource(R.string.settings_custom_color),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        Text(
+            stringResource(R.string.settings_custom_color_detail),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 2.dp),
+        )
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                .padding(top = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            presetColors.forEach { preset ->
+                Box(
+                    modifier = Modifier
+                        .size(38.dp)
+                        .background(preset, RoundedCornerShape(50))
+                        .clickable {
+                            val presetHsv = FloatArray(3)
+                            android.graphics.Color.colorToHSV(preset.toArgb(), presetHsv)
+                            hue = presetHsv[0]
+                            onColorChange(preset.toArgb())
+                        },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (color.toArgb() == preset.toArgb()) {
+                        Icon(
+                            Icons.Default.Check,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
+                }
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(44.dp)
+                .padding(top = 8.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(12.dp)
+                    .clip(RoundedCornerShape(50))
+                    .background(Brush.horizontalGradient(hueColors)),
+            )
+
+            Slider(
+                value = hue,
+                onValueChange = {
+                    hue = it
+                    val hsvColor = floatArrayOf(it, 0.78f, 0.92f)
+                    onColorChange(android.graphics.Color.HSVToColor(hsvColor))
+                },
+                valueRange = 0f..360f,
+                colors = SliderDefaults.colors(
+                    thumbColor = Color.White,
+                    activeTrackColor = Color.Transparent,
+                    inactiveTrackColor = Color.Transparent,
+                    activeTickColor = Color.Transparent,
+                    inactiveTickColor = Color.Transparent,
+                ),
+                thumb = {
+                    Box(
+                        modifier = Modifier
+                            .width(4.dp)
+                            .height(34.dp)
+                            .background(
+                                Color.White,
+                                RoundedCornerShape(50),
+                            ),
+                    )
+                },
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
     }
 }
 

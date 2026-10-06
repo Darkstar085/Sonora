@@ -79,6 +79,7 @@ fun SonoraTheme(
     val selectedTheme by preferences.theme.collectAsStateWithLifecycle()
     val pureBlack by preferences.pureBlack.collectAsStateWithLifecycle()
     val dynamicColor by preferences.dynamicColor.collectAsStateWithLifecycle()
+    val customColor by preferences.customColor.collectAsStateWithLifecycle()
     val paletteStyle by preferences.dynamicPalette.collectAsStateWithLifecycle()
     var wallpaperSeedColor by androidx.compose.runtime.remember(context) { androidx.compose.runtime.mutableStateOf(readWallpaperSeed(context)) }
 
@@ -118,8 +119,18 @@ fun SonoraTheme(
             outline = Color(0xFF3A3A3A),
         )
         dynamicScheme != null -> dynamicScheme
-        darkTheme -> SonoraDarkColors
-        else -> SonoraLightColors
+        darkTheme -> SonoraDarkColors.copy(
+            primary = Color(customColor),
+            onPrimary = Color.White,
+            primaryContainer = Color(customColor).copy(alpha = 0.35f),
+            onPrimaryContainer = Color(customColor),
+        )
+        else -> SonoraLightColors.copy(
+            primary = Color(customColor),
+            onPrimary = Color.White,
+            primaryContainer = Color(customColor).copy(alpha = 0.12f),
+            onPrimaryContainer = Color(customColor),
+        )
     }
 
     SideEffect {

@@ -36,6 +36,8 @@
     <string name="settings_dynamic_color">Dynamic color</string>
     <string name="settings_dynamic_color_detail">Use colors from your wallpaper</string>
     <string name="settings_palette_style">Palette style</string>
+    <string name="settings_custom_color">Custom colour</string>
+    <string name="settings_custom_color_detail">Pick a colour or adjust the hue</string>
     <string name="settings_palette_tonal_spot">Tonal spot</string>
     <string name="settings_palette_vibrant">Vibrant</string>
     <string name="settings_palette_expressive">Expressive</string>
