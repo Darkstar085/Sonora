@@ -83,6 +83,24 @@ class PlayerController(context: Context) {
         updateState(songs)
     }
 
+    fun playQueueShuffled(songs: List<Song>) {
+        if (songs.isEmpty()) return
+        val mediaController = controller ?: run {
+            pendingQueue = songs to 0
+            return
+        }
+        mediaController.setMediaItems(
+            songs.map(::toMediaItem),
+            0,
+            C.TIME_UNSET,
+        )
+        mediaController.shuffleModeEnabled = true
+        mediaController.prepare()
+        mediaController.play()
+        loadCurrentArtwork()
+        updateState(songs)
+    }
+
     fun playNext(song: Song) {
         controller?.let { mediaController ->
             val item = toMediaItem(song)

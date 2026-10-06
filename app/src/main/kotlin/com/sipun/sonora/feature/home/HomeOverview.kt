@@ -64,6 +64,7 @@ internal fun Overview(
     val listeningHistory = remember(currentSongId, songs) {
         preferences.listeningHistoryIds().mapNotNull(songsById::get).take(5)
     }
+    val libraryArtwork = songsById[currentSongId] ?: recentlyAdded.firstOrNull() ?: songs.firstOrNull()
 
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -80,7 +81,7 @@ internal fun Overview(
                         .padding(18.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Artwork(songs.first(), Modifier.size(100.dp))
+                    libraryArtwork?.let { Artwork(it, Modifier.size(100.dp)) }
                     Column(
                         Modifier
                             .padding(start = 16.dp)
@@ -98,7 +99,7 @@ internal fun Overview(
                             color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                         )
                         FilledTonalButton(
-                            onClick = { player.playQueue(songs); open() },
+                            onClick = { player.playQueueShuffled(songs); open() },
                             modifier = Modifier.padding(top = 4.dp),
                             colors = ButtonDefaults.filledTonalButtonColors(
                                 containerColor = MaterialTheme.colorScheme.onPrimary,

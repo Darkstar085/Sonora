@@ -28,6 +28,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -68,6 +71,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -403,15 +407,11 @@ fun NowPlayingScreen(
                 ) {
                     Spacer(Modifier.height(16.dp))
 
-                    Slider(
-                        value = state.positionMs.coerceIn(0L, max).toFloat(),
-                        onValueChange = { playerController.seekTo(it.toLong()) },
-                        valueRange = 0f..max.toFloat(),
+                    ExpressiveSeekBar(
+                        positionMs = state.positionMs,
+                        durationMs = state.durationMs,
                         enabled = song != null && state.durationMs > 0,
-                        colors = SliderDefaults.colors(
-                            thumbColor = MaterialTheme.colorScheme.primary,
-                            activeTrackColor = MaterialTheme.colorScheme.primary,
-                        ),
+                        onSeek = playerController::seekTo,
                     )
                     Row(
                         Modifier
@@ -501,3 +501,92 @@ fun NowPlayingScreen(
     }
 }
 
+@Composable
+private fun ExpressiveSeekBar(
+    positionMs: Long,
+    durationMs: Long,
+    enabled: Boolean,
+    onSeek: (Long) -> Unit,
+) {
+    val progress = if (durationMs > 0) {
+        (positionMs.toFloat() / durationMs.toFloat()).coerceIn(0f, 1f)
+    } else {
+        0f
+    }
+    val primary = MaterialTheme.colorScheme.primary
+    val track = MaterialTheme.colorScheme.surfaceVariant
+
+    Column(Modifier.fillMaxWidth()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(34.dp)
+                .pointerInput(enabled, durationMs) {
+                    if (!enabled) return@pointerInput
+                    detectTapGestures { offset ->
+                        val fraction = (offset.x / size.width).coerceIn(0f, 1f)
+                        onSeek((fraction * durationMs).toLong())
+                    }
+                }
+                .pointerInput(enabled, durationMs) {
+                    if (!enabled) return@pointerInput
+                    detectHorizontalDragGestures(
+                        onHorizontalDrag = { change, _ ->
+                            change.consume()
+                            val fraction = (change.position.x / size.width).coerceIn(0f, 1f)
+                            onSeek((fraction * durationMs).toLong())
+                        },
+                    )
+                },
+            contentAlignment = Alignment.Center,
+        ) {
+            Canvas(Modifier.fillMaxSize()) {
+                val centerY = size.height / 2f
+                val trackStart = 0f
+                val trackEnd = size.width
+                val thumbX = trackStart + (trackEnd - trackStart) * progress
+
+                drawLine(
+                    color = track,
+                    start = androidx.compose.ui.geometry.Offset(trackStart, centerY),
+                    end = androidx.compose.ui.geometry.Offset(trackEnd, centerY),
+                    strokeWidth = 4.dp.toPx(),
+                    cap = androidx.compose.ui.graphics.StrokeCap.Round,
+                )
+
+                val wavePath = androidx.compose.ui.graphics.Path()
+                val waveLength = 34.dp.toPx()
+                val amplitude = 4.dp.toPx()
+                wavePath.moveTo(trackStart, centerY)
+                var x = trackStart
+                while (x <= thumbX) {
+                    val phase = (x / waveLength) * (2f * kotlin.math.PI).toFloat()
+                    wavePath.lineTo(
+                        x,
+                        centerY + kotlin.math.sin(phase) * amplitude,
+                    )
+                    x += 2.dp.toPx()
+                }
+                if (thumbX > trackStart) {
+                    drawPath(
+                        path = wavePath,
+                        color = primary,
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(
+                            width = 4.dp.toPx(),
+                            cap = androidx.compose.ui.graphics.StrokeCap.Round,
+                            join = androidx.compose.ui.graphics.StrokeJoin.Round,
+                        ),
+                    )
+                }
+
+                drawLine(
+                    color = primary,
+                    start = androidx.compose.ui.geometry.Offset(thumbX, centerY - 11.dp.toPx()),
+                    end = androidx.compose.ui.geometry.Offset(thumbX, centerY + 11.dp.toPx()),
+                    strokeWidth = 4.dp.toPx(),
+                    cap = androidx.compose.ui.graphics.StrokeCap.Round,
+                )
+            }
+        }
+    }
+}

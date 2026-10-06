@@ -45,6 +45,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
@@ -175,6 +176,10 @@ fun SettingsScreen(
                     Switch(
                         checked = dynamicColor,
                         onCheckedChange = themePreferences::setDynamicColor,
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                            checkedTrackColor = MaterialTheme.colorScheme.primary,
+                        ),
                     )
                 },
             )
@@ -195,6 +200,10 @@ fun SettingsScreen(
                     Switch(
                         checked = pureBlack,
                         onCheckedChange = themePreferences::setPureBlack,
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                            checkedTrackColor = MaterialTheme.colorScheme.primary,
+                        ),
                     )
                 },
             )
@@ -236,17 +245,42 @@ fun SettingsScreen(
     }
 
     if (!pureBlack && showThemeDialog) {
-        AlertDialog(
-            onDismissRequest = { showThemeDialog = false },
-            title = {
-                Text(
-                    stringResource(R.string.settings_theme),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    style = MaterialTheme.typography.headlineSmall,
-                )
-            },
-            text = {
-                Column {
+        Dialog(onDismissRequest = { showThemeDialog = false }) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
+                shape = RoundedCornerShape(30.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerLow,
+                tonalElevation = 6.dp,
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 18.dp, vertical = 18.dp),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .width(36.dp)
+                            .height(4.dp)
+                            .background(
+                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f),
+                                RoundedCornerShape(50),
+                            ),
+                    )
+                    Text(
+                        stringResource(R.string.settings_theme),
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(top = 16.dp, start = 4.dp),
+                    )
+                    Text(
+                        "Choose how Sonora looks on your device.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 4.dp, start = 4.dp, end = 4.dp, bottom = 14.dp),
+                    )
                     ThemeOption(
                         title = stringResource(R.string.settings_theme_light),
                         selected = selectedTheme == AppTheme.LIGHT,
@@ -271,14 +305,15 @@ fun SettingsScreen(
                             showThemeDialog = false
                         },
                     )
+                    TextButton(
+                        onClick = { showThemeDialog = false },
+                        modifier = Modifier.align(Alignment.End).padding(top = 8.dp),
+                    ) {
+                        Text(stringResource(R.string.action_cancel))
+                    }
                 }
-            },
-            confirmButton = {
-                TextButton(onClick = { showThemeDialog = false }) {
-                    Text(stringResource(R.string.action_cancel))
-                }
-            },
-        )
+            }
+        }
     }
 }
 
@@ -655,23 +690,32 @@ private fun ThemeOption(
     selected: Boolean,
     onClick: () -> Unit,
 ) {
-    Row(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(20.dp),
+        color = if (selected) {
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.72f)
+        } else {
+            Color.Transparent
+        },
     ) {
-        RadioButton(
-            selected = selected,
-            onClick = onClick,
-        )
-        Text(
-            title,
-            color = MaterialTheme.colorScheme.onSurface,
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.padding(start = 8.dp),
-        )
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            RadioButton(
+                selected = selected,
+                onClick = onClick,
+            )
+            Text(
+                title,
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(start = 8.dp),
+            )
+        }
     }
 }
 
