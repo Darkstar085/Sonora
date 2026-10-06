@@ -1,9 +1,9 @@
 package com.sipun.sonora.data.lyrics
 
-import java.io.File
-import java.security.MessageDigest
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import java.io.File
+import java.security.MessageDigest
 
 @Serializable
 private data class CachedLyrics(val lines: List<CachedLine>, val synced: Boolean)
@@ -26,9 +26,13 @@ internal class LyricsCache(private val directory: File) {
         runCatching {
             directory.mkdirs()
             val file = File(directory, sha256(key) + ".json")
-            file.writeText(json.encodeToString(CachedLyrics(
-                lyrics.lines.map { CachedLine(it.text, it.startMs) }, lyrics.synced
-            )))
+            file.writeText(
+                json.encodeToString(
+                    CachedLyrics(
+                        lyrics.lines.map { CachedLine(it.text, it.startMs) }, lyrics.synced
+                    )
+                )
+            )
         }
     }
 

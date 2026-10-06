@@ -102,7 +102,11 @@ fun UpdateDialog(
                                 .filter { it.isNotBlank() }
                                 .forEach { note ->
                                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        Text("•", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                                        Text(
+                                            "•",
+                                            color = MaterialTheme.colorScheme.primary,
+                                            fontWeight = FontWeight.Bold
+                                        )
                                         Text(
                                             note,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,

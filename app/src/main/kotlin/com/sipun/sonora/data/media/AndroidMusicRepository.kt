@@ -5,15 +5,15 @@ import android.content.ContentUris
 import android.provider.MediaStore
 import com.sipun.sonora.domain.model.Song
 import com.sipun.sonora.domain.repository.MusicRepository
-import java.io.File
-import org.jaudiotagger.audio.AudioFileIO
-import org.jaudiotagger.tag.FieldKey
-import org.jaudiotagger.tag.TagOptionSingleton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
+import org.jaudiotagger.audio.AudioFileIO
+import org.jaudiotagger.tag.FieldKey
+import org.jaudiotagger.tag.TagOptionSingleton
+import java.io.File
 
 class AndroidMusicRepository(private val contentResolver: ContentResolver) : MusicRepository {
     @Volatile
@@ -154,7 +154,7 @@ private fun readWavMetadata(
             requireNotNull(input)
             temp.outputStream().use { output -> input.copyTo(output) }
         }
-        TagOptionSingleton.getInstance().setAndroid(true)
+        TagOptionSingleton.getInstance().isAndroid = true
         val tag = AudioFileIO.read(temp).tag ?: return fallback
         fun value(key: FieldKey): String = tag.getFirst(key).cleanMetadata("")
 

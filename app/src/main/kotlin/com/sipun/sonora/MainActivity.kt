@@ -78,7 +78,7 @@ class MainActivity : ComponentActivity() {
         }
         val initialPermissionGranted = remember {
             ContextCompat.checkSelfPermission(this, musicPermission) ==
-                PackageManager.PERMISSION_GRANTED
+                    PackageManager.PERMISSION_GRANTED
         }
         var permissionGranted by remember {
             mutableStateOf(initialPermissionGranted)

@@ -25,8 +25,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.sipun.sonora.data.preferences.SonoraPreferences
 import com.sipun.sonora.R
+import com.sipun.sonora.data.preferences.SonoraPreferences
 
 @Composable
 fun AddToPlaylistDialog(songId: Long, preferences: SonoraPreferences, onDismiss: () -> Unit) {
@@ -51,13 +51,20 @@ fun AddToPlaylistDialog(songId: Long, preferences: SonoraPreferences, onDismiss:
                             val added = songId in playlist.songIds
                             ListItem(
                                 headlineContent = { Text(playlist.name) },
-                                supportingContent = { Text(if (added) {
-                                    stringResource(R.string.already_added)
-                                } else if (playlist.songIds.size == 1) {
-                                    stringResource(R.string.song_count_one)
-                                } else {
-                                    stringResource(R.string.song_count_other, playlist.songIds.size)
-                                }) },
+                                supportingContent = {
+                                    Text(
+                                        if (added) {
+                                            stringResource(R.string.already_added)
+                                        } else if (playlist.songIds.size == 1) {
+                                            stringResource(R.string.song_count_one)
+                                        } else {
+                                            stringResource(
+                                                R.string.song_count_other,
+                                                playlist.songIds.size
+                                            )
+                                        }
+                                    )
+                                },
                                 leadingContent = {
                                     Icon(
                                         Icons.Default.LibraryMusic,
@@ -74,7 +81,15 @@ fun AddToPlaylistDialog(songId: Long, preferences: SonoraPreferences, onDismiss:
                                     else IconButton(onClick = {
                                         preferences.addToPlaylist(playlist.id, songId)
                                         playlists = preferences.playlists()
-                                    }) { Icon(Icons.Default.Add, stringResource(R.string.action_add_to_playlist, playlist.name)) }
+                                    }) {
+                                        Icon(
+                                            Icons.Default.Add,
+                                            stringResource(
+                                                R.string.action_add_to_playlist,
+                                                playlist.name
+                                            )
+                                        )
+                                    }
                                 },
                             )
                         }
@@ -112,7 +127,11 @@ fun AddToPlaylistDialog(songId: Long, preferences: SonoraPreferences, onDismiss:
                     enabled = name.isNotBlank(),
                 ) { Text(stringResource(R.string.action_create)) }
             },
-            dismissButton = { TextButton(onClick = { showCreate = false }) { Text(stringResource(R.string.action_cancel)) } },
+            dismissButton = {
+                TextButton(onClick = {
+                    showCreate = false
+                }) { Text(stringResource(R.string.action_cancel)) }
+            },
         )
     }
 }

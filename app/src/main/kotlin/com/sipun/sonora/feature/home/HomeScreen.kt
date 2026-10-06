@@ -6,14 +6,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -23,12 +23,12 @@ import androidx.compose.material.icons.filled.Album
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.MusicOff
 import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.MusicOff
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SearchOff
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -52,13 +52,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.sipun.sonora.R
 import com.sipun.sonora.data.media.AndroidMusicRepository
 import com.sipun.sonora.data.preferences.SonoraPreferences
 import com.sipun.sonora.domain.model.Song
 import com.sipun.sonora.player.PlayerController
 import com.sipun.sonora.ui.components.SonoraSearchBar
 import kotlinx.coroutines.launch
-import com.sipun.sonora.R
 
 private val tabs = listOf(
     R.string.tab_overview,
@@ -134,7 +134,10 @@ fun HomeScreen(
                 ),
                 title = {
                     Column {
-                        Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineSmall)
+                        Text(
+                            stringResource(R.string.app_name),
+                            style = MaterialTheme.typography.headlineSmall
+                        )
                         Text(
                             stringResource(R.string.home_tagline),
                             style = MaterialTheme.typography.bodySmall,
@@ -244,7 +247,10 @@ fun HomeScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,
                 ) {
-                    Text(stringResource(R.string.home_load_title), style = MaterialTheme.typography.titleLarge)
+                    Text(
+                        stringResource(R.string.home_load_title),
+                        style = MaterialTheme.typography.titleLarge
+                    )
                     Text(
                         loadError.orEmpty(),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -319,7 +325,12 @@ private fun EmptyLibraryState() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Icon(Icons.Default.MusicOff, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(48.dp))
+        Icon(
+            Icons.Default.MusicOff,
+            null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(48.dp)
+        )
         Text(
             stringResource(R.string.home_no_music),
             style = MaterialTheme.typography.titleLarge,
@@ -340,7 +351,12 @@ private fun EmptySearchState(query: String) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Icon(Icons.Default.SearchOff, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(48.dp))
+        Icon(
+            Icons.Default.SearchOff,
+            null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(48.dp)
+        )
         Text(
             stringResource(R.string.home_no_music),
             style = MaterialTheme.typography.titleLarge,

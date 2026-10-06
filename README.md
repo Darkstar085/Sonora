@@ -38,7 +38,9 @@ A beautiful, privacy-friendly music player for Android, built around your local 
 
 Sonora is a local-first music player designed to keep your music experience focused and personal.
 
-It scans the music stored on your device, organizes your collection into songs, albums, artists and playlists, and provides a modern Android playback experience without turning the app into a streaming service.
+It scans the music stored on your device, organizes your collection into songs, albums, artists and
+playlists, and provides a modern Android playback experience without turning the app into a
+streaming service.
 
 ## Screenshots
 
@@ -135,9 +137,11 @@ It scans the music stored on your device, organizes your collection into songs, 
 
 ## Downloads
 
-Get the latest available Sonora build from [**GitHub Releases**](https://github.com/Darkstar085/Sonora/releases/latest).
+Get the latest available Sonora build from [**GitHub
+Releases**](https://github.com/Darkstar085/Sonora/releases/latest).
 
-For development builds, clone the repository and build the debug APK locally using the instructions below.
+For development builds, clone the repository and build the debug APK locally using the instructions
+below.
 
 ---
 
@@ -160,31 +164,34 @@ The core interface does not depend on a third-party UI framework.
 
 ### Inspiration
 
-Sonora's design and UI direction is inspired in part by [Gramophone](https://github.com/FoedusProgramme/Gramophone), particularly its clean music-player experience, Material-oriented interface, and focus on following Android's platform conventions.
+Sonora's design and UI direction is inspired in part
+by [Gramophone](https://github.com/FoedusProgramme/Gramophone), particularly its clean music-player
+experience, Material-oriented interface, and focus on following Android's platform conventions.
 
-Sonora is an independent implementation built with its own architecture, visual language, and feature set.
+Sonora is an independent implementation built with its own architecture, visual language, and
+feature set.
 
 ---
 
 ## Tech Stack
 
-| Area | Technology |
-| --- | --- |
-| Language | Kotlin 2.4.10 |
-| UI | Jetpack Compose |
-| Design | Material 3 / M3 Expressive |
-| Android foundation | AndroidX |
-| Navigation | Navigation Compose 2.10.2 |
-| Playback | AndroidX Media3 1.11.1 |
-| Background work | WorkManager 2.11.2 |
-| Image loading | Coil 3.6.3 |
-| Lyrics | LRCLIB |
-| Metadata | JAudioTagger 3.0.1 |
-| Serialization | Kotlinx Serialization 1.11.0 |
-| Build | Gradle + AGP 9.4.0 |
-| Java | Java 17 |
-| Minimum Android | Android 10 / API 29 |
-| Compile / Target | Android API 37 |
+| Area               | Technology                   |
+|--------------------|------------------------------|
+| Language           | Kotlin 2.4.10                |
+| UI                 | Jetpack Compose              |
+| Design             | Material 3 / M3 Expressive   |
+| Android foundation | AndroidX                     |
+| Navigation         | Navigation Compose 2.10.2    |
+| Playback           | AndroidX Media3 1.11.1       |
+| Background work    | WorkManager 2.11.2           |
+| Image loading      | Coil 3.6.3                   |
+| Lyrics             | LRCLIB                       |
+| Metadata           | JAudioTagger 3.0.1           |
+| Serialization      | Kotlinx Serialization 1.11.0 |
+| Build              | Gradle + AGP 9.4.0           |
+| Java               | Java 17                      |
+| Minimum Android    | Android 10 / API 29          |
+| Compile / Target   | Android API 37               |
 
 ---
 
@@ -221,7 +228,8 @@ app/
     └── androidTest/
 ~~~
 
-The project is organized around feature-focused Compose UI, shared AndroidX/data layers, and a dedicated playback layer.
+The project is organized around feature-focused Compose UI, shared AndroidX/data layers, and a
+dedicated playback layer.
 
 ---
 
@@ -242,7 +250,8 @@ For a debug build:
 ./gradlew assembleDebug
 ~~~
 
-The release build is minified and resource-shrunk. Release signing is configured through environment variables:
+The release build is minified and resource-shrunk. Release signing is configured through environment
+variables:
 
 ~~~text
 ANDROID_KEYSTORE_FILE
@@ -261,14 +270,16 @@ After configuring the signing credentials, build the release APK with:
 
 ## Privacy & Network
 
-Sonora follows a **local-first** approach: your music library and playback are centered around media stored on your device, and no streaming account is required.
+Sonora follows a **local-first** approach: your music library and playback are centered around media
+stored on your device, and no streaming account is required.
 
 The app does use network access for specific features, including:
 
 - Lyrics retrieval from LRCLIB
 - Update-related functionality
 
-Media permissions are requested according to the Android version and the features used by the app. The music library permission is required for Sonora to discover and organize local music.
+Media permissions are requested according to the Android version and the features used by the app.
+The music library permission is required for Sonora to discover and organize local music.
 
 ---
 

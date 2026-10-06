@@ -6,7 +6,12 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
-data class WallpaperPalette(val primary: Color, val secondary: Color, val tertiary: Color, val container: Color)
+data class WallpaperPalette(
+    val primary: Color,
+    val secondary: Color,
+    val tertiary: Color,
+    val container: Color
+)
 
 fun wallpaperPalette(seed: Color, style: DynamicPalette, darkTheme: Boolean): WallpaperPalette {
     val hsl = rgbToHsl(seed.red, seed.green, seed.blue)
@@ -21,8 +26,16 @@ fun wallpaperPalette(seed: Color, style: DynamicPalette, darkTheme: Boolean): Wa
     val primaryLightness = if (darkTheme) 0.72f else 0.42f
     return WallpaperPalette(
         hslColor(hue, saturation, primaryLightness),
-        hslColor((hue + if (style == DynamicPalette.EXPRESSIVE) 60f else 20f) % 360f, saturation * 0.78f, if (darkTheme) 0.66f else 0.48f),
-        hslColor((hue + if (style == DynamicPalette.EXPRESSIVE) 120f else 35f) % 360f, saturation * 0.68f, if (darkTheme) 0.64f else 0.52f),
+        hslColor(
+            (hue + if (style == DynamicPalette.EXPRESSIVE) 60f else 20f) % 360f,
+            saturation * 0.78f,
+            if (darkTheme) 0.66f else 0.48f
+        ),
+        hslColor(
+            (hue + if (style == DynamicPalette.EXPRESSIVE) 120f else 35f) % 360f,
+            saturation * 0.68f,
+            if (darkTheme) 0.64f else 0.52f
+        ),
         hslColor(hue, saturation * 0.28f, if (darkTheme) 0.24f else 0.90f),
     )
 }

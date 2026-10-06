@@ -5,9 +5,9 @@ import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.media.MediaScannerConnection
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
 import android.os.Process
@@ -16,7 +16,6 @@ import android.provider.OpenableColumns
 import android.provider.Settings
 import android.webkit.MimeTypeMap
 import com.sipun.sonora.domain.model.Song
-import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jaudiotagger.audio.AudioFileIO
@@ -26,6 +25,7 @@ import org.jaudiotagger.tag.TagOptionSingleton
 import org.jaudiotagger.tag.flac.FlacTag
 import org.jaudiotagger.tag.images.AndroidArtwork
 import org.jaudiotagger.tag.reference.PictureTypes
+import java.io.File
 
 data class EditableSongMetadata(
     val title: String,
@@ -72,37 +72,42 @@ object AudioMetadataEditor {
     }
 
 
-    suspend fun read(context: Context, song: Song): EditableSongMetadata = withContext(Dispatchers.IO) {
-        TagOptionSingleton.getInstance().setAndroid(true)
-        val temp = File.createTempFile("sonora-read-", audioSuffix(context, Uri.parse(song.uri)), context.cacheDir)
-        try {
-            context.contentResolver.openInputStream(Uri.parse(song.uri)).use { input ->
-                requireNotNull(input) { "Unable to read the audio file." }
-                temp.outputStream().use { output -> input.copyTo(output) }
-            }
-            val tag: Tag? = AudioFileIO.read(temp).tag
-            fun value(key: FieldKey): String = tag?.getFirst(key).orEmpty()
-            EditableSongMetadata(
-                title = value(FieldKey.TITLE).ifBlank { song.title },
-                artist = value(FieldKey.ARTIST).ifBlank { song.artist },
-                album = value(FieldKey.ALBUM).ifBlank { song.album },
-                albumArtist = value(FieldKey.ALBUM_ARTIST),
-                genre = value(FieldKey.GENRE).ifBlank { song.genre.orEmpty() },
-                year = value(FieldKey.YEAR).toIntOrNull() ?: song.year,
-                track = value(FieldKey.TRACK).toIntOrNull() ?: song.trackNumber,
-                disc = value(FieldKey.DISC_NO).toIntOrNull(),
-                composer = value(FieldKey.COMPOSER),
-                comment = value(FieldKey.COMMENT),
-                grouping = value(FieldKey.GROUPING),
-                lyrics = value(FieldKey.LYRICS),
-                copyright = value(FieldKey.COPYRIGHT),
-                bpm = value(FieldKey.BPM).toIntOrNull(),
-                artworkData = tag?.getFirstArtwork()?.binaryData,
+    suspend fun read(context: Context, song: Song): EditableSongMetadata =
+        withContext(Dispatchers.IO) {
+            TagOptionSingleton.getInstance().isAndroid = true
+            val temp = File.createTempFile(
+                "sonora-read-",
+                audioSuffix(context, Uri.parse(song.uri)),
+                context.cacheDir
             )
-        } finally {
-            temp.delete()
+            try {
+                context.contentResolver.openInputStream(Uri.parse(song.uri)).use { input ->
+                    requireNotNull(input) { "Unable to read the audio file." }
+                    temp.outputStream().use { output -> input.copyTo(output) }
+                }
+                val tag: Tag? = AudioFileIO.read(temp).tag
+                fun value(key: FieldKey): String = tag?.getFirst(key).orEmpty()
+                EditableSongMetadata(
+                    title = value(FieldKey.TITLE).ifBlank { song.title },
+                    artist = value(FieldKey.ARTIST).ifBlank { song.artist },
+                    album = value(FieldKey.ALBUM).ifBlank { song.album },
+                    albumArtist = value(FieldKey.ALBUM_ARTIST),
+                    genre = value(FieldKey.GENRE).ifBlank { song.genre.orEmpty() },
+                    year = value(FieldKey.YEAR).toIntOrNull() ?: song.year,
+                    track = value(FieldKey.TRACK).toIntOrNull() ?: song.trackNumber,
+                    disc = value(FieldKey.DISC_NO).toIntOrNull(),
+                    composer = value(FieldKey.COMPOSER),
+                    comment = value(FieldKey.COMMENT),
+                    grouping = value(FieldKey.GROUPING),
+                    lyrics = value(FieldKey.LYRICS),
+                    copyright = value(FieldKey.COPYRIGHT),
+                    bpm = value(FieldKey.BPM).toIntOrNull(),
+                    artworkData = tag?.firstArtwork?.binaryData,
+                )
+            } finally {
+                temp.delete()
+            }
         }
-    }
 
     suspend fun save(
         context: Context,
@@ -111,7 +116,7 @@ object AudioMetadataEditor {
         artworkUri: Uri?,
         artworkChanged: Boolean,
     ) = withContext(Dispatchers.IO) {
-        TagOptionSingleton.getInstance().setAndroid(true)
+        TagOptionSingleton.getInstance().isAndroid = true
         val resolver = context.contentResolver
         val audioUri = Uri.parse(song.uri)
         val audioTemp = File.createTempFile(
@@ -158,7 +163,7 @@ object AudioMetadataEditor {
                 if (artworkUri != null && imageTemp != null) {
                     resolver.openInputStream(artworkUri).use { input ->
                         requireNotNull(input) { "Unable to read artwork." }
-                            imageTemp.outputStream().use { output -> input.copyTo(output) }
+                        imageTemp.outputStream().use { output -> input.copyTo(output) }
                     }
                     val normalizedArtwork = requireNotNull(normalizedImageTemp)
                     normalizeArtworkToJpeg(imageTemp, normalizedArtwork)

@@ -14,7 +14,11 @@ val SonoraTypography = Typography(
     displaySmall = TextStyle(fontSize = 36.sp, lineHeight = 44.sp),
     headlineLarge = TextStyle(fontSize = 32.sp, lineHeight = 40.sp),
     headlineMedium = TextStyle(fontSize = 28.sp, lineHeight = 36.sp),
-    headlineSmall = TextStyle(fontSize = 24.sp, lineHeight = 32.sp, fontWeight = FontWeight.SemiBold),
+    headlineSmall = TextStyle(
+        fontSize = 24.sp,
+        lineHeight = 32.sp,
+        fontWeight = FontWeight.SemiBold
+    ),
     titleLarge = TextStyle(fontSize = 22.sp, lineHeight = 28.sp, fontWeight = FontWeight.SemiBold),
     titleMedium = TextStyle(fontSize = 16.sp, lineHeight = 24.sp, fontWeight = FontWeight.Medium),
     titleSmall = TextStyle(fontSize = 14.sp, lineHeight = 20.sp, fontWeight = FontWeight.Medium),

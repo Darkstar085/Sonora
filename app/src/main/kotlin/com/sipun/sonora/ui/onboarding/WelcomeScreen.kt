@@ -65,41 +65,43 @@ fun WelcomeScreen(
                 .fillMaxSize()
                 .padding(horizontal = 24.dp, vertical = 28.dp),
         ) {
-        AnimatedContent(
-            targetState = page,
-            transitionSpec = { fadeIn() togetherWith fadeOut() },
-            label = "welcome_page",
-            modifier = Modifier.fillMaxSize(),
-        ) { currentPage ->
-            when (currentPage) {
-                0 -> WelcomePage(
-                    brand = true,
-                    title = "Your music.\nYour way.",
-                    description = "A beautiful music player built for your local library.",
-                    visual = { VinylVisual() },
-                    button = "Get Started",
-                    onClick = { page = 1 },
-                    page = page,
-                )
-                1 -> WelcomePage(
-                    title = "Your library,\nbeautifully organized",
-                    description = "Browse albums, artists, playlists and every song on your device.",
-                    visual = { LibraryVisual() },
-                    button = "Continue",
-                    onClick = { page = 2 },
-                    page = page,
-                )
-                else -> WelcomePage(
-                    title = "Let’s find your music",
-                    description = "Sonora needs access to your music library, photos, and videos to organize your media.",
-                    visual = { PermissionVisual() },
-                    button = "Allow Music Access",
-                    onClick = onRequestMusicAccess,
-                    privacy = true,
-                    page = page,
-                )
+            AnimatedContent(
+                targetState = page,
+                transitionSpec = { fadeIn() togetherWith fadeOut() },
+                label = "welcome_page",
+                modifier = Modifier.fillMaxSize(),
+            ) { currentPage ->
+                when (currentPage) {
+                    0 -> WelcomePage(
+                        brand = true,
+                        title = "Your music.\nYour way.",
+                        description = "A beautiful music player built for your local library.",
+                        visual = { VinylVisual() },
+                        button = "Get Started",
+                        onClick = { page = 1 },
+                        page = page,
+                    )
+
+                    1 -> WelcomePage(
+                        title = "Your library,\nbeautifully organized",
+                        description = "Browse albums, artists, playlists and every song on your device.",
+                        visual = { LibraryVisual() },
+                        button = "Continue",
+                        onClick = { page = 2 },
+                        page = page,
+                    )
+
+                    else -> WelcomePage(
+                        title = "Let’s find your music",
+                        description = "Sonora needs access to your music library, photos, and videos to organize your media.",
+                        visual = { PermissionVisual() },
+                        button = "Allow Music Access",
+                        onClick = onRequestMusicAccess,
+                        privacy = true,
+                        page = page,
+                    )
+                }
             }
-        }
 
         }
     }

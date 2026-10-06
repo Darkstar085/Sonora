@@ -36,9 +36,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.sipun.sonora.R
 import com.sipun.sonora.data.preferences.SonoraPreferences
 import com.sipun.sonora.player.PlayerController
-import com.sipun.sonora.R
 
 @Composable
 fun PlaylistsScreen(
@@ -50,9 +50,11 @@ fun PlaylistsScreen(
     var playlists by remember { mutableStateOf(preferences.playlists()) }
     var showCreate by remember { mutableStateOf(false) }
 
-    Column(Modifier
-        .fillMaxSize()
-        .padding(horizontal = 16.dp)) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp)
+    ) {
         Row(
             Modifier
                 .fillMaxWidth()
@@ -60,7 +62,10 @@ fun PlaylistsScreen(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(Modifier.weight(1f)) {
-                Text(stringResource(R.string.your_playlists), style = MaterialTheme.typography.headlineSmall)
+                Text(
+                    stringResource(R.string.your_playlists),
+                    style = MaterialTheme.typography.headlineSmall
+                )
                 Text(
                     if (playlists.size == 1) {
                         stringResource(R.string.playlist_count_one)
@@ -130,17 +135,26 @@ fun PlaylistsScreen(
                                     ),
                                 contentAlignment = Alignment.Center,
                             ) {
-                                Icon(Icons.Default.LibraryMusic, null, tint = MaterialTheme.colorScheme.primary)
+                                Icon(
+                                    Icons.Default.LibraryMusic,
+                                    null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
                             }
-                            Column(Modifier
-                                .padding(start = 12.dp)
-                                .weight(1f)) {
+                            Column(
+                                Modifier
+                                    .padding(start = 12.dp)
+                                    .weight(1f)
+                            ) {
                                 Text(playlist.name, style = MaterialTheme.typography.titleMedium)
                                 Text(
                                     if (playlist.songIds.size == 1) {
                                         stringResource(R.string.song_count_one)
                                     } else {
-                                        stringResource(R.string.song_count_other, playlist.songIds.size)
+                                        stringResource(
+                                            R.string.song_count_other,
+                                            playlist.songIds.size
+                                        )
                                     },
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
@@ -149,7 +163,10 @@ fun PlaylistsScreen(
                                 preferences.deletePlaylist(playlist.id)
                                 playlists = preferences.playlists()
                             }) {
-                                Icon(Icons.Default.DeleteOutline, stringResource(R.string.action_delete_playlist))
+                                Icon(
+                                    Icons.Default.DeleteOutline,
+                                    stringResource(R.string.action_delete_playlist)
+                                )
                             }
                         }
                     }
@@ -185,7 +202,11 @@ private fun CreatePlaylistDialog(onDismiss: () -> Unit, onCreate: (String) -> Un
             )
         },
         confirmButton = {
-            TextButton(onClick = { onCreate(name) }, enabled = name.isNotBlank()) { Text(stringResource(R.string.action_create)) }
+            TextButton(onClick = { onCreate(name) }, enabled = name.isNotBlank()) {
+                Text(
+                    stringResource(R.string.action_create)
+                )
+            }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
     )

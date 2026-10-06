@@ -6,23 +6,17 @@ import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.SideEffect
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sipun.sonora.data.preferences.AppTheme
-import com.sipun.sonora.data.preferences.DynamicPalette
 import com.sipun.sonora.data.preferences.ThemePreferences
 
 private val SonoraLightColors = lightColorScheme(
@@ -84,14 +78,19 @@ fun SonoraTheme(
     val dynamicColor by preferences.dynamicColor.collectAsStateWithLifecycle()
     val customColor by preferences.customColor.collectAsStateWithLifecycle()
     val paletteStyle by preferences.dynamicPalette.collectAsStateWithLifecycle()
-    var wallpaperSeedColor by androidx.compose.runtime.remember(context) { androidx.compose.runtime.mutableStateOf(readWallpaperSeed(context)) }
+    var wallpaperSeedColor by androidx.compose.runtime.remember(context) {
+        androidx.compose.runtime.mutableStateOf(
+            readWallpaperSeed(context)
+        )
+    }
 
     androidx.compose.runtime.DisposableEffect(context, dynamicColor) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O_MR1 || !dynamicColor) onDispose { }
         else {
             val manager = WallpaperManager.getInstance(context)
             val listener = WallpaperManager.OnColorsChangedListener { colors, which ->
-                if ((which and WallpaperManager.FLAG_SYSTEM) != 0 && colors != null) wallpaperSeedColor = Color(colors.primaryColor.toArgb())
+                if ((which and WallpaperManager.FLAG_SYSTEM) != 0 && colors != null) wallpaperSeedColor =
+                    Color(colors.primaryColor.toArgb())
             }
             val handler = android.os.Handler(android.os.Looper.getMainLooper())
             manager.addOnColorsChangedListener(listener, handler)
@@ -107,8 +106,26 @@ fun SonoraTheme(
 
     val palette = wallpaperPalette(wallpaperSeedColor, paletteStyle, darkTheme)
     val dynamicScheme = if (dynamicColor) {
-        if (darkTheme) darkColorScheme(primary = palette.primary, onPrimary = Color.White, primaryContainer = palette.container, onPrimaryContainer = Color.White, secondary = palette.secondary, onSecondary = Color.White, tertiary = palette.tertiary, onTertiary = Color.White)
-        else lightColorScheme(primary = palette.primary, onPrimary = Color.White, primaryContainer = palette.container, onPrimaryContainer = Color.Black, secondary = palette.secondary, onSecondary = Color.White, tertiary = palette.tertiary, onTertiary = Color.White)
+        if (darkTheme) darkColorScheme(
+            primary = palette.primary,
+            onPrimary = Color.White,
+            primaryContainer = palette.container,
+            onPrimaryContainer = Color.White,
+            secondary = palette.secondary,
+            onSecondary = Color.White,
+            tertiary = palette.tertiary,
+            onTertiary = Color.White
+        )
+        else lightColorScheme(
+            primary = palette.primary,
+            onPrimary = Color.White,
+            primaryContainer = palette.container,
+            onPrimaryContainer = Color.Black,
+            secondary = palette.secondary,
+            onSecondary = Color.White,
+            tertiary = palette.tertiary,
+            onTertiary = Color.White
+        )
     } else null
 
     val colorScheme = when {
@@ -122,6 +139,7 @@ fun SonoraTheme(
             surfaceContainerLow = Color(0xFF121212),
             outline = Color(0xFF3A3A3A),
         )
+
         dynamicScheme != null -> dynamicScheme
         darkTheme -> SonoraDarkColors.copy(
             primary = Color(customColor),
@@ -129,6 +147,7 @@ fun SonoraTheme(
             primaryContainer = Color(customColor).copy(alpha = 0.35f),
             onPrimaryContainer = Color(customColor),
         )
+
         else -> SonoraLightColors.copy(
             primary = Color(customColor),
             onPrimary = Color.White,

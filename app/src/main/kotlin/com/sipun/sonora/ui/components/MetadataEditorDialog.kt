@@ -2,10 +2,8 @@ package com.sipun.sonora.ui.components
 
 import android.app.Activity
 import android.net.Uri
-import android.os.Build
-import android.provider.MediaStore
-import androidx.activity.result.IntentSenderRequest
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -26,7 +24,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -145,7 +150,10 @@ fun MetadataEditorDialog(song: Song, onDismiss: () -> Unit, onSaved: (Song) -> U
                 AndroidMusicRepository.notifyMetadataChanged()
             }.onFailure {
                 if (it is com.sipun.sonora.data.media.MediaWriteAccessRequiredException) {
-                    val sender = AudioMetadataEditor.getWriteRequestIntentSender(context, Uri.parse(song.uri))
+                    val sender = AudioMetadataEditor.getWriteRequestIntentSender(
+                        context,
+                        Uri.parse(song.uri)
+                    )
                     if (sender != null) {
                         saving = true
                         writeAccessLauncher.launch(IntentSenderRequest.Builder(sender).build())
@@ -156,7 +164,8 @@ fun MetadataEditorDialog(song: Song, onDismiss: () -> Unit, onSaved: (Song) -> U
                     val cause = it.cause
                     error = it.message
                         ?: cause?.message
-                        ?: (it::class.simpleName ?: "Unknown error") + " while saving metadata."
+                                ?: (it::class.simpleName
+                            ?: "Unknown error") + " while saving metadata."
                 }
             }
         }
@@ -221,7 +230,12 @@ fun MetadataEditorDialog(song: Song, onDismiss: () -> Unit, onSaved: (Song) -> U
                     }
                 }
 
-                fun field(label: Int, value: String, update: (String) -> Unit, singleLine: Boolean = true) {
+                fun field(
+                    label: Int,
+                    value: String,
+                    update: (String) -> Unit,
+                    singleLine: Boolean = true
+                ) {
                     item {
                         OutlinedTextField(
                             value = value,

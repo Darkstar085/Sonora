@@ -30,10 +30,17 @@ fun SonoraSearchBar(
             .heightIn(min = 52.dp),
         singleLine = true,
         leadingIcon = {
-            Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            Icon(
+                Icons.Default.Search,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         },
         placeholder = {
-            Text(stringResource(R.string.search_music), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                stringResource(R.string.search_music),
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         },
         shape = MaterialTheme.shapes.extraLarge,
         colors = OutlinedTextFieldDefaults.colors(

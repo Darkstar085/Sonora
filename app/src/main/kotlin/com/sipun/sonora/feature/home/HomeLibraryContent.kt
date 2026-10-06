@@ -19,7 +19,6 @@ import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
@@ -35,11 +34,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
 import com.sipun.sonora.data.preferences.SonoraPlaylist
 import com.sipun.sonora.data.preferences.SonoraPreferences
 import com.sipun.sonora.domain.model.Song
@@ -442,11 +439,17 @@ internal fun PlaylistList(
                                     ),
                                 contentAlignment = Alignment.Center,
                             ) {
-                                Icon(Icons.AutoMirrored.Filled.QueueMusic, null, tint = MaterialTheme.colorScheme.primary)
+                                Icon(
+                                    Icons.AutoMirrored.Filled.QueueMusic,
+                                    null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
                             }
-                            Column(Modifier
-                                .padding(start = 12.dp)
-                                .weight(1f)) {
+                            Column(
+                                Modifier
+                                    .padding(start = 12.dp)
+                                    .weight(1f)
+                            ) {
                                 Text(playlist.name, style = MaterialTheme.typography.titleMedium)
                                 Text(
                                     playlist.songIds.size.toString() + if (playlist.songIds.size == 1) " song" else " songs",

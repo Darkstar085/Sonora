@@ -38,11 +38,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.sipun.sonora.R
 import com.sipun.sonora.data.preferences.SonoraPreferences
 import com.sipun.sonora.domain.model.Song
 import com.sipun.sonora.player.PlayerController
 import com.sipun.sonora.ui.components.SongMoreButton
-import com.sipun.sonora.R
 
 @Composable
 internal fun Overview(
@@ -64,7 +64,8 @@ internal fun Overview(
     val listeningHistory = remember(currentSongId, songs) {
         preferences.listeningHistoryIds().mapNotNull(songsById::get).take(5)
     }
-    val libraryArtwork = songsById[currentSongId] ?: recentlyAdded.firstOrNull() ?: songs.firstOrNull()
+    val libraryArtwork =
+        songsById[currentSongId] ?: recentlyAdded.firstOrNull() ?: songs.firstOrNull()
 
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -88,7 +89,10 @@ internal fun Overview(
                             .weight(1f),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Text(stringResource(R.string.your_library), color = MaterialTheme.colorScheme.onPrimary)
+                        Text(
+                            stringResource(R.string.your_library),
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
                         Text(
                             stringResource(R.string.song_count_other, songs.size),
                             color = MaterialTheme.colorScheme.onPrimary,
@@ -162,7 +166,10 @@ internal fun Overview(
             }
         }
         item {
-            Text(stringResource(R.string.recently_added), style = MaterialTheme.typography.titleLarge)
+            Text(
+                stringResource(R.string.recently_added),
+                style = MaterialTheme.typography.titleLarge
+            )
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(top = 10.dp)
@@ -174,9 +181,11 @@ internal fun Overview(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Column(Modifier.padding(10.dp)) {
-                                Artwork(song, Modifier
-                                    .fillMaxWidth()
-                                    .aspectRatio(1f))
+                                Artwork(
+                                    song, Modifier
+                                        .fillMaxWidth()
+                                        .aspectRatio(1f)
+                                )
                                 Text(
                                     song.title,
                                     style = MaterialTheme.typography.titleMedium,
@@ -207,7 +216,10 @@ internal fun Overview(
         }
         if (listeningHistory.isNotEmpty()) {
             item {
-                Text(stringResource(R.string.continue_listening), style = MaterialTheme.typography.titleLarge)
+                Text(
+                    stringResource(R.string.continue_listening),
+                    style = MaterialTheme.typography.titleLarge
+                )
                 Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp)) {
                     Column {
                         listeningHistory.forEachIndexed { index, song ->
@@ -223,9 +235,11 @@ internal fun Overview(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Artwork(song, Modifier.size(52.dp))
-                                    Column(Modifier
-                                        .padding(start = 12.dp)
-                                        .weight(1f)) {
+                                    Column(
+                                        Modifier
+                                            .padding(start = 12.dp)
+                                            .weight(1f)
+                                    ) {
                                         Text(
                                             song.title,
                                             style = MaterialTheme.typography.titleMedium,
@@ -239,7 +253,11 @@ internal fun Overview(
                                             overflow = TextOverflow.Ellipsis
                                         )
                                     }
-                                    Icon(Icons.Default.PlayArrow, null, tint = MaterialTheme.colorScheme.primary)
+                                    Icon(
+                                        Icons.Default.PlayArrow,
+                                        null,
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
                                 }
                             }
                             if (index < listeningHistory.lastIndex) HorizontalDivider()
@@ -266,7 +284,14 @@ private fun OverviewMetric(
             Modifier.padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            icon?.let { Icon(it, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
+            icon?.let {
+                Icon(
+                    it,
+                    null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
             Text(value.toString(), style = MaterialTheme.typography.titleLarge)
             Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }

@@ -92,9 +92,11 @@ fun PlaylistDetailScreen(
         },
     ) { padding ->
         if (playlist == null) {
-            Box(Modifier
-                .fillMaxSize()
-                .padding(padding), contentAlignment = Alignment.Center) {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .padding(padding), contentAlignment = Alignment.Center
+            ) {
                 Text("Playlist not found", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         } else {

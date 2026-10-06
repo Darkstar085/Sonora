@@ -107,9 +107,11 @@ internal fun MoreOptionsSheet(
         containerColor = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
     ) {
-        Column(Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 8.dp)) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 8.dp)
+        ) {
             Text(
                 "More options",
                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),

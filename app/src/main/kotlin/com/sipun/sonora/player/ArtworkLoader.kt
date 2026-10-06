@@ -6,10 +6,10 @@ import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.provider.OpenableColumns
-import java.io.ByteArrayOutputStream
-import java.io.File
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.TagOptionSingleton
+import java.io.ByteArrayOutputStream
+import java.io.File
 
 internal class ArtworkLoader(private val context: Context) {
     companion object {
@@ -66,8 +66,8 @@ internal class ArtworkLoader(private val context: Context) {
                 requireNotNull(input)
                 temp.outputStream().use { output -> input.copyTo(output) }
             }
-            TagOptionSingleton.getInstance().setAndroid(true)
-            AudioFileIO.read(temp).tag?.getFirstArtwork()?.binaryData?.let {
+            TagOptionSingleton.getInstance().isAndroid = true
+            AudioFileIO.read(temp).tag?.firstArtwork?.binaryData?.let {
                 if (it.size <= MAX_ARTWORK_BYTES) it else resizeArtwork(it)
             }
         } catch (_: Exception) {
