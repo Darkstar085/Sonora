@@ -31,7 +31,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.sipun.sonora.player.PlayerController
-import com.sipun.sonora.ui.theme.SonoraRed
 
 @Composable
 fun SonoraMiniPlayer(
@@ -103,7 +102,7 @@ fun SonoraMiniPlayer(
                     Icon(
                         if (state.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                         if (state.isPlaying) "Pause" else "Play",
-                        tint = SonoraRed,
+                        tint = MaterialTheme.colorScheme.primary,
                     )
                 }
                 IconButton(
@@ -125,7 +124,7 @@ fun SonoraMiniPlayer(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(2.dp),
-                color = SonoraRed,
+                color = MaterialTheme.colorScheme.primary,
                 trackColor = MaterialTheme.colorScheme.surface,
             )
         }

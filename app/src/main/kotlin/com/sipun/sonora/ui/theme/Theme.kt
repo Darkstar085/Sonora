@@ -1,6 +1,7 @@
 package com.sipun.sonora.ui.theme
 
 import android.app.Activity
+import android.app.WallpaperManager
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -9,7 +10,11 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.SideEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.graphics.Color
@@ -17,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import com.sipun.sonora.data.preferences.AppTheme
+import com.sipun.sonora.data.preferences.DynamicPalette
 import com.sipun.sonora.data.preferences.ThemePreferences
 
 private val SonoraLightColors = lightColorScheme(
@@ -34,9 +40,9 @@ private val SonoraLightColors = lightColorScheme(
 )
 
 private val SonoraDarkColors = darkColorScheme(
-    primary = Color(0xFFFFB4AB),
-    onPrimary = Color(0xFF690005),
-    primaryContainer = Color(0xFF93000A),
+    primary = SonoraRed,
+    onPrimary = Color.White,
+    primaryContainer = Color(0xFF5F0000),
     onPrimaryContainer = Color(0xFFFFDAD6),
     background = Color(0xFF141313),
     onBackground = Color(0xFFEDE0DD),
@@ -73,17 +79,33 @@ fun SonoraTheme(
     val selectedTheme by preferences.theme.collectAsStateWithLifecycle()
     val pureBlack by preferences.pureBlack.collectAsStateWithLifecycle()
     val dynamicColor by preferences.dynamicColor.collectAsStateWithLifecycle()
+    val paletteStyle by preferences.dynamicPalette.collectAsStateWithLifecycle()
+    var wallpaperSeedColor by androidx.compose.runtime.remember(context) { androidx.compose.runtime.mutableStateOf(readWallpaperSeed(context)) }
+
+    androidx.compose.runtime.DisposableEffect(context, dynamicColor) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O_MR1 || !dynamicColor) onDispose { }
+        else {
+            val manager = WallpaperManager.getInstance(context)
+            val listener = WallpaperManager.OnColorsChangedListener { colors, which ->
+                if ((which and WallpaperManager.FLAG_SYSTEM) != 0 && colors != null) wallpaperSeedColor = Color(colors.primaryColor.toArgb())
+            }
+            val handler = android.os.Handler(android.os.Looper.getMainLooper())
+            manager.addOnColorsChangedListener(listener, handler)
+            onDispose { manager.removeOnColorsChangedListener(listener) }
+        }
+    }
+
     val darkTheme = pureBlack || when (selectedTheme) {
         AppTheme.SYSTEM -> isSystemInDarkTheme()
         AppTheme.LIGHT -> false
         AppTheme.DARK -> true
     }
 
-    val dynamicScheme = if (dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-    } else {
-        null
-    }
+    val palette = wallpaperPalette(wallpaperSeedColor, paletteStyle, darkTheme)
+    val dynamicScheme = if (dynamicColor) {
+        if (darkTheme) darkColorScheme(primary = palette.primary, onPrimary = Color.White, primaryContainer = palette.container, onPrimaryContainer = Color.White, secondary = palette.secondary, onSecondary = Color.White, tertiary = palette.tertiary, onTertiary = Color.White)
+        else lightColorScheme(primary = palette.primary, onPrimary = Color.White, primaryContainer = palette.container, onPrimaryContainer = Color.Black, secondary = palette.secondary, onSecondary = Color.White, tertiary = palette.tertiary, onTertiary = Color.White)
+    } else null
 
     val colorScheme = when {
         pureBlack -> (dynamicScheme ?: SonoraPureBlackColors).copy(
@@ -114,3 +136,16 @@ fun SonoraTheme(
         content = content,
     )
 }
+
+private fun readWallpaperSeed(context: android.content.Context): Color =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        androidx.compose.material3.dynamicLightColorScheme(context).primary
+    } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+        WallpaperManager.getInstance(context)
+            .getWallpaperColors(WallpaperManager.FLAG_SYSTEM)
+            ?.primaryColor
+            ?.let { Color(it.toArgb()) }
+            ?: Color(0xFFE92B2B)
+    } else {
+        Color(0xFFE92B2B)
+    }

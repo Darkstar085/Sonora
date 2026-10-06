@@ -47,7 +47,6 @@ import com.sipun.sonora.player.PlayerController
 import com.sipun.sonora.ui.components.SongActionConfig
 import com.sipun.sonora.ui.components.SongArtworkImage
 import com.sipun.sonora.ui.components.SongMoreButton
-import com.sipun.sonora.ui.theme.SonoraRed
 import java.text.Normalizer
 
 @Composable
@@ -157,7 +156,7 @@ internal fun FavoriteList(
             Icon(
                 Icons.Default.FavoriteBorder,
                 null,
-                tint = SonoraRed,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(56.dp)
             )
             Text(
@@ -380,7 +379,7 @@ internal fun PlaylistList(
             }
             var showCreate by remember { mutableStateOf(false) }
             IconButton(onClick = { showCreate = true }) {
-                Icon(Icons.Default.Add, "Create playlist", tint = SonoraRed)
+                Icon(Icons.Default.Add, "Create playlist", tint = MaterialTheme.colorScheme.primary)
             }
             if (showCreate) {
                 CreatePlaylistDialog(
@@ -403,7 +402,7 @@ internal fun PlaylistList(
                 Icon(
                     Icons.AutoMirrored.Filled.QueueMusic,
                     null,
-                    tint = SonoraRed,
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(56.dp)
                 )
                 Text(
@@ -438,12 +437,12 @@ internal fun PlaylistList(
                                 Modifier
                                     .size(58.dp)
                                     .background(
-                                        SonoraRed.copy(alpha = 0.10f),
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),
                                         RoundedCornerShape(16.dp),
                                     ),
                                 contentAlignment = Alignment.Center,
                             ) {
-                                Icon(Icons.AutoMirrored.Filled.QueueMusic, null, tint = SonoraRed)
+                                Icon(Icons.AutoMirrored.Filled.QueueMusic, null, tint = MaterialTheme.colorScheme.primary)
                             }
                             Column(Modifier
                                 .padding(start = 12.dp)

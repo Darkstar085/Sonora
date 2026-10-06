@@ -35,6 +35,12 @@
     <string name="settings_theme_device_default">Device default</string>
     <string name="settings_dynamic_color">Dynamic color</string>
     <string name="settings_dynamic_color_detail">Use colors from your wallpaper</string>
+    <string name="settings_palette_style">Palette style</string>
+    <string name="settings_palette_tonal_spot">Tonal spot</string>
+    <string name="settings_palette_vibrant">Vibrant</string>
+    <string name="settings_palette_expressive">Expressive</string>
+    <string name="settings_palette_neutral">Neutral</string>
+    <string name="settings_palette_monochrome">Monochrome</string>
     <string name="settings_pure_black">Pure black</string>
     <string name="settings_pure_black_detail">Use pure black surfaces in dark mode</string>
     <string name="settings_updates">Updates</string>

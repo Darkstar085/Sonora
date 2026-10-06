@@ -48,7 +48,6 @@ import com.sipun.sonora.data.preferences.SonoraPreferences
 import com.sipun.sonora.domain.model.Song
 import com.sipun.sonora.player.PlayerController
 import com.sipun.sonora.ui.components.SonoraSearchBar
-import com.sipun.sonora.ui.theme.SonoraRed
 import kotlinx.coroutines.launch
 import com.sipun.sonora.R
 
@@ -172,7 +171,7 @@ fun HomeScreen(
             PrimaryScrollableTabRow(
                 selectedTabIndex = pagerState.currentPage,
                 containerColor = MaterialTheme.colorScheme.background,
-                contentColor = SonoraRed,
+                contentColor = MaterialTheme.colorScheme.primary,
                 edgePadding = 0.dp,
                 divider = {},
             ) {
@@ -181,7 +180,7 @@ fun HomeScreen(
                         selected = pagerState.currentPage == index,
                         onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
                         text = { Text(stringResource(label)) },
-                        selectedContentColor = SonoraRed,
+                        selectedContentColor = MaterialTheme.colorScheme.primary,
                         unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
@@ -191,7 +190,7 @@ fun HomeScreen(
 
             if (isLoading) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = SonoraRed)
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
             } else if (loadError != null) {
                 Column(
@@ -274,7 +273,7 @@ private fun EmptyLibraryState() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Icon(Icons.Default.MusicOff, null, tint = SonoraRed, modifier = Modifier.size(48.dp))
+        Icon(Icons.Default.MusicOff, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(48.dp))
         Text(
             stringResource(R.string.home_no_music),
             style = MaterialTheme.typography.titleLarge,
@@ -295,7 +294,7 @@ private fun EmptySearchState(query: String) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Icon(Icons.Default.SearchOff, null, tint = SonoraRed, modifier = Modifier.size(48.dp))
+        Icon(Icons.Default.SearchOff, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(48.dp))
         Text(
             stringResource(R.string.home_no_music),
             style = MaterialTheme.typography.titleLarge,

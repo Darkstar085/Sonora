@@ -52,7 +52,6 @@ import com.sipun.sonora.player.PlayerController
 import com.sipun.sonora.ui.components.SongActionConfig
 import com.sipun.sonora.ui.components.SongArtworkImage
 import com.sipun.sonora.ui.components.SongMoreButton
-import com.sipun.sonora.ui.theme.SonoraRed
 
 @Composable
 fun AlbumDetailScreen(
@@ -93,7 +92,7 @@ fun AlbumDetailScreen(
                     .padding(padding),
                 contentAlignment = Alignment.Center,
             ) {
-                CircularProgressIndicator(color = SonoraRed)
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         } else {
             val first = songs.first()
@@ -147,7 +146,7 @@ fun AlbumDetailScreen(
                             },
                             modifier = Modifier.padding(top = 12.dp),
                             colors = IconButtonDefaults.filledIconButtonColors(
-                                containerColor = SonoraRed,
+                                containerColor = MaterialTheme.colorScheme.primary,
                                 contentColor = MaterialTheme.colorScheme.onPrimary,
                             ),
                         ) {

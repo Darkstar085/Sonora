@@ -26,7 +26,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.sipun.sonora.data.preferences.SonoraPreferences
-import com.sipun.sonora.ui.theme.SonoraRed
 import com.sipun.sonora.R
 
 @Composable
@@ -63,13 +62,13 @@ fun AddToPlaylistDialog(songId: Long, preferences: SonoraPreferences, onDismiss:
                                     Icon(
                                         Icons.Default.LibraryMusic,
                                         null,
-                                        tint = if (added) SonoraRed else MaterialTheme.colorScheme.onSurfaceVariant
+                                        tint = if (added) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 },
                                 trailingContent = {
                                     if (added) Text(
                                         stringResource(R.string.added),
-                                        color = SonoraRed,
+                                        color = MaterialTheme.colorScheme.primary,
                                         style = MaterialTheme.typography.labelMedium
                                     )
                                     else IconButton(onClick = {

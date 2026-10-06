@@ -45,7 +45,6 @@ import com.sipun.sonora.data.preferences.SonoraPreferences
 import com.sipun.sonora.domain.model.Song
 import com.sipun.sonora.player.PlayerController
 import com.sipun.sonora.ui.components.SongArtworkImage
-import com.sipun.sonora.ui.theme.SonoraRed
 
 @Composable
 fun FavoritesScreen(
@@ -89,7 +88,7 @@ fun FavoritesScreen(
                         onOpenNowPlaying()
                     },
                     colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = SonoraRed,
+                        containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary,
                     ),
                 ) {
@@ -165,7 +164,7 @@ private fun FavoriteSongCard(
                 Icon(
                     Icons.Default.Favorite,
                     contentDescription = "Remove from favorites",
-                    tint = SonoraRed,
+                    tint = MaterialTheme.colorScheme.primary,
                 )
             }
         }
@@ -184,7 +183,7 @@ private fun EmptyFavorites() {
         Icon(
             Icons.Default.FavoriteBorder,
             contentDescription = null,
-            tint = SonoraRed,
+            tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(56.dp),
         )
         Text(

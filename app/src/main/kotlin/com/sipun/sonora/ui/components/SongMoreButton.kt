@@ -49,7 +49,6 @@ import androidx.compose.ui.unit.dp
 import com.sipun.sonora.data.preferences.SonoraPreferences
 import com.sipun.sonora.domain.model.Song
 import com.sipun.sonora.player.PlayerController
-import com.sipun.sonora.ui.theme.SonoraRed
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -211,7 +210,7 @@ fun SongMoreButton(
                             if (removed) onChanged()
                         }
                     },
-                ) { Text(stringResource(R.string.action_remove), color = SonoraRed) }
+                ) { Text(stringResource(R.string.action_remove), color = MaterialTheme.colorScheme.primary) }
             },
             dismissButton = {
                 TextButton(onClick = { showRemoveConfirmation = false }) { Text(stringResource(R.string.action_cancel)) }

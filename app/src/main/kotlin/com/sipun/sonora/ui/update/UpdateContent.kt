@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -30,7 +31,6 @@ import com.sipun.sonora.core.update.UpdateInstaller
 import com.sipun.sonora.core.update.UpdateManager
 import com.sipun.sonora.ui.components.DownloadProgressDialog
 import com.sipun.sonora.ui.components.UpdateDialog
-import com.sipun.sonora.ui.theme.SonoraRed
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -220,7 +220,7 @@ fun UpdateContent(
                 ) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
-                        color = SonoraRed,
+                        color = MaterialTheme.colorScheme.primary,
                         strokeWidth = 2.5.dp,
                     )
                     Text(stringResource(R.string.update_checking_message))
@@ -250,7 +250,7 @@ fun UpdateContent(
                         updateCheckError = null
                         onRequestCheck()
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = SonoraRed),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 ) {
                     Text(stringResource(R.string.action_try_again))
                 }
@@ -268,7 +268,7 @@ fun UpdateContent(
             confirmButton = {
                 Button(
                     onClick = { showNoUpdate = false },
-                    colors = ButtonDefaults.buttonColors(containerColor = SonoraRed),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 ) {
                     Text(stringResource(R.string.action_ok))
                 }

@@ -11,6 +11,14 @@ enum class AppTheme {
     DARK,
 }
 
+enum class DynamicPalette {
+    TONAL_SPOT,
+    VIBRANT,
+    EXPRESSIVE,
+    NEUTRAL,
+    MONOCHROME,
+}
+
 class ThemePreferences private constructor(context: Context) {
     private val preferences =
         context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
@@ -23,6 +31,9 @@ class ThemePreferences private constructor(context: Context) {
 
     private val _dynamicColor = MutableStateFlow(readDynamicColor())
     val dynamicColor: StateFlow<Boolean> = _dynamicColor.asStateFlow()
+
+    private val _dynamicPalette = MutableStateFlow(readDynamicPalette())
+    val dynamicPalette: StateFlow<DynamicPalette> = _dynamicPalette.asStateFlow()
 
     fun setTheme(theme: AppTheme) {
         preferences.edit().putString(KEY_THEME, theme.name).apply()
@@ -39,11 +50,24 @@ class ThemePreferences private constructor(context: Context) {
         _dynamicColor.value = enabled
     }
 
+    fun setDynamicPalette(palette: DynamicPalette) {
+        preferences.edit().putString(KEY_DYNAMIC_PALETTE, palette.name).apply()
+        _dynamicPalette.value = palette
+    }
+
     private fun readPureBlack(): Boolean =
         preferences.getBoolean(KEY_PURE_BLACK, false)
 
     private fun readDynamicColor(): Boolean =
         preferences.getBoolean(KEY_DYNAMIC_COLOR, false)
+
+    private fun readDynamicPalette(): DynamicPalette =
+        runCatching {
+            DynamicPalette.valueOf(
+                preferences.getString(KEY_DYNAMIC_PALETTE, DynamicPalette.TONAL_SPOT.name)
+                    ?: DynamicPalette.TONAL_SPOT.name
+            )
+        }.getOrDefault(DynamicPalette.TONAL_SPOT)
 
     private fun readTheme(): AppTheme =
         runCatching {
@@ -58,6 +82,7 @@ class ThemePreferences private constructor(context: Context) {
         private const val KEY_THEME = "app_theme"
         private const val KEY_PURE_BLACK = "pure_black"
         private const val KEY_DYNAMIC_COLOR = "dynamic_color"
+        private const val KEY_DYNAMIC_PALETTE = "dynamic_palette"
 
         @Volatile
         private var instance: ThemePreferences? = null

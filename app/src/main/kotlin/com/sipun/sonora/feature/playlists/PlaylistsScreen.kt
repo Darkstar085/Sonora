@@ -38,7 +38,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.sipun.sonora.data.preferences.SonoraPreferences
 import com.sipun.sonora.player.PlayerController
-import com.sipun.sonora.ui.theme.SonoraRed
 import com.sipun.sonora.R
 
 @Composable
@@ -74,7 +73,7 @@ fun PlaylistsScreen(
             FilledIconButton(
                 onClick = { showCreate = true },
                 colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = SonoraRed,
+                    containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
                 ),
             ) { Icon(Icons.Default.Add, stringResource(R.string.action_create_playlist)) }
@@ -91,7 +90,7 @@ fun PlaylistsScreen(
                 Icon(
                     Icons.Default.LibraryMusic,
                     null,
-                    tint = SonoraRed,
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(56.dp)
                 )
                 Text(
@@ -126,12 +125,12 @@ fun PlaylistsScreen(
                                 Modifier
                                     .size(58.dp)
                                     .background(
-                                        SonoraRed.copy(alpha = 0.10f),
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),
                                         RoundedCornerShape(16.dp),
                                     ),
                                 contentAlignment = Alignment.Center,
                             ) {
-                                Icon(Icons.Default.LibraryMusic, null, tint = SonoraRed)
+                                Icon(Icons.Default.LibraryMusic, null, tint = MaterialTheme.colorScheme.primary)
                             }
                             Column(Modifier
                                 .padding(start = 12.dp)

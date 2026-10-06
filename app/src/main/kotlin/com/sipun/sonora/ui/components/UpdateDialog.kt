@@ -36,7 +36,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sipun.sonora.core.update.AppUpdate
 import com.sipun.sonora.core.update.DownloadProgress
-import com.sipun.sonora.ui.theme.SonoraRed
 
 @Composable
 fun UpdateDialog(
@@ -75,7 +74,7 @@ fun UpdateDialog(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(18.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = SonoraRed.copy(alpha = 0.06f),
+                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.06f),
                     ),
                 ) {
                     Column(
@@ -103,7 +102,7 @@ fun UpdateDialog(
                                 .filter { it.isNotBlank() }
                                 .forEach { note ->
                                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        Text("•", color = SonoraRed, fontWeight = FontWeight.Bold)
+                                        Text("•", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                                         Text(
                                             note,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -138,7 +137,7 @@ fun UpdateDialog(
                         .height(44.dp),
                     shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = SonoraRed,
+                        containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary,
                     ),
                 ) {
@@ -195,8 +194,8 @@ fun DownloadProgressDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(8.dp),
-                    color = SonoraRed,
-                    trackColor = SonoraRed.copy(alpha = 0.12f),
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
                 )
                 Row(
                     Modifier.fillMaxWidth(),
@@ -244,7 +243,7 @@ private fun UpdateInfoRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(9.dp),
     ) {
-        Icon(icon, null, tint = SonoraRed, modifier = Modifier.size(18.dp))
+        Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
         Text(
             label,
             color = MaterialTheme.colorScheme.onSurfaceVariant,

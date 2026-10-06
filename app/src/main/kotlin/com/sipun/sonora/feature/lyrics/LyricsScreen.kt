@@ -12,6 +12,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Album
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,7 +29,6 @@ import com.sipun.sonora.data.lyrics.Lyrics
 import com.sipun.sonora.data.lyrics.LyricsRepository
 import com.sipun.sonora.player.PlayerController
 import com.sipun.sonora.ui.components.SongArtworkImage
-import com.sipun.sonora.ui.theme.SonoraRed
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 
@@ -163,7 +163,7 @@ fun LyricsScreen(playerController: PlayerController, onBack: () -> Unit) {
                         .weight(1f),
                     contentAlignment = Alignment.Center,
                 ) {
-                    CircularProgressIndicator(color = SonoraRed)
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
 
                 lyrics == null || lyrics!!.lines.isEmpty() -> Box(
@@ -174,7 +174,7 @@ fun LyricsScreen(playerController: PlayerController, onBack: () -> Unit) {
                 ) {
                     Button(
                         onClick = { retry++ },
-                        colors = ButtonDefaults.buttonColors(containerColor = SonoraRed),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                     ) {
                         Text(stringResource(R.string.lyrics_retry))
                     }
@@ -243,7 +243,7 @@ private fun LyricsCard(
                                     .width(5.dp)
                                     .height(48.dp)
                                     .clip(RoundedCornerShape(5.dp))
-                                    .background(SonoraRed),
+                                    .background(MaterialTheme.colorScheme.primary),
                             )
                         }
 
@@ -256,7 +256,7 @@ private fun LyricsCard(
                                 FontWeight.Normal
                             },
                             color = if (index == active) {
-                                SonoraRed
+                                MaterialTheme.colorScheme.primary
                             } else {
                                 MaterialTheme.colorScheme.onSurfaceVariant
                             },

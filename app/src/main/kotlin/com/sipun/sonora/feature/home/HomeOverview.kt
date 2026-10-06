@@ -42,7 +42,6 @@ import com.sipun.sonora.data.preferences.SonoraPreferences
 import com.sipun.sonora.domain.model.Song
 import com.sipun.sonora.player.PlayerController
 import com.sipun.sonora.ui.components.SongMoreButton
-import com.sipun.sonora.ui.theme.SonoraRed
 import com.sipun.sonora.R
 
 @Composable
@@ -73,7 +72,7 @@ internal fun Overview(
         item {
             Card(
                 shape = RoundedCornerShape(28.dp),
-                colors = CardDefaults.cardColors(containerColor = SonoraRed)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
                 Row(
                     Modifier
@@ -103,7 +102,7 @@ internal fun Overview(
                             modifier = Modifier.padding(top = 4.dp),
                             colors = ButtonDefaults.filledTonalButtonColors(
                                 containerColor = MaterialTheme.colorScheme.onPrimary,
-                                contentColor = SonoraRed
+                                contentColor = MaterialTheme.colorScheme.primary
                             ),
                         ) {
                             Icon(Icons.Default.PlayArrow, null)
@@ -239,7 +238,7 @@ internal fun Overview(
                                             overflow = TextOverflow.Ellipsis
                                         )
                                     }
-                                    Icon(Icons.Default.PlayArrow, null, tint = SonoraRed)
+                                    Icon(Icons.Default.PlayArrow, null, tint = MaterialTheme.colorScheme.primary)
                                 }
                             }
                             if (index < listeningHistory.lastIndex) HorizontalDivider()
@@ -266,7 +265,7 @@ private fun OverviewMetric(
             Modifier.padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            icon?.let { Icon(it, null, tint = SonoraRed, modifier = Modifier.size(22.dp)) }
+            icon?.let { Icon(it, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
             Text(value.toString(), style = MaterialTheme.typography.titleLarge)
             Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }

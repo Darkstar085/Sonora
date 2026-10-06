@@ -48,7 +48,6 @@ import com.sipun.sonora.domain.model.Song
 import com.sipun.sonora.player.PlayerController
 import com.sipun.sonora.ui.components.SongActionConfig
 import com.sipun.sonora.ui.components.SongMoreButton
-import com.sipun.sonora.ui.theme.SonoraRed
 
 @Composable
 fun PlaylistDetailScreen(
@@ -121,7 +120,7 @@ fun PlaylistDetailScreen(
                             Icon(
                                 Icons.AutoMirrored.Filled.QueueMusic,
                                 null,
-                                tint = SonoraRed,
+                                tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(72.dp)
                             )
                         }
@@ -142,7 +141,7 @@ fun PlaylistDetailScreen(
                             FilledIconButton(
                                 onClick = { playerController.playQueue(songs); onOpenNowPlaying() },
                                 modifier = Modifier.padding(top = 12.dp),
-                                colors = IconButtonDefaults.filledIconButtonColors(containerColor = SonoraRed),
+                                colors = IconButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.primary),
                             ) { Icon(Icons.Default.PlayArrow, "Play playlist") }
                         }
                     }

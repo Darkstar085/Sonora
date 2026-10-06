@@ -15,7 +15,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.sipun.sonora.ui.theme.SonoraRed
 import com.sipun.sonora.R
 
 @Composable
@@ -39,7 +38,7 @@ fun SonoraSearchBar(
         },
         shape = RoundedCornerShape(20.dp),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = SonoraRed,
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
             unfocusedBorderColor = Color.Transparent,
             focusedContainerColor = MaterialTheme.colorScheme.surface,
             unfocusedContainerColor = MaterialTheme.colorScheme.surface,

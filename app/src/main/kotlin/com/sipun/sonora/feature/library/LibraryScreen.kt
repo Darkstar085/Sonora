@@ -54,7 +54,6 @@ import com.sipun.sonora.domain.model.Song
 import com.sipun.sonora.player.PlayerController
 import com.sipun.sonora.ui.components.AddToPlaylistDialog
 import com.sipun.sonora.ui.components.SongArtworkImage
-import com.sipun.sonora.ui.theme.SonoraRed
 
 @Composable
 fun LibraryScreen(playerController: PlayerController, onOpenNowPlaying: () -> Unit) {
@@ -168,7 +167,7 @@ fun LibraryScreen(playerController: PlayerController, onOpenNowPlaying: () -> Un
                         Icon(
                             if (song.id in favoriteIds) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                             "Favorite",
-                            tint = if (song.id in favoriteIds) SonoraRed else MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = if (song.id in favoriteIds) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -186,7 +185,7 @@ private fun LibraryPermission(onRequest: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Icon(Icons.Default.LibraryMusic, null, tint = SonoraRed, modifier = Modifier.size(48.dp))
+        Icon(Icons.Default.LibraryMusic, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(48.dp))
         Text(
             "Access your music",
             style = MaterialTheme.typography.headlineSmall,
@@ -208,7 +207,7 @@ private fun BoxedLibraryState() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        CircularProgressIndicator(color = SonoraRed)
+        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
         Text("Scanning your music…", modifier = Modifier.padding(top = 12.dp))
     }
 }
@@ -222,7 +221,7 @@ private fun EmptyLibraryContent() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Icon(Icons.Default.AudioFile, null, tint = SonoraRed, modifier = Modifier.size(48.dp))
+        Icon(Icons.Default.AudioFile, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(48.dp))
         Text(
             "No music found",
             style = MaterialTheme.typography.headlineSmall,

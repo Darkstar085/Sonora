@@ -22,7 +22,6 @@ import androidx.compose.ui.platform.LocalContext
 import coil3.compose.AsyncImage
 import com.sipun.sonora.domain.model.Song
 import com.sipun.sonora.player.ArtworkLoader
-import com.sipun.sonora.ui.theme.SonoraRed
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -72,7 +71,7 @@ fun SongArtworkImage(
         Icon(
             Icons.Default.Album,
             contentDescription = null,
-            tint = SonoraRed,
+            tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.fillMaxSize(0.62f),
         )
 

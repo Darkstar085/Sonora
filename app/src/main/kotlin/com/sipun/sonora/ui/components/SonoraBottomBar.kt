@@ -33,7 +33,6 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.sipun.sonora.navigation.SonoraRoute
-import com.sipun.sonora.ui.theme.SonoraRed
 
 private data class BottomDestination(
     val route: SonoraRoute,
@@ -86,7 +85,7 @@ fun SonoraBottomBar(
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(28.dp),
                         color = if (selected) {
-                            SonoraRed.copy(alpha = 0.12f)
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                         } else {
                             Color.Transparent
                         },
@@ -114,7 +113,7 @@ fun SonoraBottomBar(
                                 imageVector = destination.icon,
                                 contentDescription = destination.label,
                                 tint = if (selected) {
-                                    SonoraRed
+                                    MaterialTheme.colorScheme.primary
                                 } else {
                                     MaterialTheme.colorScheme.onSurfaceVariant
                                 },
@@ -130,7 +129,7 @@ fun SonoraBottomBar(
                                     FontWeight.Normal
                                 },
                                 color = if (selected) {
-                                    SonoraRed
+                                    MaterialTheme.colorScheme.primary
                                 } else {
                                     MaterialTheme.colorScheme.onSurfaceVariant
                                 },

@@ -58,7 +58,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.sipun.sonora.domain.model.Song
-import com.sipun.sonora.ui.theme.SonoraRed
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -81,10 +80,10 @@ internal fun QuickAction(
             Surface(
                 modifier = Modifier.fillMaxSize(),
                 shape = RoundedCornerShape(18.dp),
-                color = SonoraRed.copy(alpha = 0.08f),
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Icon(icon, label, tint = SonoraRed)
+                    Icon(icon, label, tint = MaterialTheme.colorScheme.primary)
                 }
             }
         }
@@ -150,14 +149,14 @@ private fun MoreOption(
         headlineContent = {
             Text(
                 label,
-                color = if (destructive) SonoraRed else LocalContentColor.current
+                color = if (destructive) MaterialTheme.colorScheme.primary else LocalContentColor.current
             )
         },
         leadingContent = {
             Icon(
                 icon,
                 null,
-                tint = if (destructive) SonoraRed else LocalContentColor.current
+                tint = if (destructive) MaterialTheme.colorScheme.primary else LocalContentColor.current
             )
         },
         trailingContent = { Icon(Icons.Default.ChevronRight, null) },

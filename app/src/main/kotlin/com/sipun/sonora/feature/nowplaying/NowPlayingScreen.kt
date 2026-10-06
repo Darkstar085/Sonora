@@ -83,7 +83,6 @@ import com.sipun.sonora.player.PlayerController
 import com.sipun.sonora.ui.components.SongArtworkImage
 import com.sipun.sonora.player.RepeatMode
 import com.sipun.sonora.ui.components.AddToPlaylistDialog
-import com.sipun.sonora.ui.theme.SonoraRed
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -276,7 +275,7 @@ fun NowPlayingScreen(
                             }
                         }
                     },
-                ) { Text("Remove", color = SonoraRed) }
+                ) { Text("Remove", color = MaterialTheme.colorScheme.primary) }
             },
             dismissButton = {
                 TextButton(onClick = { showRemoveConfirmation = false }) { Text("Cancel") }
@@ -410,8 +409,8 @@ fun NowPlayingScreen(
                         valueRange = 0f..max.toFloat(),
                         enabled = song != null && state.durationMs > 0,
                         colors = SliderDefaults.colors(
-                            thumbColor = SonoraRed,
-                            activeTrackColor = SonoraRed,
+                            thumbColor = MaterialTheme.colorScheme.primary,
+                            activeTrackColor = MaterialTheme.colorScheme.primary,
                         ),
                     )
                     Row(
@@ -441,7 +440,7 @@ fun NowPlayingScreen(
                             Icon(
                                 if (state.repeatMode == RepeatMode.ONE) Icons.Default.RepeatOne else Icons.Default.Repeat,
                                 "Repeat " + state.repeatMode.name.lowercase(),
-                                tint = if (state.repeatMode != RepeatMode.OFF) SonoraRed else LocalContentColor.current,
+                                tint = if (state.repeatMode != RepeatMode.OFF) MaterialTheme.colorScheme.primary else LocalContentColor.current,
                             )
                         }
                         IconButton(
@@ -455,7 +454,7 @@ fun NowPlayingScreen(
                             enabled = song != null,
                             modifier = Modifier.size(72.dp),
                             colors = IconButtonDefaults.filledIconButtonColors(
-                                containerColor = SonoraRed,
+                                containerColor = MaterialTheme.colorScheme.primary,
                                 contentColor = Color.White,
                             ),
                         ) {
@@ -472,7 +471,7 @@ fun NowPlayingScreen(
                             Icon(
                                 Icons.Default.Shuffle,
                                 "Shuffle",
-                                tint = if (state.shuffleEnabled) SonoraRed else LocalContentColor.current,
+                                tint = if (state.shuffleEnabled) MaterialTheme.colorScheme.primary else LocalContentColor.current,
                             )
                         }
                     }

@@ -1,24 +1,35 @@
 package com.sipun.sonora.feature.settings
 
+import android.app.WallpaperManager
+import android.os.Build
+import android.os.Handler
+import android.os.Looper
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material3.AlertDialog
@@ -32,12 +43,15 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -46,8 +60,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sipun.sonora.BuildConfig
 import com.sipun.sonora.R
 import com.sipun.sonora.data.preferences.AppTheme
+import com.sipun.sonora.data.preferences.DynamicPalette
 import com.sipun.sonora.data.preferences.ThemePreferences
-import com.sipun.sonora.ui.theme.SonoraRed
+import com.sipun.sonora.ui.theme.WallpaperPalette
+import com.sipun.sonora.ui.theme.wallpaperPalette
 
 @Composable
 fun SettingsScreen(onCheckForUpdates: () -> Unit = {}) {
@@ -58,7 +74,31 @@ fun SettingsScreen(onCheckForUpdates: () -> Unit = {}) {
     val selectedTheme by themePreferences.theme.collectAsStateWithLifecycle()
     val pureBlack by themePreferences.pureBlack.collectAsStateWithLifecycle()
     val dynamicColor by themePreferences.dynamicColor.collectAsStateWithLifecycle()
+    val selectedPalette by themePreferences.dynamicPalette.collectAsStateWithLifecycle()
     var showThemeDialog by remember { mutableStateOf(false) }
+    var wallpaperSeed by remember(context) { mutableStateOf(readWallpaperSeed(context)) }
+
+    DisposableEffect(context, dynamicColor) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O_MR1 || !dynamicColor) {
+            onDispose { }
+        } else {
+            val manager = WallpaperManager.getInstance(context)
+            val listener = WallpaperManager.OnColorsChangedListener { colors, which ->
+                if ((which and WallpaperManager.FLAG_SYSTEM) != 0 && colors != null) {
+                    wallpaperSeed = Color(colors.primaryColor.toArgb())
+                }
+            }
+            val handler = Handler(Looper.getMainLooper())
+            manager.addOnColorsChangedListener(listener, handler)
+            onDispose { manager.removeOnColorsChangedListener(listener) }
+        }
+    }
+
+    val darkTheme = pureBlack || when (selectedTheme) {
+        AppTheme.SYSTEM -> androidx.compose.foundation.isSystemInDarkTheme()
+        AppTheme.LIGHT -> false
+        AppTheme.DARK -> true
+    }
 
     val themeLabel = when (selectedTheme) {
         AppTheme.LIGHT -> stringResource(R.string.settings_theme_light)
@@ -96,12 +136,12 @@ fun SettingsScreen(onCheckForUpdates: () -> Unit = {}) {
                     onClick = { showThemeDialog = true },
                     trailing = {
                         Surface(
-                            color = SonoraRed.copy(alpha = 0.10f),
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),
                             shape = RoundedCornerShape(50),
                         ) {
                             Text(
                                 themeLabel,
-                                color = SonoraRed,
+                                color = MaterialTheme.colorScheme.primary,
                                 style = MaterialTheme.typography.labelLarge,
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp)
                             )
@@ -120,6 +160,15 @@ fun SettingsScreen(onCheckForUpdates: () -> Unit = {}) {
                     )
                 },
             )
+            if (dynamicColor) {
+                PaletteSelector(
+                    seed = wallpaperSeed,
+                    darkTheme = darkTheme,
+                    selected = selectedPalette,
+                    onSelect = themePreferences::setDynamicPalette,
+                )
+            }
+
             SettingsRow(
                 icon = Icons.Default.DarkMode,
                 title = stringResource(R.string.settings_pure_black),
@@ -207,6 +256,146 @@ fun SettingsScreen(onCheckForUpdates: () -> Unit = {}) {
 }
 
 @Composable
+private fun PaletteSelector(
+    seed: Color,
+    darkTheme: Boolean,
+    selected: DynamicPalette,
+    onSelect: (DynamicPalette) -> Unit,
+) {
+    val palettes = DynamicPalette.entries.take(4)
+
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+    ) {
+        Text(
+            stringResource(R.string.settings_palette_style),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp),
+            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
+        ) {
+            palettes.forEach { palette ->
+                PaletteCard(
+                    palette = palette,
+                    colors = wallpaperPalette(seed, palette, darkTheme),
+                    selected = palette == selected,
+                    onClick = { onSelect(palette) },
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun PaletteCard(
+    palette: DynamicPalette,
+    colors: WallpaperPalette,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val paletteColors = listOf(
+        colors.primary,
+        colors.secondary,
+        colors.tertiary,
+        colors.container,
+    )
+
+    Card(
+        modifier = modifier
+            .height(132.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (selected) 4.dp else 1.dp,
+        ),
+        border = BorderStroke(
+            width = if (selected) 2.dp else 1.dp,
+            color = if (selected) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.outline.copy(alpha = 0.28f)
+            },
+        ),
+    ) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .padding(6.dp),
+        ) {
+            Column(
+                Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(15.dp)),
+            ) {
+                paletteColors.forEachIndexed { index, color ->
+                    Box(
+                        Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .background(color),
+                    ) {
+                        if (index < paletteColors.lastIndex) {
+                            Box(
+                                Modifier
+                                    .align(Alignment.BottomCenter)
+                                    .fillMaxWidth()
+                                    .height(1.dp)
+                                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.18f)),
+                            )
+                        }
+                    }
+                }
+            }
+
+            if (selected) {
+                Surface(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(7.dp)
+                        .size(28.dp),
+                    shape = RoundedCornerShape(50),
+                    color = MaterialTheme.colorScheme.primary,
+                    tonalElevation = 2.dp,
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.Default.Check,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(17.dp),
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+private fun readWallpaperSeed(context: android.content.Context): Color =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        androidx.compose.material3.dynamicLightColorScheme(context).primary
+    } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+        WallpaperManager.getInstance(context)
+            .getWallpaperColors(WallpaperManager.FLAG_SYSTEM)
+            ?.primaryColor
+            ?.let { Color(it.toArgb()) }
+            ?: Color(0xFFE92B2B)
+    } else {
+        Color(0xFFE92B2B)
+    }
+
+@Composable
 private fun ThemeOption(
     title: String,
     selected: Boolean,
@@ -236,7 +425,7 @@ private fun ThemeOption(
 private fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) {
     Text(
         title,
-        color = SonoraRed,
+        color = MaterialTheme.colorScheme.primary,
         style = MaterialTheme.typography.labelLarge,
         modifier = Modifier.padding(start = 4.dp, bottom = 8.dp, top = 8.dp)
     )
@@ -267,10 +456,10 @@ private fun SettingsRow(
         Box(
             Modifier
                 .size(42.dp)
-                .background(SonoraRed.copy(alpha = 0.10f), RoundedCornerShape(14.dp)),
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.10f), RoundedCornerShape(14.dp)),
             contentAlignment = Alignment.Center
         ) {
-            Icon(icon, null, tint = SonoraRed)
+            Icon(icon, null, tint = MaterialTheme.colorScheme.primary)
         }
         Column(
             Modifier
