@@ -1,9 +1,12 @@
 package com.sipun.sonora.ui.theme
 
 import android.app.Activity
+import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -69,14 +72,30 @@ fun SonoraTheme(
     }
     val selectedTheme by preferences.theme.collectAsStateWithLifecycle()
     val pureBlack by preferences.pureBlack.collectAsStateWithLifecycle()
+    val dynamicColor by preferences.dynamicColor.collectAsStateWithLifecycle()
     val darkTheme = pureBlack || when (selectedTheme) {
         AppTheme.SYSTEM -> isSystemInDarkTheme()
         AppTheme.LIGHT -> false
         AppTheme.DARK -> true
     }
 
+    val dynamicScheme = if (dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+    } else {
+        null
+    }
+
     val colorScheme = when {
-        pureBlack -> SonoraPureBlackColors
+        pureBlack -> (dynamicScheme ?: SonoraPureBlackColors).copy(
+            background = Color.Black,
+            onBackground = Color(0xFFF5F5F5),
+            surface = Color.Black,
+            onSurface = Color(0xFFF5F5F5),
+            surfaceVariant = Color(0xFF121212),
+            onSurfaceVariant = Color(0xFFBDBDBD),
+            outline = Color(0xFF3A3A3A),
+        )
+        dynamicScheme != null -> dynamicScheme
         darkTheme -> SonoraDarkColors
         else -> SonoraLightColors
     }

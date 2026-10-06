@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -56,6 +57,7 @@ fun SettingsScreen(onCheckForUpdates: () -> Unit = {}) {
     }
     val selectedTheme by themePreferences.theme.collectAsStateWithLifecycle()
     val pureBlack by themePreferences.pureBlack.collectAsStateWithLifecycle()
+    val dynamicColor by themePreferences.dynamicColor.collectAsStateWithLifecycle()
     var showThemeDialog by remember { mutableStateOf(false) }
 
     val themeLabel = when (selectedTheme) {
@@ -107,6 +109,17 @@ fun SettingsScreen(onCheckForUpdates: () -> Unit = {}) {
                     },
                 )
             }
+            SettingsRow(
+                icon = Icons.Default.Palette,
+                title = stringResource(R.string.settings_dynamic_color),
+                subtitle = stringResource(R.string.settings_dynamic_color_detail),
+                trailing = {
+                    Switch(
+                        checked = dynamicColor,
+                        onCheckedChange = themePreferences::setDynamicColor,
+                    )
+                },
+            )
             SettingsRow(
                 icon = Icons.Default.DarkMode,
                 title = stringResource(R.string.settings_pure_black),

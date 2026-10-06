@@ -21,6 +21,9 @@ class ThemePreferences private constructor(context: Context) {
     private val _pureBlack = MutableStateFlow(readPureBlack())
     val pureBlack: StateFlow<Boolean> = _pureBlack.asStateFlow()
 
+    private val _dynamicColor = MutableStateFlow(readDynamicColor())
+    val dynamicColor: StateFlow<Boolean> = _dynamicColor.asStateFlow()
+
     fun setTheme(theme: AppTheme) {
         preferences.edit().putString(KEY_THEME, theme.name).apply()
         _theme.value = theme
@@ -31,8 +34,16 @@ class ThemePreferences private constructor(context: Context) {
         _pureBlack.value = enabled
     }
 
+    fun setDynamicColor(enabled: Boolean) {
+        preferences.edit().putBoolean(KEY_DYNAMIC_COLOR, enabled).apply()
+        _dynamicColor.value = enabled
+    }
+
     private fun readPureBlack(): Boolean =
         preferences.getBoolean(KEY_PURE_BLACK, false)
+
+    private fun readDynamicColor(): Boolean =
+        preferences.getBoolean(KEY_DYNAMIC_COLOR, false)
 
     private fun readTheme(): AppTheme =
         runCatching {
@@ -46,6 +57,7 @@ class ThemePreferences private constructor(context: Context) {
         private const val PREFERENCES_NAME = "sonora_preferences"
         private const val KEY_THEME = "app_theme"
         private const val KEY_PURE_BLACK = "pure_black"
+        private const val KEY_DYNAMIC_COLOR = "dynamic_color"
 
         @Volatile
         private var instance: ThemePreferences? = null
