@@ -2,6 +2,7 @@ package com.sipun.sonora.data.media
 
 import android.content.ContentResolver
 import android.content.ContentUris
+import android.net.Uri
 import android.provider.MediaStore
 import com.sipun.sonora.domain.model.Song
 import com.sipun.sonora.domain.repository.MusicRepository
@@ -10,9 +11,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
-import org.jaudiotagger.audio.AudioFileIO
-import org.jaudiotagger.tag.FieldKey
-import org.jaudiotagger.tag.TagOptionSingleton
+import kotlinx.io.files.Path
+import org.jaudiotagger.kt.AudioTagger
+import org.jaudiotagger.kt.tag.FieldKey
 import java.io.File
 
 class AndroidMusicRepository(private val contentResolver: ContentResolver) : MusicRepository {
@@ -145,7 +146,7 @@ private data class MediaStoreMetadata(
 
 private fun readWavMetadata(
     contentResolver: ContentResolver,
-    uri: android.net.Uri,
+    uri: Uri,
     fallback: MediaStoreMetadata,
 ): MediaStoreMetadata? {
     val temp = File.createTempFile("sonora-wav-", ".wav")
@@ -154,9 +155,8 @@ private fun readWavMetadata(
             requireNotNull(input)
             temp.outputStream().use { output -> input.copyTo(output) }
         }
-        TagOptionSingleton.getInstance().isAndroid = true
-        val tag = AudioFileIO.read(temp).tag ?: return fallback
-        fun value(key: FieldKey): String = tag.getFirst(key).cleanMetadata("")
+        val tag = AudioTagger.read(Path(temp.absolutePath)).tag
+        fun value(key: FieldKey): String = tag.first(key).orEmpty()
 
         MediaStoreMetadata(
             title = value(FieldKey.TITLE).ifBlank { fallback.title },
