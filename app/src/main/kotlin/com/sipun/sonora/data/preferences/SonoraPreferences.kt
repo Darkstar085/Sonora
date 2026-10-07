@@ -33,6 +33,10 @@ class SonoraPreferences(context: Context) {
 
     fun setGaplessPlayback(enabled: Boolean) = playback.setGaplessPlayback(enabled)
 
+    fun crossfadeSeconds(): Int = playback.crossfadeSeconds()
+
+    fun setCrossfadeSeconds(seconds: Int) = playback.setCrossfadeSeconds(seconds)
+
     fun listeningHistoryIds(): List<Long> = playback.listeningHistoryIds()
 
     fun lastPlayed(): Song? = playback.lastPlayed()

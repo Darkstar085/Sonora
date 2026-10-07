@@ -61,6 +61,15 @@ internal class PlaybackPreferences(context: Context) {
         preferences.edit().putBoolean(KEY_GAPLESS_PLAYBACK, enabled).apply()
     }
 
+    fun crossfadeSeconds(): Int =
+        preferences.getInt(KEY_CROSSFADE_SECONDS, 0).coerceIn(0, MAX_CROSSFADE_SECONDS)
+
+    fun setCrossfadeSeconds(seconds: Int) {
+        preferences.edit()
+            .putInt(KEY_CROSSFADE_SECONDS, seconds.coerceIn(0, MAX_CROSSFADE_SECONDS))
+            .apply()
+    }
+
     fun clearLastPlayed() {
         preferences.edit()
             .remove(LAST_PLAYED_ID)
@@ -85,6 +94,8 @@ internal class PlaybackPreferences(context: Context) {
         const val LISTENING_HISTORY = "listening_history"
         const val KEY_RESUME_PLAYBACK = "resume_playback"
         const val KEY_GAPLESS_PLAYBACK = "gapless_playback"
+        const val KEY_CROSSFADE_SECONDS = "crossfade_seconds"
         const val MAX_LISTENING_HISTORY = 10
+        const val MAX_CROSSFADE_SECONDS = 12
     }
 }

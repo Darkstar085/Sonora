@@ -25,16 +25,18 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -52,6 +54,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -99,6 +102,7 @@ fun SettingsScreen(
     val customColor by themePreferences.customColor.collectAsStateWithLifecycle()
     var resumePlayback by remember { mutableStateOf(playbackPreferences.resumePlayback()) }
     var gaplessPlayback by remember { mutableStateOf(playbackPreferences.gaplessPlayback()) }
+    var crossfadeSeconds by remember { mutableIntStateOf(playbackPreferences.crossfadeSeconds()) }
     var showThemeDialog by remember { mutableStateOf(false) }
     var showSonoraDialog by remember { mutableStateOf(false) }
     var wallpaperSeed by remember(context) { mutableStateOf(readWallpaperSeed(context)) }
@@ -136,6 +140,7 @@ fun SettingsScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .windowInsetsPadding(WindowInsets.statusBars)
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp)
     ) {
         Column(Modifier.padding(top = 20.dp, bottom = 18.dp)) {
@@ -250,7 +255,6 @@ fun SettingsScreen(
                     onColorChange = { themePreferences.setCustomColor(it) },
                 )
             }
-
         }
 
         SettingsSection(stringResource(R.string.settings_playback)) {
@@ -259,8 +263,9 @@ fun SettingsScreen(
                 title = stringResource(R.string.settings_resume_playback),
                 subtitle = stringResource(R.string.settings_resume_playback_detail),
                 trailing = {
-                    Switch(
+                    PlaybackSwitch(
                         checked = resumePlayback,
+                        darkTheme = darkTheme,
                         onCheckedChange = {
                             resumePlayback = it
                             playbackPreferences.setResumePlayback(it)
@@ -273,13 +278,21 @@ fun SettingsScreen(
                 title = stringResource(R.string.settings_gapless_playback),
                 subtitle = stringResource(R.string.settings_gapless_playback_detail),
                 trailing = {
-                    Switch(
+                    PlaybackSwitch(
                         checked = gaplessPlayback,
+                        darkTheme = darkTheme,
                         onCheckedChange = {
                             gaplessPlayback = it
                             playbackPreferences.setGaplessPlayback(it)
                         },
                     )
+                },
+            )
+            CrossfadeSelector(
+                seconds = crossfadeSeconds,
+                onSecondsChange = {
+                    crossfadeSeconds = it
+                    playbackPreferences.setCrossfadeSeconds(it)
                 },
             )
         }
@@ -368,6 +381,99 @@ fun SettingsScreen(
                     Text(stringResource(R.string.action_cancel))
                 }
             },
+        )
+    }
+}
+
+@Composable
+private fun PlaybackSwitch(
+    checked: Boolean,
+    darkTheme: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Switch(
+        checked = checked,
+        onCheckedChange = onCheckedChange,
+        colors = SwitchDefaults.colors(
+            checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+            checkedTrackColor = MaterialTheme.colorScheme.primary,
+            uncheckedThumbColor = if (darkTheme) {
+                MaterialTheme.colorScheme.onSurface
+            } else {
+                Color.White
+            },
+            uncheckedTrackColor = if (darkTheme) {
+                MaterialTheme.colorScheme.surfaceVariant
+            } else {
+                Color(0xFFE3E3E8)
+            },
+            uncheckedBorderColor = if (darkTheme) {
+                MaterialTheme.colorScheme.outline
+            } else {
+                Color(0xFFC1C1C8)
+            },
+        ),
+    )
+}
+
+@Composable
+private fun CrossfadeSelector(
+    seconds: Int,
+    onSecondsChange: (Int) -> Unit,
+) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                Modifier
+                    .size(42.dp)
+                    .background(
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),
+                        RoundedCornerShape(14.dp),
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    Icons.Default.SwapHoriz,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            }
+            Column(
+                Modifier
+                    .padding(start = 12.dp)
+                    .weight(1f),
+            ) {
+                Text(
+                    stringResource(R.string.settings_crossfade),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Text(
+                    if (seconds == 0) {
+                        stringResource(R.string.settings_crossfade_off)
+                    } else {
+                        stringResource(R.string.settings_crossfade_value, seconds)
+                    },
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 2.dp),
+                )
+            }
+        }
+
+        Slider(
+            value = seconds.toFloat(),
+            onValueChange = { onSecondsChange(it.toInt()) },
+            valueRange = 0f..12f,
+            steps = 11,
+            modifier = Modifier.padding(start = 42.dp, top = 2.dp),
         )
     }
 }

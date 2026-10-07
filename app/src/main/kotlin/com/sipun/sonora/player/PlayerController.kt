@@ -56,7 +56,7 @@ class PlayerController(context: Context) {
                 runCatching { controllerFuture.get() }.onSuccess { mediaController ->
                     controller = mediaController
                     mediaController.addListener(listener)
-                    restoreLastPlayedIfNeeded()
+                                restoreLastPlayedIfNeeded()
                     pendingQueue?.let { (songs, index) ->
                         pendingQueue = null
                         playQueue(songs, index)
@@ -181,7 +181,9 @@ class PlayerController(context: Context) {
         updateState()
     }
 
-    fun refresh() = updateState()
+    fun refresh() {
+        updateState()
+    }
 
     fun updateCurrentSong(song: Song) {
         val mediaController = controller ?: return
@@ -314,5 +316,8 @@ class PlayerController(context: Context) {
             uri = uri,
             albumArtUri = metadata.artworkUri?.toString(),
         )
+    }
+
+    private companion object {
     }
 }
