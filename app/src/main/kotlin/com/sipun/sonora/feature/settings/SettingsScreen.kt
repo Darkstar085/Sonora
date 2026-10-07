@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material3.AlertDialog
@@ -97,6 +98,7 @@ fun SettingsScreen(
     val selectedPalette by themePreferences.dynamicPalette.collectAsStateWithLifecycle()
     val customColor by themePreferences.customColor.collectAsStateWithLifecycle()
     var resumePlayback by remember { mutableStateOf(playbackPreferences.resumePlayback()) }
+    var gaplessPlayback by remember { mutableStateOf(playbackPreferences.gaplessPlayback()) }
     var showThemeDialog by remember { mutableStateOf(false) }
     var showSonoraDialog by remember { mutableStateOf(false) }
     var wallpaperSeed by remember(context) { mutableStateOf(readWallpaperSeed(context)) }
@@ -262,6 +264,20 @@ fun SettingsScreen(
                         onCheckedChange = {
                             resumePlayback = it
                             playbackPreferences.setResumePlayback(it)
+                        },
+                    )
+                },
+            )
+            SettingsRow(
+                icon = Icons.Default.History,
+                title = stringResource(R.string.settings_gapless_playback),
+                subtitle = stringResource(R.string.settings_gapless_playback_detail),
+                trailing = {
+                    Switch(
+                        checked = gaplessPlayback,
+                        onCheckedChange = {
+                            gaplessPlayback = it
+                            playbackPreferences.setGaplessPlayback(it)
                         },
                     )
                 },

@@ -29,6 +29,10 @@ class SonoraPreferences(context: Context) {
 
     fun setResumePlayback(enabled: Boolean) = playback.setResumePlayback(enabled)
 
+    fun gaplessPlayback(): Boolean = playback.gaplessPlayback()
+
+    fun setGaplessPlayback(enabled: Boolean) = playback.setGaplessPlayback(enabled)
+
     fun listeningHistoryIds(): List<Long> = playback.listeningHistoryIds()
 
     fun lastPlayed(): Song? = playback.lastPlayed()

@@ -43,6 +43,8 @@
     <string name="settings_playback">Playback</string>
     <string name="settings_resume_playback">Resume playback</string>
     <string name="settings_resume_playback_detail">Continue from where you left off</string>
+    <string name="settings_gapless_playback">Gapless playback</string>
+    <string name="settings_gapless_playback_detail">Start the next track without a pause</string>
     <string name="settings_about">About</string>
     <string name="about_sonora">Sonora</string>
     <string name="about_sonora_detail">A simple local music player for Android.</string>

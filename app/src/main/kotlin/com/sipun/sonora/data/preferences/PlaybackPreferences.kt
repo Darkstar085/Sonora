@@ -54,6 +54,13 @@ internal class PlaybackPreferences(context: Context) {
         preferences.edit().putBoolean(KEY_RESUME_PLAYBACK, enabled).apply()
     }
 
+    fun gaplessPlayback(): Boolean =
+        preferences.getBoolean(KEY_GAPLESS_PLAYBACK, true)
+
+    fun setGaplessPlayback(enabled: Boolean) {
+        preferences.edit().putBoolean(KEY_GAPLESS_PLAYBACK, enabled).apply()
+    }
+
     fun clearLastPlayed() {
         preferences.edit()
             .remove(LAST_PLAYED_ID)
@@ -77,6 +84,7 @@ internal class PlaybackPreferences(context: Context) {
         const val LAST_PLAYED_POSITION = "last_played_position"
         const val LISTENING_HISTORY = "listening_history"
         const val KEY_RESUME_PLAYBACK = "resume_playback"
+        const val KEY_GAPLESS_PLAYBACK = "gapless_playback"
         const val MAX_LISTENING_HISTORY = 10
     }
 }
