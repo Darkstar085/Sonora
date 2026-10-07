@@ -220,6 +220,7 @@ internal fun Overview(
                     stringResource(R.string.continue_listening),
                     style = MaterialTheme.typography.titleLarge
                 )
+                Spacer(Modifier.size(8.dp))
                 Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp)) {
                     Column {
                         listeningHistory.forEachIndexed { index, song ->

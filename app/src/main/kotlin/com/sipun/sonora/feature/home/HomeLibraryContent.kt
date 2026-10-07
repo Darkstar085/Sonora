@@ -171,6 +171,7 @@ internal fun FavoriteList(
     }
 
     LazyColumn(
+        modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
         contentPadding = PaddingValues(bottom = 85.dp),
     ) {
