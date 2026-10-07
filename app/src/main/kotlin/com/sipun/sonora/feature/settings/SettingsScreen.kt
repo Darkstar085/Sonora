@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.SwapHoriz
@@ -277,7 +278,7 @@ fun SettingsScreen(
                 },
             )
             SettingsRow(
-                icon = Icons.Default.History,
+                icon = Icons.Default.Link,
                 title = stringResource(R.string.settings_gapless_playback),
                 subtitle = stringResource(R.string.settings_gapless_playback_detail),
                 trailing = {

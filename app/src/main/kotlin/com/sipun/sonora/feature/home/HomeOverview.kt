@@ -16,7 +16,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.QueueMusic
+import androidx.compose.material.icons.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.Album
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.MusicNote
@@ -160,7 +160,7 @@ internal fun Overview(
                         stringResource(R.string.tab_playlists),
                         playlistCount,
                         Modifier.width(124.dp),
-                        Icons.AutoMirrored.Filled.QueueMusic
+                        Icons.Default.PlaylistPlay
                     )
                 }
             }

@@ -682,7 +682,7 @@ private fun AudioInfoPill(info: AudioInfo, modifier: Modifier = Modifier) {
         ) {
             AudioInfoItem(Icons.Default.MusicNote, info.bitrate)
             AudioInfoDivider()
-            AudioInfoItem(Icons.Default.GraphicEq, info.format)
+            AudioInfoItem(Icons.Default.Description, info.format)
             AudioInfoDivider()
             AudioInfoItem(Icons.Default.GraphicEq, info.sampleRate)
         }
