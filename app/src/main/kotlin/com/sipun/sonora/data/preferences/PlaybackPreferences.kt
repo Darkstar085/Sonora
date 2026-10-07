@@ -6,7 +6,7 @@ import com.sipun.sonora.domain.model.Song
 internal class PlaybackPreferences(context: Context) {
     private val preferences = context.getSharedPreferences(FILE_NAME, Context.MODE_PRIVATE)
 
-    fun saveLastPlayed(song: Song) {
+    fun saveLastPlayed(song: Song, positionMs: Long = 0L) {
         val history = listeningHistoryIds().toMutableList()
         history.remove(song.id)
         history.add(0, song.id)
@@ -17,6 +17,7 @@ internal class PlaybackPreferences(context: Context) {
             .putString(LAST_PLAYED_ALBUM, song.album)
             .putString(LAST_PLAYED_URI, song.uri)
             .putString(LAST_PLAYED_ART, song.albumArtUri)
+            .putLong(LAST_PLAYED_POSITION, positionMs.coerceAtLeast(0L))
             .putString(LISTENING_HISTORY, history.take(MAX_LISTENING_HISTORY).joinToString(","))
             .apply()
     }
@@ -43,6 +44,16 @@ internal class PlaybackPreferences(context: Context) {
         )
     }
 
+    fun lastPlayedPositionMs(): Long =
+        preferences.getLong(LAST_PLAYED_POSITION, 0L)
+
+    fun resumePlayback(): Boolean =
+        preferences.getBoolean(KEY_RESUME_PLAYBACK, true)
+
+    fun setResumePlayback(enabled: Boolean) {
+        preferences.edit().putBoolean(KEY_RESUME_PLAYBACK, enabled).apply()
+    }
+
     fun clearLastPlayed() {
         preferences.edit()
             .remove(LAST_PLAYED_ID)
@@ -51,6 +62,7 @@ internal class PlaybackPreferences(context: Context) {
             .remove(LAST_PLAYED_ALBUM)
             .remove(LAST_PLAYED_URI)
             .remove(LAST_PLAYED_ART)
+            .remove(LAST_PLAYED_POSITION)
             .apply()
     }
 
@@ -62,7 +74,9 @@ internal class PlaybackPreferences(context: Context) {
         const val LAST_PLAYED_ALBUM = "last_played_album"
         const val LAST_PLAYED_URI = "last_played_uri"
         const val LAST_PLAYED_ART = "last_played_art"
+        const val LAST_PLAYED_POSITION = "last_played_position"
         const val LISTENING_HISTORY = "listening_history"
+        const val KEY_RESUME_PLAYBACK = "resume_playback"
         const val MAX_LISTENING_HISTORY = 10
     }
 }

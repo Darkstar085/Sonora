@@ -34,6 +34,7 @@ class PlayerController(context: Context) {
     val state: StateFlow<PlayerState> = _state.asStateFlow()
     private var controller: MediaController? = null
     private var pendingQueue: Pair<List<Song>, Int>? = null
+    private var restoredLastPlayed = false
     private val controllerFuture = MediaController.Builder(
         appContext,
         SessionToken(appContext, ComponentName(appContext, SonoraPlaybackService::class.java)),
@@ -55,6 +56,7 @@ class PlayerController(context: Context) {
                 runCatching { controllerFuture.get() }.onSuccess { mediaController ->
                     controller = mediaController
                     mediaController.addListener(listener)
+                    restoreLastPlayedIfNeeded()
                     pendingQueue?.let { (songs, index) ->
                         pendingQueue = null
                         playQueue(songs, index)
@@ -125,7 +127,12 @@ class PlayerController(context: Context) {
                 mediaController.play()
             } else {
                 preferences.lastPlayed()?.let { song ->
-                    mediaController.setMediaItem(toMediaItem(song))
+                    val position = if (preferences.resumePlayback()) {
+                        preferences.lastPlayedPositionMs()
+                    } else {
+                        0L
+                    }
+                    mediaController.setMediaItem(toMediaItem(song), position)
                     mediaController.prepare()
                     mediaController.play()
                     loadCurrentArtwork()
@@ -197,6 +204,24 @@ class PlayerController(context: Context) {
         MediaController.releaseFuture(controllerFuture)
     }
 
+    private fun restoreLastPlayedIfNeeded() {
+        if (restoredLastPlayed || !preferences.resumePlayback()) return
+        val mediaController = controller ?: return
+        if (mediaController.currentMediaItem != null) {
+            restoredLastPlayed = true
+            return
+        }
+
+        val song = preferences.lastPlayed() ?: return
+        mediaController.setMediaItem(
+            toMediaItem(song),
+            preferences.lastPlayedPositionMs().coerceAtLeast(0L),
+        )
+        mediaController.prepare()
+        restoredLastPlayed = true
+        loadCurrentArtwork()
+    }
+
     private fun loadCurrentArtwork() {
         val mediaController = controller ?: return
         val item = mediaController.currentMediaItem ?: return
@@ -250,7 +275,12 @@ class PlayerController(context: Context) {
             ?: currentItem?.toSong()
             ?: _state.value.currentSong
 
-        currentSong?.let(preferences::saveLastPlayed)
+        currentSong?.let {
+            preferences.saveLastPlayed(
+                it,
+                mediaController.currentPosition.coerceAtLeast(0L),
+            )
+        }
         _state.value = PlayerState(
             currentSong = currentSong,
             artworkData = _state.value.artworkData,

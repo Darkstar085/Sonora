@@ -21,7 +21,13 @@ class SonoraPreferences(context: Context) {
 
     fun favoriteIds(): Set<Long> = library.favoriteIds()
 
-    fun saveLastPlayed(song: Song) = playback.saveLastPlayed(song)
+    fun saveLastPlayed(song: Song, positionMs: Long = 0L) = playback.saveLastPlayed(song, positionMs)
+
+    fun lastPlayedPositionMs(): Long = playback.lastPlayedPositionMs()
+
+    fun resumePlayback(): Boolean = playback.resumePlayback()
+
+    fun setResumePlayback(enabled: Boolean) = playback.setResumePlayback(enabled)
 
     fun listeningHistoryIds(): List<Long> = playback.listeningHistoryIds()
 

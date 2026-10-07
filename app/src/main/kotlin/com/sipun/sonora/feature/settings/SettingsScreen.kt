@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material3.AlertDialog
@@ -74,6 +75,7 @@ import com.sipun.sonora.BuildConfig
 import com.sipun.sonora.R
 import com.sipun.sonora.data.preferences.AppTheme
 import com.sipun.sonora.data.preferences.DynamicPalette
+import com.sipun.sonora.data.preferences.SonoraPreferences
 import com.sipun.sonora.data.preferences.ThemePreferences
 import com.sipun.sonora.ui.theme.WallpaperPalette
 import com.sipun.sonora.ui.theme.wallpaperPalette
@@ -86,11 +88,15 @@ fun SettingsScreen(
     val themePreferences = remember(context) {
         ThemePreferences.from(context.applicationContext)
     }
+    val playbackPreferences = remember(context) {
+        SonoraPreferences(context.applicationContext)
+    }
     val selectedTheme by themePreferences.theme.collectAsStateWithLifecycle()
     val pureBlack by themePreferences.pureBlack.collectAsStateWithLifecycle()
     val dynamicColor by themePreferences.dynamicColor.collectAsStateWithLifecycle()
     val selectedPalette by themePreferences.dynamicPalette.collectAsStateWithLifecycle()
     val customColor by themePreferences.customColor.collectAsStateWithLifecycle()
+    var resumePlayback by remember { mutableStateOf(playbackPreferences.resumePlayback()) }
     var showThemeDialog by remember { mutableStateOf(false) }
     var showSonoraDialog by remember { mutableStateOf(false) }
     var wallpaperSeed by remember(context) { mutableStateOf(readWallpaperSeed(context)) }
@@ -243,6 +249,23 @@ fun SettingsScreen(
                 )
             }
 
+        }
+
+        SettingsSection(stringResource(R.string.settings_playback)) {
+            SettingsRow(
+                icon = Icons.Default.PlayArrow,
+                title = stringResource(R.string.settings_resume_playback),
+                subtitle = stringResource(R.string.settings_resume_playback_detail),
+                trailing = {
+                    Switch(
+                        checked = resumePlayback,
+                        onCheckedChange = {
+                            resumePlayback = it
+                            playbackPreferences.setResumePlayback(it)
+                        },
+                    )
+                },
+            )
         }
 
         SettingsSection(stringResource(R.string.settings_about)) {
