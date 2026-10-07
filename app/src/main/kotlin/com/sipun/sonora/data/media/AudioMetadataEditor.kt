@@ -18,13 +18,11 @@ import android.webkit.MimeTypeMap
 import com.sipun.sonora.domain.model.Song
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.jaudiotagger.audio.AudioFileIO
-import org.jaudiotagger.tag.FieldKey
-import org.jaudiotagger.tag.Tag
-import org.jaudiotagger.tag.TagOptionSingleton
-import org.jaudiotagger.tag.flac.FlacTag
-import org.jaudiotagger.tag.images.AndroidArtwork
-import org.jaudiotagger.tag.reference.PictureTypes
+import kotlinx.io.files.Path
+import org.jaudiotagger.kt.AudioTagger
+import org.jaudiotagger.kt.tag.Artwork
+import org.jaudiotagger.kt.tag.FieldKey
+import org.jaudiotagger.kt.tag.Tag
 import java.io.File
 
 data class EditableSongMetadata(
@@ -74,7 +72,7 @@ object AudioMetadataEditor {
 
     suspend fun read(context: Context, song: Song): EditableSongMetadata =
         withContext(Dispatchers.IO) {
-            TagOptionSingleton.getInstance().isAndroid = true
+
             val temp = File.createTempFile(
                 "sonora-read-",
                 audioSuffix(context, Uri.parse(song.uri)),
@@ -85,8 +83,8 @@ object AudioMetadataEditor {
                     requireNotNull(input) { "Unable to read the audio file." }
                     temp.outputStream().use { output -> input.copyTo(output) }
                 }
-                val tag: Tag? = AudioFileIO.read(temp).tag
-                fun value(key: FieldKey): String = tag?.getFirst(key).orEmpty()
+                val tag: Tag = AudioTagger.read(Path(temp.absolutePath)).tag
+                fun value(key: FieldKey): String = tag.first(key).orEmpty()
                 EditableSongMetadata(
                     title = value(FieldKey.TITLE).ifBlank { song.title },
                     artist = value(FieldKey.ARTIST).ifBlank { song.artist },
@@ -102,7 +100,7 @@ object AudioMetadataEditor {
                     lyrics = value(FieldKey.LYRICS),
                     copyright = value(FieldKey.COPYRIGHT),
                     bpm = value(FieldKey.BPM).toIntOrNull(),
-                    artworkData = tag?.firstArtwork?.binaryData,
+                    artworkData = tag.artworks.firstOrNull()?.data,
                 )
             } finally {
                 temp.delete()
@@ -116,7 +114,7 @@ object AudioMetadataEditor {
         artworkUri: Uri?,
         artworkChanged: Boolean,
     ) = withContext(Dispatchers.IO) {
-        TagOptionSingleton.getInstance().isAndroid = true
+
         val resolver = context.contentResolver
         val audioUri = Uri.parse(song.uri)
         val audioTemp = File.createTempFile(
@@ -141,8 +139,8 @@ object AudioMetadataEditor {
                 audioTemp.outputStream().use { output -> input.copyTo(output) }
             }
 
-            val audioFile = AudioFileIO.read(audioTemp)
-            val tag: Tag = audioFile.tagOrCreateAndSetDefault
+            val audioFile = AudioTagger.read(Path(audioTemp.absolutePath))
+            val tag: Tag = audioFile.tag
             writeField(tag, FieldKey.TITLE, metadata.title)
             writeField(tag, FieldKey.ARTIST, metadata.artist)
             writeField(tag, FieldKey.ALBUM, metadata.album)
@@ -159,7 +157,7 @@ object AudioMetadataEditor {
             writeField(tag, FieldKey.BPM, metadata.bpm?.toString().orEmpty())
 
             if (artworkChanged) {
-                tag.deleteArtworkField()
+                tag.clearArtworks()
                 if (artworkUri != null && imageTemp != null) {
                     resolver.openInputStream(artworkUri).use { input ->
                         requireNotNull(input) { "Unable to read artwork." }
@@ -167,29 +165,21 @@ object AudioMetadataEditor {
                     }
                     val normalizedArtwork = requireNotNull(normalizedImageTemp)
                     normalizeArtworkToJpeg(imageTemp, normalizedArtwork)
-                    if (tag is FlacTag) {
-                        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-                        BitmapFactory.decodeFile(normalizedArtwork.absolutePath, bounds)
-                        val artworkData = normalizedArtwork.readBytes()
-                        tag.setField(
-                            tag.createArtworkField(
-                                artworkData,
-                                PictureTypes.DEFAULT_ID,
-                                "image/jpeg",
-                                "",
-                                bounds.outWidth,
-                                bounds.outHeight,
-                                24,
-                                0,
-                            ),
-                        )
-                    } else {
-                        tag.setField(AndroidArtwork.createArtworkFromFile(normalizedArtwork))
-                    }
+                    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                    BitmapFactory.decodeFile(normalizedArtwork.absolutePath, bounds)
+                    tag.setArtwork(
+                        Artwork(
+                            data = normalizedArtwork.readBytes(),
+                            mimeType = "image/jpeg",
+                            width = bounds.outWidth,
+                            height = bounds.outHeight,
+                            colourDepth = 24,
+                        ),
+                    )
                 }
             }
 
-            AudioFileIO.write(audioFile)
+            AudioTagger.write(Path(audioTemp.absolutePath), tag)
 
             try {
                 resolver.openOutputStream(audioUri, "wt").use { output ->
@@ -334,6 +324,6 @@ object AudioMetadataEditor {
     }
 
     private fun writeField(tag: Tag, key: FieldKey, value: String) {
-        if (value.isBlank()) tag.deleteField(key) else tag.setField(key, value)
+        if (value.isBlank()) tag.remove(key) else tag.set(key, value)
     }
 }
