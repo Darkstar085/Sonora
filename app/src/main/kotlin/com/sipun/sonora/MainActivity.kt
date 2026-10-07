@@ -2,6 +2,7 @@ package com.sipun.sonora
 
 import android.Manifest
 import android.content.Intent
+import android.provider.OpenableColumns
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -37,11 +38,14 @@ import com.sipun.sonora.core.update.UpdateNotificationHelper
 import com.sipun.sonora.data.media.AndroidMusicRepository
 import com.sipun.sonora.data.preferences.OnboardingPreferences
 import com.sipun.sonora.navigation.SonoraApp
+import com.sipun.sonora.domain.model.Song
+import com.sipun.sonora.player.PlayerController
 import com.sipun.sonora.ui.onboarding.WelcomeScreen
 import com.sipun.sonora.ui.theme.SonoraTheme
 import com.sipun.sonora.ui.update.UpdateContent
 
 class MainActivity : ComponentActivity() {
+    private var pendingAudioIntent: Intent? = null
     private val updateCheckRequested = mutableStateOf(false)
     private val updateNotificationRequested = mutableStateOf(false)
 
@@ -51,6 +55,7 @@ class MainActivity : ComponentActivity() {
         configureSystemBars()
         UpdateNotificationHelper.createChannel(this)
         handleUpdateIntent(intent)
+        handleAudioIntent(intent)
         setContent { SonoraTheme { SonoraPermissionGate() } }
     }
 
@@ -112,6 +117,10 @@ class MainActivity : ComponentActivity() {
 
             permissionGranted -> {
                 SonoraContent()
+                pendingAudioIntent?.let { audioIntent ->
+                    pendingAudioIntent = null
+                    playAudioIntent(audioIntent)
+                }
             }
 
             else -> {
@@ -177,6 +186,51 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         handleUpdateIntent(intent)
+        handleAudioIntent(intent)
+    }
+
+    private fun handleAudioIntent(intent: Intent?) {
+        if (intent?.action != Intent.ACTION_VIEW || intent.data == null) return
+        if (intent.resolveTypeIfNeeded(contentResolver)?.startsWith("audio/") != true) return
+        if (!hasMusicPermission()) {
+            pendingAudioIntent = intent
+            return
+        }
+        playAudioIntent(intent)
+    }
+
+    private fun hasMusicPermission(): Boolean {
+        val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Manifest.permission.READ_MEDIA_AUDIO
+        } else {
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+        return ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun playAudioIntent(intent: Intent) {
+        val uri = intent.data ?: return
+        val title = contentResolver.query(
+            uri,
+            arrayOf(OpenableColumns.DISPLAY_NAME),
+            null,
+            null,
+            null,
+        )?.use { cursor ->
+            if (cursor.moveToFirst()) cursor.getString(0) else null
+        }?.substringBeforeLast('.', missingDelimiterValue = "")
+            ?.takeIf { it.isNotBlank() }
+            ?: "Unknown title"
+
+        val song = Song(
+            id = uri.toString().hashCode().toLong(),
+            title = title,
+            artist = "Unknown artist",
+            album = "Unknown album",
+            durationMs = 0L,
+            uri = uri.toString(),
+        )
+        PlayerController(applicationContext).playQueue(listOf(song))
     }
 
     private fun configureSystemBars() {
