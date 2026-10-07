@@ -48,7 +48,7 @@ internal class PlaybackPreferences(context: Context) {
         preferences.getLong(LAST_PLAYED_POSITION, 0L)
 
     fun resumePlayback(): Boolean =
-        preferences.getBoolean(KEY_RESUME_PLAYBACK, true)
+        preferences.getBoolean(KEY_RESUME_PLAYBACK, false)
 
     fun setResumePlayback(enabled: Boolean) {
         preferences.edit().putBoolean(KEY_RESUME_PLAYBACK, enabled).apply()
@@ -62,7 +62,7 @@ internal class PlaybackPreferences(context: Context) {
     }
 
     fun crossfadeSeconds(): Int =
-        preferences.getInt(KEY_CROSSFADE_SECONDS, 0).coerceIn(0, MAX_CROSSFADE_SECONDS)
+        preferences.getInt(KEY_CROSSFADE_SECONDS, 2).coerceIn(0, MAX_CROSSFADE_SECONDS)
 
     fun setCrossfadeSeconds(seconds: Int) {
         preferences.edit()
