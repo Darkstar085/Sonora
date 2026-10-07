@@ -3,6 +3,7 @@ package com.sipun.sonora.player
 import android.content.ComponentName
 import android.content.Context
 import android.net.Uri
+import android.media.MediaMetadataRetriever
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
@@ -34,6 +35,7 @@ class PlayerController(context: Context) {
     val state: StateFlow<PlayerState> = _state.asStateFlow()
     private var controller: MediaController? = null
     private var pendingQueue: Pair<List<Song>, Int>? = null
+    private var pendingExternalUri: Uri? = null
     private var restoredLastPlayed = false
     private val controllerFuture = MediaController.Builder(
         appContext,
@@ -61,11 +63,52 @@ class PlayerController(context: Context) {
                         pendingQueue = null
                         playQueue(songs, index)
                     }
+                    pendingExternalUri?.let { uri ->
+                        pendingExternalUri = null
+                        playExternal(uri)
+                    }
                     updateState()
                 }
             },
             context.mainExecutor,
         )
+    }
+
+    fun playExternal(uri: Uri) {
+        val mediaController = controller ?: run {
+            pendingExternalUri = uri
+            return
+        }
+
+        artworkScope.launch {
+            val metadata = withContext(Dispatchers.IO) {
+                val retriever = MediaMetadataRetriever()
+                try {
+                    retriever.setDataSource(appContext, uri)
+                    MediaMetadata.Builder()
+                        .setTitle(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE))
+                        .setArtist(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST))
+                        .setAlbumTitle(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM))
+                        .build()
+                } catch (_: Exception) {
+                    MediaMetadata.Builder().build()
+                } finally {
+                    retriever.release()
+                }
+            }
+
+            mediaController.setMediaItem(
+                MediaItem.Builder()
+                    .setUri(uri)
+                    .setMediaId(uri.toString().hashCode().toLong().toString())
+                    .setMediaMetadata(metadata)
+                    .build(),
+            )
+            mediaController.prepare()
+            mediaController.play()
+            loadCurrentArtwork()
+            updateState()
+        }
     }
 
     fun playQueue(songs: List<Song>, startIndex: Int = 0) {

@@ -2,7 +2,7 @@ package com.sipun.sonora
 
 import android.Manifest
 import android.content.Intent
-import android.provider.OpenableColumns
+import android.net.Uri
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -38,14 +38,12 @@ import com.sipun.sonora.core.update.UpdateNotificationHelper
 import com.sipun.sonora.data.media.AndroidMusicRepository
 import com.sipun.sonora.data.preferences.OnboardingPreferences
 import com.sipun.sonora.navigation.SonoraApp
-import com.sipun.sonora.domain.model.Song
-import com.sipun.sonora.player.PlayerController
 import com.sipun.sonora.ui.onboarding.WelcomeScreen
 import com.sipun.sonora.ui.theme.SonoraTheme
 import com.sipun.sonora.ui.update.UpdateContent
 
 class MainActivity : ComponentActivity() {
-    private var pendingAudioIntent: Intent? = null
+    private var pendingAudioUri by mutableStateOf<Uri?>(null)
     private val updateCheckRequested = mutableStateOf(false)
     private val updateNotificationRequested = mutableStateOf(false)
 
@@ -116,11 +114,10 @@ class MainActivity : ComponentActivity() {
             }
 
             permissionGranted -> {
-                SonoraContent()
-                pendingAudioIntent?.let { audioIntent ->
-                    pendingAudioIntent = null
-                    playAudioIntent(audioIntent)
-                }
+                SonoraContent(
+                    externalAudioUri = pendingAudioUri,
+                    onExternalAudioConsumed = { pendingAudioUri = null },
+                )
             }
 
             else -> {
@@ -157,7 +154,10 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    private fun SonoraContent() {
+    private fun SonoraContent(
+        externalAudioUri: Uri? = null,
+        onExternalAudioConsumed: () -> Unit = {},
+    ) {
         val appIcon = remember {
             packageManager
                 .getApplicationIcon(applicationInfo)
@@ -168,7 +168,9 @@ class MainActivity : ComponentActivity() {
         val notificationRequested by updateNotificationRequested
 
         SonoraApp(
-            onCheckForUpdates = { updateCheckRequested.value = true }
+            onCheckForUpdates = { updateCheckRequested.value = true },
+            externalAudioUri = pendingAudioUri,
+            onExternalAudioConsumed = { pendingAudioUri = null },
         )
         UpdateContent(
             checkRequested = checkRequested,
@@ -193,10 +195,10 @@ class MainActivity : ComponentActivity() {
         if (intent?.action != Intent.ACTION_VIEW || intent.data == null) return
         if (intent.resolveTypeIfNeeded(contentResolver)?.startsWith("audio/") != true) return
         if (!hasMusicPermission()) {
-            pendingAudioIntent = intent
+            pendingAudioUri = intent.data
             return
         }
-        playAudioIntent(intent)
+        pendingAudioUri = intent.data
     }
 
     private fun hasMusicPermission(): Boolean {
@@ -206,31 +208,6 @@ class MainActivity : ComponentActivity() {
             Manifest.permission.READ_EXTERNAL_STORAGE
         }
         return ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
-    }
-
-    private fun playAudioIntent(intent: Intent) {
-        val uri = intent.data ?: return
-        val title = contentResolver.query(
-            uri,
-            arrayOf(OpenableColumns.DISPLAY_NAME),
-            null,
-            null,
-            null,
-        )?.use { cursor ->
-            if (cursor.moveToFirst()) cursor.getString(0) else null
-        }?.substringBeforeLast('.', missingDelimiterValue = "")
-            ?.takeIf { it.isNotBlank() }
-            ?: "Unknown title"
-
-        val song = Song(
-            id = uri.toString().hashCode().toLong(),
-            title = title,
-            artist = "Unknown artist",
-            album = "Unknown album",
-            durationMs = 0L,
-            uri = uri.toString(),
-        )
-        PlayerController(applicationContext).playQueue(listOf(song))
     }
 
     private fun configureSystemBars() {

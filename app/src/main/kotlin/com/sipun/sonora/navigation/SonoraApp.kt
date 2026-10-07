@@ -21,6 +21,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import android.net.Uri
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
@@ -31,7 +32,11 @@ import com.sipun.sonora.player.PlayerController
 import kotlinx.coroutines.delay
 
 @Composable
-fun SonoraApp(onCheckForUpdates: () -> Unit = {}) {
+fun SonoraApp(
+    onCheckForUpdates: () -> Unit = {},
+    externalAudioUri: Uri? = null,
+    onExternalAudioConsumed: () -> Unit = {},
+) {
     val context = LocalContext.current
     val navController = rememberNavController()
     val player = remember(context) { PlayerController(context.applicationContext) }
@@ -40,6 +45,16 @@ fun SonoraApp(onCheckForUpdates: () -> Unit = {}) {
     val slideOffset = with(LocalDensity.current) { 72.dp.roundToPx() }
     var miniPlayerVisible by remember { mutableStateOf(currentRoute != SonoraRoute.NowPlaying.route) }
     val playerState by player.state.collectAsStateWithLifecycle()
+    LaunchedEffect(externalAudioUri) {
+        externalAudioUri?.let {
+            player.playExternal(it)
+            onExternalAudioConsumed()
+            navController.navigate(SonoraRoute.NowPlaying.route) {
+                launchSingleTop = true
+            }
+        }
+    }
+
     val showMiniPlayer = miniPlayerVisible &&
             currentRoute != SonoraRoute.Lyrics.route &&
             playerState.currentSong != null
