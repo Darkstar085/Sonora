@@ -15,7 +15,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlaylistPlay
+import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.FavoriteBorder
@@ -398,7 +398,7 @@ internal fun PlaylistList(
                 verticalArrangement = Arrangement.Center,
             ) {
                 Icon(
-                    Icons.Default.PlaylistPlay,
+                    Icons.AutoMirrored.Filled.PlaylistPlay,
                     null,
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(56.dp)
@@ -441,7 +441,7 @@ internal fun PlaylistList(
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Icon(
-                                    Icons.Default.PlaylistPlay,
+                                    Icons.AutoMirrored.Filled.PlaylistPlay,
                                     null,
                                     tint = MaterialTheme.colorScheme.primary
                                 )

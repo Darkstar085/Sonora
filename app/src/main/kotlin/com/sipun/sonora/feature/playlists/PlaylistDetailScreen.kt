@@ -18,7 +18,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.PlaylistPlay
+import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Card
 import androidx.compose.material3.FilledIconButton
@@ -120,7 +120,7 @@ fun PlaylistDetailScreen(
                             contentAlignment = Alignment.Center,
                         ) {
                             Icon(
-                                Icons.Default.PlaylistPlay,
+                                Icons.AutoMirrored.Filled.PlaylistPlay,
                                 null,
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(72.dp)

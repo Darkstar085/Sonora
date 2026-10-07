@@ -35,11 +35,11 @@ import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LightMode
-import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.AllInclusive
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.SwapHoriz
-import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -278,7 +278,7 @@ fun SettingsScreen(
                 },
             )
             SettingsRow(
-                icon = Icons.Default.Link,
+                icon = Icons.Default.AllInclusive,
                 title = stringResource(R.string.settings_gapless_playback),
                 subtitle = stringResource(R.string.settings_gapless_playback_detail),
                 trailing = {
@@ -293,7 +293,7 @@ fun SettingsScreen(
                 },
             )
             SettingsRow(
-                icon = Icons.Default.VolumeUp,
+                icon = Icons.AutoMirrored.Filled.VolumeUp,
                 title = stringResource(R.string.settings_normalize_volume),
                 subtitle = stringResource(R.string.settings_normalize_volume_detail),
                 trailing = {

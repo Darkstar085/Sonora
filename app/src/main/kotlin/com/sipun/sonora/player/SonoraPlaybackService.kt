@@ -13,7 +13,6 @@ import androidx.media3.extractor.mp3.Mp3InfoReplayGain
 import kotlin.math.log10
 import kotlin.math.pow
 import androidx.media3.common.Player
-import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.DefaultMediaNotificationProvider
 import androidx.media3.session.MediaSession
@@ -22,7 +21,6 @@ import com.sipun.sonora.MainActivity
 import com.sipun.sonora.R
 import com.sipun.sonora.data.preferences.SonoraPreferences
 
-@OptIn(UnstableApi::class)
 class SonoraPlaybackService : MediaSessionService() {
     private val preferences by lazy { SonoraPreferences(applicationContext) }
     private val transitionHandler = Handler(Looper.getMainLooper())
@@ -300,12 +298,12 @@ class SonoraPlaybackService : MediaSessionService() {
                     when (key) {
                         "REPLAYGAIN_TRACK_GAIN", "REPLAYGAIN_ALBUM_GAIN" -> {
                             if (gainDb == null || key == "REPLAYGAIN_TRACK_GAIN") {
-                                gainDb = parseGainDb(entry.value)
+                                gainDb = parseGainDb(entry.values.first())
                             }
                         }
                         "REPLAYGAIN_TRACK_PEAK", "REPLAYGAIN_ALBUM_PEAK" -> {
                             if (peak == null || key == "REPLAYGAIN_TRACK_PEAK") {
-                                peak = entry.value.toFloatOrNull()
+                                peak = entry.values.first().toFloatOrNull()
                             }
                         }
                     }

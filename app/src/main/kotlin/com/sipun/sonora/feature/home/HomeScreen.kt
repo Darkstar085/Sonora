@@ -18,7 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlaylistPlay
+import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.Album
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
@@ -75,7 +75,7 @@ private val tabIcons = listOf(
     Icons.Default.Album,
     Icons.Default.Person,
     Icons.Default.Favorite,
-    Icons.Default.PlaylistPlay,
+    Icons.AutoMirrored.Filled.PlaylistPlay,
 )
 
 @Composable
