@@ -37,6 +37,7 @@ import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -103,6 +104,7 @@ fun SettingsScreen(
     var resumePlayback by remember { mutableStateOf(playbackPreferences.resumePlayback()) }
     var gaplessPlayback by remember { mutableStateOf(playbackPreferences.gaplessPlayback()) }
     var crossfadeSeconds by remember { mutableIntStateOf(playbackPreferences.crossfadeSeconds()) }
+    var normalizeVolume by remember { mutableStateOf(playbackPreferences.normalizeVolume()) }
     var showThemeDialog by remember { mutableStateOf(false) }
     var showSonoraDialog by remember { mutableStateOf(false) }
     var wallpaperSeed by remember(context) { mutableStateOf(readWallpaperSeed(context)) }
@@ -284,6 +286,21 @@ fun SettingsScreen(
                         onCheckedChange = {
                             gaplessPlayback = it
                             playbackPreferences.setGaplessPlayback(it)
+                        },
+                    )
+                },
+            )
+            SettingsRow(
+                icon = Icons.Default.VolumeUp,
+                title = stringResource(R.string.settings_normalize_volume),
+                subtitle = stringResource(R.string.settings_normalize_volume_detail),
+                trailing = {
+                    PlaybackSwitch(
+                        checked = normalizeVolume,
+                        darkTheme = darkTheme,
+                        onCheckedChange = {
+                            normalizeVolume = it
+                            playbackPreferences.setNormalizeVolume(it)
                         },
                     )
                 },

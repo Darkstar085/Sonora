@@ -1,11 +1,17 @@
 package com.sipun.sonora.player
 
 import android.app.PendingIntent
+import android.media.audiofx.LoudnessEnhancer
 import android.content.Intent
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import androidx.media3.common.C
+import androidx.media3.common.Metadata
+import androidx.media3.extractor.metadata.id3.TextInformationFrame
+import androidx.media3.extractor.mp3.Mp3InfoReplayGain
+import kotlin.math.log10
+import kotlin.math.pow
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
@@ -27,6 +33,9 @@ class SonoraPlaybackService : MediaSessionService() {
     private var crossfadeTargetIndex = C.INDEX_UNSET
     private var crossfadeStartElapsedMs = 0L
     private var crossfadeDurationMs = 0L
+    private val normalizationVolumes = mutableMapOf<ExoPlayer, Float>()
+    private val normalizationEffects = mutableMapOf<ExoPlayer, LoudnessEnhancer?>()
+    private val normalizationMetadata = mutableMapOf<ExoPlayer, Metadata>()
 
     override fun onCreate() {
         super.onCreate()
@@ -35,6 +44,7 @@ class SonoraPlaybackService : MediaSessionService() {
         val initialPlayer = buildPlayer(handleAudioFocus = true)
         activePlayer = initialPlayer
         initialPlayer.addListener(serviceListener)
+        addNormalizationListener(initialPlayer)
 
         val notificationProvider = DefaultMediaNotificationProvider.Builder(this)
             .setChannelId(NOTIFICATION_CHANNEL_ID)
@@ -69,7 +79,7 @@ class SonoraPlaybackService : MediaSessionService() {
         cancelCrossfade()
         mediaSession?.release()
         mediaSession = null
-        activePlayer?.release()
+        releasePlayer(activePlayer)
         activePlayer = null
         super.onDestroy()
     }
@@ -102,7 +112,7 @@ class SonoraPlaybackService : MediaSessionService() {
 
                     active.currentMediaItemIndex != crossfadeFromIndex -> {
                         cancelCrossfade()
-                        active.volume = 1f
+                        active.volume = normalizationVolumes[active] ?: 1f
                     }
                 }
             }
@@ -153,8 +163,12 @@ class SonoraPlaybackService : MediaSessionService() {
                     updateCrossfade(active)
                 } else if (crossfadeMs > 0L) {
                     maybePrepareCrossfade(active, crossfadeMs)
-                } else if (active.volume != 1f) {
-                    active.volume = 1f
+                } else {
+                    normalizationMetadata[active]?.let { metadata ->
+                        if (preferences.normalizeVolume()) applyNormalization(active, metadata)
+                    }
+                    val baseVolume = normalizationVolumes[active] ?: 1f
+                    if (active.volume != baseVolume) active.volume = baseVolume
                 }
             }
 
@@ -179,6 +193,7 @@ class SonoraPlaybackService : MediaSessionService() {
         val next = buildPlayer(handleAudioFocus = false)
 
         next.setMediaItems(items, nextIndex, 0L)
+        addNormalizationListener(next)
         next.shuffleModeEnabled = active.shuffleModeEnabled
         next.repeatMode = active.repeatMode
         next.playbackParameters = active.playbackParameters
@@ -221,8 +236,10 @@ class SonoraPlaybackService : MediaSessionService() {
         val progress = (elapsed.toFloat() / crossfadeDurationMs.coerceAtLeast(1L))
             .coerceIn(0f, 1f)
 
-        active.volume = 1f - progress
-        next.volume = progress
+        val activeBaseVolume = normalizationVolumes[active] ?: 1f
+        val nextBaseVolume = normalizationVolumes[next] ?: 1f
+        active.volume = activeBaseVolume * (1f - progress)
+        next.volume = nextBaseVolume * progress
 
         if (progress >= 1f) {
             finalizeCrossfade(active, next)
@@ -230,14 +247,13 @@ class SonoraPlaybackService : MediaSessionService() {
     }
 
     private fun finalizeCrossfade(oldPlayer: ExoPlayer, nextPlayer: ExoPlayer) {
-        nextPlayer.volume = 1f
+        nextPlayer.volume = normalizationVolumes[nextPlayer] ?: 1f
         nextPlayer.addListener(serviceListener)
         mediaSession?.setPlayer(nextPlayer)
         activePlayer = nextPlayer
 
         oldPlayer.removeListener(serviceListener)
-        oldPlayer.stop()
-        oldPlayer.release()
+        releasePlayer(oldPlayer)
 
         crossfadePlayer = null
         crossfadeFromIndex = C.INDEX_UNSET
@@ -248,16 +264,138 @@ class SonoraPlaybackService : MediaSessionService() {
 
     private fun cancelCrossfade() {
         crossfadePlayer?.let { next ->
-            next.stop()
-            next.release()
+            releasePlayer(next)
         }
         crossfadePlayer = null
         crossfadeFromIndex = C.INDEX_UNSET
         crossfadeTargetIndex = C.INDEX_UNSET
         crossfadeStartElapsedMs = 0L
         crossfadeDurationMs = 0L
-        activePlayer?.volume = 1f
+        activePlayer?.volume = activePlayer?.let { normalizationVolumes[it] ?: 1f } ?: 1f
     }
+
+    private fun addNormalizationListener(player: ExoPlayer) {
+        player.addListener(object : Player.Listener {
+            override fun onMetadata(metadata: Metadata) {
+                normalizationMetadata[player] = metadata
+                applyNormalization(player, metadata)
+            }
+        })
+    }
+
+    private fun applyNormalization(player: ExoPlayer, metadata: Metadata) {
+        if (!preferences.normalizeVolume()) {
+            clearNormalization(player)
+            return
+        }
+
+        var gainDb: Float? = null
+        var peak: Float? = null
+
+        for (index in 0 until metadata.length()) {
+            val entry = metadata[index]
+            when (entry) {
+                is TextInformationFrame -> {
+                    val key = entry.description?.trim()?.uppercase()
+                    when (key) {
+                        "REPLAYGAIN_TRACK_GAIN", "REPLAYGAIN_ALBUM_GAIN" -> {
+                            if (gainDb == null || key == "REPLAYGAIN_TRACK_GAIN") {
+                                gainDb = parseGainDb(entry.value)
+                            }
+                        }
+                        "REPLAYGAIN_TRACK_PEAK", "REPLAYGAIN_ALBUM_PEAK" -> {
+                            if (peak == null || key == "REPLAYGAIN_TRACK_PEAK") {
+                                peak = entry.value.toFloatOrNull()
+                            }
+                        }
+                    }
+                }
+                is androidx.media3.extractor.metadata.vorbis.VorbisComment -> {
+                    when (entry.key.trim().uppercase()) {
+                        "REPLAYGAIN_TRACK_GAIN", "REPLAYGAIN_ALBUM_GAIN" -> {
+                            if (gainDb == null || entry.key.equals("REPLAYGAIN_TRACK_GAIN", true)) {
+                                gainDb = parseGainDb(entry.value)
+                            }
+                        }
+                        "REPLAYGAIN_TRACK_PEAK", "REPLAYGAIN_ALBUM_PEAK" -> {
+                            if (peak == null || entry.key.equals("REPLAYGAIN_TRACK_PEAK", true)) {
+                                peak = entry.value.toFloatOrNull()
+                            }
+                        }
+                    }
+                }
+                is Mp3InfoReplayGain -> {
+                    val field = entry.field1 ?: entry.field2
+                    if (field != null && field.name == Mp3InfoReplayGain.GainField.NAME_RADIO) {
+                        gainDb = field.gain
+                    }
+                    if (entry.peak > 0f) peak = entry.peak
+                }
+            }
+        }
+
+        val gain = gainDb ?: run {
+            clearNormalization(player)
+            return
+        }
+        val safeGain = if (gain > 0f && peak != null && peak > 0f) {
+            minOf(gain, -20f * log10(peak))
+        } else {
+            gain
+        }
+
+        if (safeGain <= 0f) {
+            releaseNormalizationEffect(player)
+            normalizationVolumes[player] = dbToLinear(safeGain)
+            player.volume = normalizationVolumes[player] ?: 1f
+        } else {
+            normalizationVolumes[player] = 1f
+            try {
+                val enhancer = normalizationEffects[player] ?: LoudnessEnhancer(player.audioSessionId).also {
+                    normalizationEffects[player] = it
+                }
+                enhancer.setTargetGain((safeGain * 100f).toInt())
+                enhancer.enabled = true
+                player.volume = 1f
+            } catch (_: RuntimeException) {
+                releaseNormalizationEffect(player)
+                player.volume = 1f
+            }
+        }
+    }
+
+    private fun clearNormalization(player: ExoPlayer) {
+        releaseNormalizationEffect(player)
+        normalizationMetadata.remove(player)
+        normalizationVolumes[player] = 1f
+        player.volume = 1f
+    }
+
+    private fun releaseNormalizationEffect(player: ExoPlayer) {
+        normalizationEffects.remove(player)?.let { effect ->
+            try {
+                effect.enabled = false
+            } catch (_: RuntimeException) {
+            }
+            effect.release()
+        }
+    }
+
+    private fun releasePlayer(player: ExoPlayer?) {
+        if (player == null) return
+        releaseNormalizationEffect(player)
+        normalizationVolumes.remove(player)
+        normalizationMetadata.remove(player)
+        player.removeListener(serviceListener)
+        player.stop()
+        player.release()
+    }
+
+    private fun parseGainDb(value: String): Float? =
+        value.trim().removeSuffix("dB").trim().toFloatOrNull()
+
+    private fun dbToLinear(db: Float): Float =
+        10f.pow(db / 20f).coerceIn(0f, 1f)
 
     private companion object {
         private const val NOTIFICATION_CHANNEL_ID = "sonora_playback"

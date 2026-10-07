@@ -37,6 +37,10 @@ class SonoraPreferences(context: Context) {
 
     fun setCrossfadeSeconds(seconds: Int) = playback.setCrossfadeSeconds(seconds)
 
+    fun normalizeVolume(): Boolean = playback.normalizeVolume()
+
+    fun setNormalizeVolume(enabled: Boolean) = playback.setNormalizeVolume(enabled)
+
     fun listeningHistoryIds(): List<Long> = playback.listeningHistoryIds()
 
     fun lastPlayed(): Song? = playback.lastPlayed()
