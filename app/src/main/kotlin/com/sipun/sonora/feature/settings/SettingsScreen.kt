@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -142,8 +143,8 @@ fun SettingsScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .windowInsetsPadding(WindowInsets.statusBars)
-            .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp)
+            .verticalScroll(rememberScrollState())
     ) {
         Column(Modifier.padding(top = 20.dp, bottom = 18.dp)) {
             Text(
@@ -332,6 +333,7 @@ fun SettingsScreen(
                 },
             )
         }
+        Spacer(Modifier.height(112.dp))
     }
 
     if (showSonoraDialog) {
