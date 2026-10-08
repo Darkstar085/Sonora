@@ -107,48 +107,52 @@ internal fun Overview(
             )
         }
         item {
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(horizontal = 0.dp),
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(22.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                ),
             ) {
-                item {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 6.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     OverviewMetric(
                         stringResource(R.string.tab_songs),
                         songs.size,
-                        Modifier.width(124.dp),
-                        Icons.Default.MusicNote
+                        Modifier.weight(1f),
+                        Icons.Default.MusicNote,
                     )
-                }
-                item {
+                    OverviewMetricDivider()
                     OverviewMetric(
                         stringResource(R.string.tab_albums),
                         albums.size,
-                        Modifier.width(124.dp),
-                        Icons.Default.Album
+                        Modifier.weight(1f),
+                        Icons.Default.Album,
                     )
-                }
-                item {
+                    OverviewMetricDivider()
                     OverviewMetric(
                         stringResource(R.string.tab_artists),
                         artists.size,
-                        Modifier.width(124.dp),
-                        Icons.Default.Person
+                        Modifier.weight(1f),
+                        Icons.Default.Person,
                     )
-                }
-                item {
+                    OverviewMetricDivider()
                     OverviewMetric(
                         stringResource(R.string.tab_favorites),
                         favoriteCount,
-                        Modifier.width(124.dp),
-                        Icons.Default.Favorite
+                        Modifier.weight(1f),
+                        Icons.Default.Favorite,
                     )
-                }
-                item {
+                    OverviewMetricDivider()
                     OverviewMetric(
                         stringResource(R.string.tab_playlists),
                         playlistCount,
-                        Modifier.width(124.dp),
-                        Icons.AutoMirrored.Filled.PlaylistPlay
+                        Modifier.weight(1f),
+                        Icons.AutoMirrored.Filled.PlaylistPlay,
                     )
                 }
             }
@@ -160,32 +164,55 @@ internal fun Overview(
             )
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(top = 10.dp)
+                contentPadding = PaddingValues(top = 10.dp),
             ) {
                 items(recentlyAdded.take(10), key = { it.id }) { song ->
-                    Box(Modifier.width(172.dp)) {
+                    Box(Modifier.width(188.dp)) {
                         Card(
                             onClick = { player.playQueue(songs, songs.indexOf(song)); open() },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(20.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            ),
                         ) {
                             Column(Modifier.padding(10.dp)) {
-                                Artwork(
-                                    song, Modifier
-                                        .fillMaxWidth()
-                                        .aspectRatio(1f)
-                                )
+                                Box {
+                                    Artwork(
+                                        song,
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .aspectRatio(1f)
+                                            .clip(RoundedCornerShape(16.dp)),
+                                    )
+                                    FilledIconButton(
+                                        onClick = {
+                                            player.playQueue(songs, songs.indexOf(song))
+                                            open()
+                                        },
+                                        modifier = Modifier
+                                            .align(Alignment.BottomEnd)
+                                            .padding(8.dp)
+                                            .size(38.dp),
+                                    ) {
+                                        Icon(
+                                            Icons.Default.PlayArrow,
+                                            contentDescription = "Play",
+                                        )
+                                    }
+                                }
                                 Text(
                                     song.title,
                                     style = MaterialTheme.typography.titleMedium,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.padding(top = 10.dp)
+                                    modifier = Modifier.padding(top = 10.dp),
                                 )
                                 Text(
                                     song.artist,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
+                                    overflow = TextOverflow.Ellipsis,
                                 )
                             }
                         }
@@ -196,7 +223,7 @@ internal fun Overview(
                                 .align(Alignment.TopEnd)
                                 .padding(4.dp),
                             onOpenAlbum = openAlbum,
-                            onOpenArtist = openArtist
+                            onOpenArtist = openArtist,
                         )
                     }
                 }
@@ -623,25 +650,50 @@ private fun OverviewMetric(
     modifier: Modifier = Modifier,
     icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
 ) {
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(20.dp),
+    Column(
+        modifier
+            .padding(horizontal = 2.dp, vertical = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(3.dp),
     ) {
-        Column(
-            Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+        Box(
+            modifier = Modifier
+                .size(34.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+            contentAlignment = Alignment.Center,
         ) {
             icon?.let {
                 Icon(
                     it,
                     null,
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(22.dp)
+                    modifier = Modifier.size(18.dp),
                 )
             }
-            Text(value.toString(), style = MaterialTheme.typography.titleLarge)
-            Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
+        Text(
+            value.toString(),
+            style = MaterialTheme.typography.titleMedium,
+            maxLines = 1,
+        )
+        Text(
+            label,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.labelSmall,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
+}
+
+@Composable
+private fun OverviewMetricDivider() {
+    Box(
+        Modifier
+            .width(1.dp)
+            .height(44.dp)
+            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+    )
 }
 
