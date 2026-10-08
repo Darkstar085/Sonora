@@ -95,6 +95,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.rememberLottieAnimatable
+import com.airbnb.lottie.compose.rememberLottieComposition
 
 @Composable
 fun NowPlayingScreen(
@@ -119,6 +123,10 @@ fun NowPlayingScreen(
     var favorite by remember(state.currentSong?.id) {
         mutableStateOf(state.currentSong?.id?.let { it in preferences.favoriteIds() } == true)
     }
+    val favoriteComposition by rememberLottieComposition(
+        LottieCompositionSpec.RawRes(R.raw.fav),
+    )
+    val favoriteAnimation = rememberLottieAnimatable()
     var sleepTimerJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
     var audioInfo by remember {
         mutableStateOf(AudioInfo(bitrate = "—", format = "AUDIO", sampleRate = "—"))
@@ -553,13 +561,74 @@ fun NowPlayingScreen(
                         QuickAction(Icons.AutoMirrored.Filled.QueueMusic, "Queue") {
                             showQueue = true
                         }
-                        QuickAction(
-                            if (favorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                            "Add to Favorite",
+                        FavoriteQuickAction(
+                            favorite = favorite,
+                            composition = favoriteComposition,
+                            isPlaying = favoriteAnimation.isPlaying,
+                            progress = favoriteAnimation.progress,
                         ) {
-                            song?.let { favorite = preferences.toggleFavorite(it.id) }
+                            song?.let { currentSong ->
+                                val isFavorite = preferences.toggleFavorite(currentSong.id)
+                                favorite = isFavorite
+                                scope.launch {
+                                    favoriteComposition?.let { composition ->
+                                        if (isFavorite) {
+                                            favoriteAnimation.animate(
+                                                composition = composition,
+                                                iterations = 1,
+                                            )
+                                        } else {
+                                            favoriteAnimation.snapTo(
+                                                composition = composition,
+                                                progress = 0f,
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         }
                         QuickAction(Icons.Default.MoreHoriz, "More") { showMore = true }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FavoriteQuickAction(
+    favorite: Boolean,
+    composition: com.airbnb.lottie.LottieComposition?,
+    isPlaying: Boolean,
+    progress: Float,
+    onClick: () -> Unit,
+) {
+    Column(
+        modifier = Modifier.width(78.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        IconButton(
+            onClick = onClick,
+            modifier = Modifier.size(54.dp),
+        ) {
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+                shape = RoundedCornerShape(18.dp),
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    if (isPlaying && composition != null) {
+                        LottieAnimation(
+                            composition = composition,
+                            progress = { progress },
+                            modifier = Modifier.size(46.dp),
+                        )
+                    } else {
+                        Icon(
+                            if (favorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            "Add to Favorite",
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
                     }
                 }
             }

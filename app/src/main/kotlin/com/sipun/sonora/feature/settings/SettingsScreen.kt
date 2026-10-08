@@ -93,10 +93,13 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.airbnb.lottie.LottieProperty
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
+import com.airbnb.lottie.compose.rememberLottieDynamicProperties
+import com.airbnb.lottie.compose.rememberLottieDynamicProperty
 import com.sipun.sonora.BuildConfig
 import com.sipun.sonora.R
 import com.sipun.sonora.data.preferences.AppTheme
@@ -1104,10 +1107,17 @@ private fun SonoraAboutDialog(
     onCheckForUpdates: () -> Unit,
 ) {
     val composition by rememberLottieComposition(
-        LottieCompositionSpec.RawRes(R.raw.opensource_animation),
+        LottieCompositionSpec.RawRes(R.raw.about_sound_wave),
     )
     val progress by animateLottieCompositionAsState(
         composition = composition,
+        iterations = Int.MAX_VALUE,
+    )
+    val loveComposition by rememberLottieComposition(
+        LottieCompositionSpec.RawRes(R.raw.love),
+    )
+    val loveProgress by animateLottieCompositionAsState(
+        composition = loveComposition,
         iterations = Int.MAX_VALUE,
     )
 
@@ -1154,12 +1164,23 @@ private fun SonoraAboutDialog(
                     modifier = Modifier.padding(top = 4.dp),
                 )
 
+                val animationColor = MaterialTheme.colorScheme.primary.toArgb()
+                val dynamicProperties = rememberLottieDynamicProperties(
+                    rememberLottieDynamicProperty(
+                        property = LottieProperty.COLOR,
+                        value = animationColor,
+                        "**",
+                        "Fill 1",
+                    ),
+                )
+
                 LottieAnimation(
                     composition = composition,
                     progress = { progress },
+                    dynamicProperties = dynamicProperties,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(72.dp)
+                        .height(132.dp)
                         .padding(top = 14.dp),
                 )
 
@@ -1182,12 +1203,27 @@ private fun SonoraAboutDialog(
                     )
                 }
 
-                Text(
-                    text = stringResource(R.string.about_made_with),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
+                Row(
                     modifier = Modifier.padding(top = 12.dp),
-                )
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = stringResource(R.string.about_made_with_prefix),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    LottieAnimation(
+                        composition = loveComposition,
+                        progress = { loveProgress },
+                        modifier = Modifier.size(34.dp),
+                    )
+                    Text(
+                        text = stringResource(R.string.about_made_with_suffix),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
             }
         }
     }
