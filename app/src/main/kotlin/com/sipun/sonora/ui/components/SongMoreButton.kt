@@ -2,7 +2,11 @@
 
 package com.sipun.sonora.ui.components
 
+import android.app.Activity
 import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -29,6 +33,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -47,12 +52,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.sipun.sonora.R
+import com.sipun.sonora.data.media.AudioMetadataEditor
 import com.sipun.sonora.data.preferences.SonoraPreferences
 import com.sipun.sonora.domain.model.Song
 import com.sipun.sonora.player.PlayerController
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 @Composable
 fun SongMoreButton(
@@ -73,6 +77,11 @@ fun SongMoreButton(
     var showRemoveConfirmation by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val deleteRequestLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartIntentSenderForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) onChanged()
+    }
     val isFavorite = song.id in preferences.favoriteIds()
 
     IconButton(
@@ -183,7 +192,8 @@ fun SongMoreButton(
                 if (actions.showRemoveFromDevice) {
                     SongMoreOption(
                         Icons.Default.Delete,
-                        stringResource(R.string.remove_from_device)
+                        stringResource(R.string.remove_from_library),
+                        destructive = true,
                     ) {
                         showMore = false
                         showRemoveConfirmation = true
@@ -205,23 +215,24 @@ fun SongMoreButton(
     if (showRemoveConfirmation) {
         AlertDialog(
             onDismissRequest = { showRemoveConfirmation = false },
-            title = { Text(stringResource(R.string.remove_from_device_question)) },
-            text = { Text(stringResource(R.string.remove_from_device_message)) },
+            title = { Text(stringResource(R.string.remove_from_library_question)) },
+            text = { Text(stringResource(R.string.remove_from_library_message)) },
             confirmButton = {
                 TextButton(
                     onClick = {
+                        showRemoveConfirmation = false
                         scope.launch {
-                            val removed = withContext(Dispatchers.IO) {
-                                runCatching {
-                                    context.contentResolver.delete(
-                                        Uri.parse(song.uri),
-                                        null,
-                                        null
-                                    ) > 0
-                                }.getOrDefault(false)
+                            val uri = Uri.parse(song.uri)
+                            val deleteRequest = AudioMetadataEditor.getDeleteRequestIntentSender(context, uri)
+                            if (deleteRequest != null) {
+                                deleteRequestLauncher.launch(
+                                    IntentSenderRequest.Builder(deleteRequest).build()
+                                )
+                                return@launch
                             }
-                            showRemoveConfirmation = false
-                            if (removed) onChanged()
+                            if (AudioMetadataEditor.delete(context, uri)) {
+                                onChanged()
+                            }
                         }
                     },
                 ) {
@@ -296,11 +307,17 @@ private fun formatDuration(durationMs: Long): String {
 private fun SongMoreOption(
     icon: ImageVector,
     label: String,
+    destructive: Boolean = false,
     onClick: () -> Unit,
 ) {
+    val contentColor = if (destructive) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        LocalContentColor.current
+    }
     ListItem(
-        headlineContent = { Text(label) },
-        leadingContent = { Icon(icon, null) },
+        headlineContent = { Text(label, color = contentColor) },
+        leadingContent = { Icon(icon, null, tint = contentColor) },
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),

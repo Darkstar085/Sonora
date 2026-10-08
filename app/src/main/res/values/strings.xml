@@ -104,9 +104,9 @@
     <string name="action_add_to_playlist">Add to %1$s</string>
     <string name="action_create_new_playlist">Create new playlist</string>
     <string name="action_done">Done</string>
-    <string name="remove_from_device">Remove from device</string>
-    <string name="remove_from_device_question">Remove from device?</string>
-    <string name="remove_from_device_message">This will permanently remove the audio file from your device.</string>
+    <string name="remove_from_library">Remove from library</string>
+    <string name="remove_from_library_question">Remove from library?</string>
+    <string name="remove_from_library_message">This will permanently remove the audio file from your device.</string>
     <string name="lyrics_title">Lyrics</string>
     <string name="lyrics_unavailable">Lyrics unavailable</string>
     <string name="lyrics_retry">Try again</string>

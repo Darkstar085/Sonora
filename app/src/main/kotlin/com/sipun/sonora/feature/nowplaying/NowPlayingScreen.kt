@@ -5,11 +5,15 @@
 
 package com.sipun.sonora.feature.nowplaying
 
+import android.app.Activity
 import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -73,11 +77,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.sipun.sonora.R
+import com.sipun.sonora.data.media.AudioMetadataEditor
 import com.sipun.sonora.data.preferences.SonoraPreferences
 import com.sipun.sonora.player.PlayerController
 import com.sipun.sonora.player.RepeatMode
@@ -115,6 +122,18 @@ fun NowPlayingScreen(
     var sleepTimerJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
     var audioInfo by remember {
         mutableStateOf(AudioInfo(bitrate = "—", format = "AUDIO", sampleRate = "—"))
+    }
+    val deleteRequestLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartIntentSenderForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            Toast.makeText(
+                context,
+                context.getString(R.string.remove_from_library),
+                Toast.LENGTH_SHORT,
+            ).show()
+            playerController.skipNext()
+        }
     }
 
     LaunchedEffect(state.currentSong?.uri) {
@@ -259,37 +278,49 @@ fun NowPlayingScreen(
     if (showRemoveConfirmation) {
         AlertDialog(
             onDismissRequest = { showRemoveConfirmation = false },
-            title = { Text("Remove from library?") },
-            text = { Text("This removes the audio file from the device's media library.") },
+            title = { Text(stringResource(R.string.remove_from_library_question)) },
+            text = { Text(stringResource(R.string.remove_from_library_message)) },
             confirmButton = {
                 TextButton(
                     onClick = {
                         val song = state.currentSong
                         if (song != null) {
+                            showRemoveConfirmation = false
                             scope.launch {
-                                val removed = withContext(Dispatchers.IO) {
-                                    runCatching {
-                                        context.contentResolver.delete(
-                                            Uri.parse(song.uri),
-                                            null,
-                                            null
-                                        ) > 0
-                                    }.getOrDefault(false)
+                                val uri = Uri.parse(song.uri)
+                                val deleteRequest =
+                                    AudioMetadataEditor.getDeleteRequestIntentSender(context, uri)
+                                if (deleteRequest != null) {
+                                    deleteRequestLauncher.launch(
+                                        IntentSenderRequest.Builder(deleteRequest).build()
+                                    )
+                                    return@launch
                                 }
+                                val removed = AudioMetadataEditor.delete(context, uri)
                                 Toast.makeText(
                                     context,
-                                    if (removed) "Removed from library" else "Unable to remove this song",
+                                    if (removed) {
+                                        context.getString(R.string.remove_from_library)
+                                    } else {
+                                        "Unable to remove this song"
+                                    },
                                     Toast.LENGTH_SHORT,
                                 ).show()
-                                showRemoveConfirmation = false
                                 if (removed) playerController.skipNext()
                             }
                         }
                     },
-                ) { Text("Remove", color = MaterialTheme.colorScheme.primary) }
+                ) {
+                    Text(
+                        stringResource(R.string.action_remove),
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
             },
             dismissButton = {
-                TextButton(onClick = { showRemoveConfirmation = false }) { Text("Cancel") }
+                TextButton(onClick = { showRemoveConfirmation = false }) {
+                    Text(stringResource(R.string.action_cancel))
+                }
             },
         )
     }

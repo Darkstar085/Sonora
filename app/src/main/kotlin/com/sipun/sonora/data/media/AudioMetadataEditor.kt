@@ -56,6 +56,21 @@ object AudioMetadataEditor {
         }
     }
 
+    fun getDeleteRequestIntentSender(context: Context, uri: Uri): android.content.IntentSender? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return null
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && MediaStore.canManageMedia(context)) {
+            return null
+        }
+        return MediaStore.createDeleteRequest(context.contentResolver, listOf(uri)).intentSender
+    }
+
+    suspend fun delete(context: Context, uri: Uri): Boolean =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                context.contentResolver.delete(uri, null, null) > 0
+            }.getOrDefault(false)
+        }
+
     fun getWriteRequestIntentSender(context: Context, uri: Uri): android.content.IntentSender? {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return null
         if (context.checkUriPermission(
