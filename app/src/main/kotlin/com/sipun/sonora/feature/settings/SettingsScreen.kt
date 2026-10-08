@@ -1,11 +1,18 @@
 package com.sipun.sonora.feature.settings
 
+import android.Manifest
 import android.app.WallpaperManager
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.os.PowerManager
+import android.provider.MediaStore
+import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -31,14 +38,23 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.AllInclusive
+import androidx.compose.material.icons.filled.BatteryFull
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -72,6 +88,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
@@ -108,6 +128,104 @@ fun SettingsScreen(
     var normalizeVolume by remember { mutableStateOf(playbackPreferences.normalizeVolume()) }
     var showThemeDialog by remember { mutableStateOf(false) }
     var showSonoraDialog by remember { mutableStateOf(false) }
+    var mediaManagementAllowed by remember(context) {
+        mutableStateOf(
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                MediaStore.canManageMedia(context),
+        )
+    }
+    var ringtoneAllowed by remember(context) {
+        mutableStateOf(Settings.System.canWrite(context))
+    }
+    var installUpdatesAllowed by remember(context) {
+        mutableStateOf(
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.O ||
+                context.packageManager.canRequestPackageInstalls(),
+        )
+    }
+    var batteryUnrestricted by remember(context) {
+        mutableStateOf(
+            (context.getSystemService(PowerManager::class.java))
+                ?.isIgnoringBatteryOptimizations(context.packageName) == true,
+        )
+    }
+    var musicPermissionAllowed by remember(context) {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    Manifest.permission.READ_MEDIA_AUDIO
+                } else {
+                    Manifest.permission.READ_EXTERNAL_STORAGE
+                },
+            ) == PackageManager.PERMISSION_GRANTED,
+        )
+    }
+    var photoPermissionAllowed by remember(context) {
+        mutableStateOf(
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.READ_MEDIA_IMAGES,
+                ) == PackageManager.PERMISSION_GRANTED ||
+                (
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
+                        ContextCompat.checkSelfPermission(
+                            context,
+                            "android.permission.READ_MEDIA_VISUAL_USER_SELECTED",
+                        ) == PackageManager.PERMISSION_GRANTED
+                ),
+        )
+    }
+    var notificationPermissionAllowed by remember(context) {
+        mutableStateOf(
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS,
+                ) == PackageManager.PERMISSION_GRANTED,
+        )
+    }
+    fun refreshPermissionStates() {
+        mediaManagementAllowed =
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                MediaStore.canManageMedia(context)
+        ringtoneAllowed = Settings.System.canWrite(context)
+        installUpdatesAllowed =
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.O ||
+                context.packageManager.canRequestPackageInstalls()
+        batteryUnrestricted =
+            (context.getSystemService(PowerManager::class.java))
+                ?.isIgnoringBatteryOptimizations(context.packageName) == true
+        musicPermissionAllowed = ContextCompat.checkSelfPermission(
+            context,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                Manifest.permission.READ_MEDIA_AUDIO
+            } else {
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            },
+        ) == PackageManager.PERMISSION_GRANTED
+        photoPermissionAllowed =
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.READ_MEDIA_IMAGES,
+                ) == PackageManager.PERMISSION_GRANTED ||
+                (
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
+                        ContextCompat.checkSelfPermission(
+                            context,
+                            "android.permission.READ_MEDIA_VISUAL_USER_SELECTED",
+                        ) == PackageManager.PERMISSION_GRANTED
+                )
+        notificationPermissionAllowed =
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS,
+                ) == PackageManager.PERMISSION_GRANTED
+    }
+    val lifecycleOwner = LocalLifecycleOwner.current
     var wallpaperSeed by remember(context) { mutableStateOf(readWallpaperSeed(context)) }
 
     DisposableEffect(context, dynamicColor) {
@@ -123,6 +241,73 @@ fun SettingsScreen(
             val handler = Handler(Looper.getMainLooper())
             manager.addOnColorsChangedListener(listener, handler)
             onDispose { manager.removeOnColorsChangedListener(listener) }
+        }
+    }
+
+    DisposableEffect(lifecycleOwner, context) {
+        refreshPermissionStates()
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) refreshPermissionStates()
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    val setupPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) {
+        refreshPermissionStates()
+    }
+
+    fun openMediaManagementSettings() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            runCatching {
+                context.startActivity(
+                    Intent(Settings.ACTION_REQUEST_MANAGE_MEDIA).apply {
+                        data = Uri.parse("package:" + context.packageName)
+                    },
+                )
+            }
+        }
+    }
+
+    fun openRingtoneSettings() {
+        runCatching {
+            context.startActivity(
+                Intent(
+                    Settings.ACTION_MANAGE_WRITE_SETTINGS,
+                    Uri.parse("package:" + context.packageName),
+                ),
+            )
+        }
+    }
+
+    fun openInstallPermissionSettings() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        runCatching {
+            context.startActivity(
+                Intent(
+                    Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                    Uri.parse("package:" + context.packageName),
+                ),
+            )
+        }
+    }
+
+    fun openBatterySettings(enable: Boolean) {
+        val action = if (enable) {
+            Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+        } else {
+            Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS
+        }
+        runCatching {
+            context.startActivity(
+                Intent(action).apply {
+                    if (enable) {
+                        data = Uri.parse("package:" + context.packageName)
+                    }
+                },
+            )
         }
     }
 
@@ -315,6 +500,113 @@ fun SettingsScreen(
             )
         }
 
+        SettingsSection(stringResource(R.string.settings_permissions)) {
+            if (!musicPermissionAllowed) {
+                SettingsPermissionRow(
+                    icon = Icons.Default.MusicNote,
+                    title = stringResource(R.string.settings_permission_music),
+                    subtitle = stringResource(R.string.settings_permission_music_detail),
+                    status = stringResource(R.string.settings_permission_allow),
+                    onClick = {
+                        setupPermissionLauncher.launch(
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                Manifest.permission.READ_MEDIA_AUDIO
+                            } else {
+                                Manifest.permission.READ_EXTERNAL_STORAGE
+                            },
+                        )
+                    },
+                )
+            }
+            if (!photoPermissionAllowed && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                SettingsPermissionRow(
+                    icon = Icons.Default.Image,
+                    title = stringResource(R.string.settings_permission_photos),
+                    subtitle = stringResource(R.string.settings_permission_photos_detail),
+                    status = stringResource(R.string.settings_permission_allow),
+                    onClick = {
+                        setupPermissionLauncher.launch(Manifest.permission.READ_MEDIA_IMAGES)
+                    },
+                )
+            }
+            if (!notificationPermissionAllowed && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                SettingsPermissionRow(
+                    icon = Icons.Default.Notifications,
+                    title = stringResource(R.string.settings_permission_notifications),
+                    subtitle = stringResource(R.string.settings_permission_notifications_detail),
+                    status = stringResource(R.string.settings_permission_allow),
+                    onClick = {
+                        setupPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    },
+                )
+            }
+
+            SettingsPermissionRow(
+                icon = Icons.Default.Edit,
+                title = stringResource(R.string.settings_permission_media_edit),
+                subtitle = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    stringResource(R.string.settings_permission_media_edit_detail)
+                } else {
+                    stringResource(R.string.settings_permission_media_ondemand)
+                },
+                status = when {
+                    Build.VERSION.SDK_INT < Build.VERSION_CODES.S ->
+                        stringResource(R.string.settings_permission_ondemand)
+                    mediaManagementAllowed ->
+                        stringResource(R.string.settings_permission_allowed)
+                    else ->
+                        stringResource(R.string.settings_permission_allow)
+                },
+                onClick = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    ::openMediaManagementSettings
+                } else {
+                    null
+                },
+            )
+            SettingsPermissionRow(
+                icon = Icons.Default.DeleteOutline,
+                title = stringResource(R.string.settings_permission_media_delete),
+                subtitle = stringResource(R.string.settings_permission_media_delete_ondemand),
+                status = stringResource(R.string.settings_permission_ondemand),
+                onClick = null,
+            )
+            SettingsPermissionRow(
+                icon = Icons.Default.Phone,
+                title = stringResource(R.string.settings_permission_ringtone),
+                subtitle = stringResource(R.string.settings_permission_ringtone_detail),
+                status = if (ringtoneAllowed) {
+                    stringResource(R.string.settings_permission_allowed)
+                } else {
+                    stringResource(R.string.settings_permission_allow)
+                },
+                onClick = ::openRingtoneSettings,
+            )
+            SettingsPermissionRow(
+                icon = Icons.Default.SystemUpdate,
+                title = stringResource(R.string.settings_permission_install_updates),
+                subtitle = stringResource(R.string.settings_permission_install_updates_detail),
+                status = if (installUpdatesAllowed) {
+                    stringResource(R.string.settings_permission_allowed)
+                } else {
+                    stringResource(R.string.settings_permission_allow)
+                },
+                onClick = ::openInstallPermissionSettings,
+            )
+            SettingsRow(
+                icon = Icons.Default.BatteryFull,
+                title = stringResource(R.string.settings_unrestricted_battery),
+                subtitle = stringResource(R.string.settings_unrestricted_battery_detail),
+                onClick = { openBatterySettings(!batteryUnrestricted) },
+                trailing = {
+                    PlaybackSwitch(
+                        checked = batteryUnrestricted,
+                        darkTheme = darkTheme,
+                        onCheckedChange = { openBatterySettings(it) },
+                    )
+                },
+            )
+        }
+
         SettingsSection(stringResource(R.string.settings_about)) {
             SettingsRow(
                 icon = Icons.Default.Info,
@@ -402,6 +694,43 @@ fun SettingsScreen(
             },
         )
     }
+}
+
+@Composable
+private fun SettingsPermissionRow(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    status: String,
+    onClick: (() -> Unit)?,
+) {
+    SettingsRow(
+        icon = icon,
+        title = title,
+        subtitle = subtitle,
+        onClick = onClick,
+        trailing = {
+            Surface(
+                color = if (status == stringResource(R.string.settings_permission_allowed)) {
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
+                } else {
+                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f)
+                },
+                shape = RoundedCornerShape(50),
+            ) {
+                Text(
+                    status,
+                    color = if (status == stringResource(R.string.settings_permission_allowed)) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                    style = MaterialTheme.typography.labelLarge,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+                )
+            }
+        },
+    )
 }
 
 @Composable
