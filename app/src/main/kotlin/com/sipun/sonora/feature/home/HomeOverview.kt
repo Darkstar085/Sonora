@@ -236,47 +236,106 @@ internal fun Overview(
                     style = MaterialTheme.typography.titleLarge
                 )
                 Spacer(Modifier.size(8.dp))
-                Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp)) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(22.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    ),
+                ) {
                     Column {
                         listeningHistory.forEachIndexed { index, song ->
+                            val isCurrentSong = song.id == currentSongId
+                            val durationMs = if (isCurrentSong) {
+                                playerState.durationMs
+                            } else {
+                                song.durationMs
+                            }
+                            val positionMs = if (isCurrentSong) {
+                                playerState.positionMs
+                            } else {
+                                preferences.lastPlayedPositionMs(song.id)
+                            }
+                            val progress = if (durationMs > 0L) {
+                                (positionMs.toFloat() / durationMs.toFloat()).coerceIn(0f, 1f)
+                            } else {
+                                0f
+                            }
+
                             Card(
                                 onClick = { player.playQueue(songs, songs.indexOf(song)); open() },
                                 modifier = Modifier.fillMaxWidth(),
-                                colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+                                colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                             ) {
                                 Row(
                                     Modifier
                                         .fillMaxWidth()
                                         .padding(horizontal = 12.dp, vertical = 10.dp),
-                                    verticalAlignment = Alignment.CenterVertically
+                                    verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    Artwork(song, Modifier.size(52.dp))
+                                    Artwork(
+                                        song,
+                                        Modifier
+                                            .size(56.dp)
+                                            .clip(RoundedCornerShape(14.dp)),
+                                    )
                                     Column(
                                         Modifier
                                             .padding(start = 12.dp)
-                                            .weight(1f)
+                                            .weight(1f),
                                     ) {
                                         Text(
                                             song.title,
                                             style = MaterialTheme.typography.titleMedium,
                                             maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
+                                            overflow = TextOverflow.Ellipsis,
                                         )
                                         Text(
                                             song.artist,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
+                                            overflow = TextOverflow.Ellipsis,
+                                        )
+                                        Spacer(Modifier.height(7.dp))
+                                        Box(
+                                            Modifier
+                                                .fillMaxWidth()
+                                                .height(4.dp)
+                                                .clip(CircleShape)
+                                                .background(
+                                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+                                                ),
+                                        ) {
+                                            if (progress > 0f) {
+                                                Box(
+                                                    Modifier
+                                                        .fillMaxWidth(progress)
+                                                        .fillMaxSize()
+                                                        .clip(CircleShape)
+                                                        .background(MaterialTheme.colorScheme.primary),
+                                                )
+                                            }
+                                        }
+                                    }
+                                    FilledIconButton(
+                                        onClick = {
+                                            player.playQueue(songs, songs.indexOf(song))
+                                            open()
+                                        },
+                                        modifier = Modifier
+                                            .padding(start = 10.dp)
+                                            .size(44.dp),
+                                    ) {
+                                        Icon(
+                                            Icons.Default.PlayArrow,
+                                            contentDescription = "Play",
                                         )
                                     }
-                                    Icon(
-                                        Icons.Default.PlayArrow,
-                                        null,
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
                                 }
                             }
-                            if (index < listeningHistory.lastIndex) HorizontalDivider()
+                            if (index < listeningHistory.lastIndex) HorizontalDivider(
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+                            )
                         }
                     }
                 }

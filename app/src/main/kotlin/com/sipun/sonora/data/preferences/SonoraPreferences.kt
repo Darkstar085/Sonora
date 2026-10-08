@@ -26,6 +26,9 @@ class SonoraPreferences(context: Context) {
 
     fun lastPlayedPositionMs(): Long = playback.lastPlayedPositionMs()
 
+    fun lastPlayedPositionMs(songId: Long): Long =
+        playback.lastPlayedPositionMs(songId)
+
     fun resumePlayback(): Boolean = playback.resumePlayback()
 
     fun setResumePlayback(enabled: Boolean) = playback.setResumePlayback(enabled)

@@ -18,6 +18,7 @@ internal class PlaybackPreferences(context: Context) {
             .putString(LAST_PLAYED_URI, song.uri)
             .putString(LAST_PLAYED_ART, song.albumArtUri)
             .putLong(LAST_PLAYED_POSITION, positionMs.coerceAtLeast(0L))
+            .putLong("${LAST_PLAYED_POSITION}_${song.id}", positionMs.coerceAtLeast(0L))
             .putString(LISTENING_HISTORY, history.take(MAX_LISTENING_HISTORY).joinToString(","))
             .apply()
     }
@@ -46,6 +47,9 @@ internal class PlaybackPreferences(context: Context) {
 
     fun lastPlayedPositionMs(): Long =
         preferences.getLong(LAST_PLAYED_POSITION, 0L)
+
+    fun lastPlayedPositionMs(songId: Long): Long =
+        preferences.getLong("${LAST_PLAYED_POSITION}_${songId}", 0L)
 
     fun resumePlayback(): Boolean =
         preferences.getBoolean(KEY_RESUME_PLAYBACK, false)
