@@ -91,7 +91,6 @@ internal fun Overview(
 
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(16.dp),
-        contentPadding = PaddingValues(bottom = 85.dp),
     ) {
         item {
             LibraryLottieCard(
@@ -102,7 +101,6 @@ internal fun Overview(
                 onOpenNowPlaying = open,
                 onPlayAll = {
                     player.playQueueShuffled(songs)
-                    open()
                 },
             )
         }
