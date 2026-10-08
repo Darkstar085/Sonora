@@ -301,7 +301,16 @@ fun NowPlayingScreen(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
                 title = {},
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier
+                            .padding(start = 8.dp)
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(
+                                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+                            ),
+                    ) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
                     }
                 },
@@ -453,20 +462,41 @@ fun NowPlayingScreen(
                         ) {
                             Icon(Icons.Default.SkipPrevious, "Previous")
                         }
-                        FilledIconButton(
-                            onClick = playerController::togglePlayPause,
-                            enabled = song != null,
-                            modifier = Modifier.size(72.dp),
-                            colors = IconButtonDefaults.filledIconButtonColors(
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = Color.White,
-                            ),
+                        Box(
+                            modifier = Modifier.size(96.dp),
+                            contentAlignment = Alignment.Center,
                         ) {
-                            Icon(
-                                if (state.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                                if (state.isPlaying) "Pause" else "Play",
-                                modifier = Modifier.size(32.dp),
+                            Box(
+                                Modifier
+                                    .size(92.dp)
+                                    .clip(RoundedCornerShape(50.dp))
+                                    .background(
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
+                                    ),
                             )
+                            Box(
+                                Modifier
+                                    .size(84.dp)
+                                    .clip(RoundedCornerShape(50.dp))
+                                    .background(
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
+                                    ),
+                            )
+                            FilledIconButton(
+                                onClick = playerController::togglePlayPause,
+                                enabled = song != null,
+                                modifier = Modifier.size(72.dp),
+                                colors = IconButtonDefaults.filledIconButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = Color.White,
+                                ),
+                            ) {
+                                Icon(
+                                    if (state.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                    if (state.isPlaying) "Pause" else "Play",
+                                    modifier = Modifier.size(32.dp),
+                                )
+                            }
                         }
                         IconButton(onClick = playerController::skipNext, enabled = state.hasNext) {
                             Icon(Icons.Default.SkipNext, "Next")
