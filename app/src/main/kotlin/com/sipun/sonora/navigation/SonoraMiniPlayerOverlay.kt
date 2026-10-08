@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import com.sipun.sonora.player.PlayerController
 import com.sipun.sonora.player.PlayerState
 import com.sipun.sonora.ui.components.SonoraMiniPlayer
@@ -23,7 +24,9 @@ internal fun SonoraMiniPlayerOverlay(
     if (!visible || playerState.currentSong == null) return
 
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .zIndex(1f),
         contentAlignment = Alignment.BottomCenter,
     ) {
         Box(

@@ -12,8 +12,8 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -24,11 +24,9 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MusicNote
-import androidx.compose.material.icons.filled.MusicOff
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -52,11 +50,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import com.sipun.sonora.R
 import com.sipun.sonora.data.media.AndroidMusicRepository
 import com.sipun.sonora.data.preferences.SonoraPreferences
 import com.sipun.sonora.domain.model.Song
 import com.sipun.sonora.player.PlayerController
+import com.sipun.sonora.ui.components.SonoraMiniPlayer
 import com.sipun.sonora.ui.components.SonoraSearchBar
 import kotlinx.coroutines.launch
 
@@ -126,254 +126,214 @@ fun HomeScreen(
                 it.album.contains(query, true)
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                ),
-                title = {
-                    Column {
-                        Text(
-                            stringResource(R.string.app_name),
-                            style = MaterialTheme.typography.headlineSmall
-                        )
-                        Text(
-                            stringResource(R.string.home_tagline),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(
-                        onClick = AndroidMusicRepository::notifyMetadataChanged,
-                    ) {
-                        Icon(
-                            Icons.Default.Refresh,
-                            contentDescription = "Refresh library",
-                        )
-                    }
-                    IconButton(
-                        onClick = {
-                            searchActive = !searchActive
-                            if (searchActive) scope.launch { pagerState.animateScrollToPage(1) } else query =
-                                ""
-                        },
-                    ) {
-                        Icon(
-                            if (searchActive) Icons.Default.Close else Icons.Default.Search,
-                            contentDescription = stringResource(
-                                if (searchActive) R.string.action_close_search else R.string.action_search_music
-                            ),
-                        )
-                    }
-                    IconButton(onClick = onOpenSettings) {
-                        Icon(Icons.Default.Settings, stringResource(R.string.action_settings))
-                    }
-                },
-            )
-        },
-    ) { padding ->
-        Column(
-            Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 16.dp)
-        ) {
-            if (searchActive) {
-                SonoraSearchBar(
-                    value = query,
-                    onValueChange = { query = it },
-                    modifier = Modifier.padding(bottom = 8.dp),
-                )
-            }
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                tabs.forEachIndexed { index, label ->
-                    val selected = pagerState.currentPage == index
-
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        IconButton(
-                            onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
-                        ) {
-                            Icon(
-                                imageVector = tabIcons[index],
-                                contentDescription = stringResource(label),
-                                tint = if (selected) {
-                                    MaterialTheme.colorScheme.primary
-                                } else {
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                                },
+    Box(Modifier.fillMaxSize()) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background,
+                    ),
+                    title = {
+                        Column {
+                            Text(
+                                stringResource(R.string.app_name),
+                                style = MaterialTheme.typography.headlineSmall
+                            )
+                            Text(
+                                stringResource(R.string.home_tagline),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
+                    },
+                    actions = {
+                        IconButton(
+                            onClick = AndroidMusicRepository::notifyMetadataChanged,
+                        ) {
+                            Icon(
+                                Icons.Default.Refresh,
+                                contentDescription = "Refresh library",
+                            )
+                        }
+                        IconButton(
+                            onClick = {
+                                searchActive = !searchActive
+                                if (searchActive) scope.launch { pagerState.animateScrollToPage(1) } else query =
+                                    ""
+                            },
+                        ) {
+                            Icon(
+                                if (searchActive) Icons.Default.Close else Icons.Default.Search,
+                                contentDescription = stringResource(
+                                    if (searchActive) R.string.action_close_search else R.string.action_search_music
+                                ),
+                            )
+                        }
+                        IconButton(onClick = onOpenSettings) {
+                            Icon(Icons.Default.Settings, stringResource(R.string.action_settings))
+                        }
+                    },
+                )
+            },
+        ) { padding ->
+            Column(
+                Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = 16.dp)
+            ) {
+                if (searchActive) {
+                    SonoraSearchBar(
+                        value = query,
+                        onValueChange = { query = it },
+                        modifier = Modifier.padding(bottom = 8.dp),
+                    )
+                }
 
-                        Box(
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    tabs.forEachIndexed { index, label ->
+                        val selected = pagerState.currentPage == index
+
+                        Column(
                             modifier = Modifier
-                                .width(40.dp)
-                                .height(3.dp)
-                                .background(
-                                    if (selected) {
+                                .weight(1f)
+                                .fillMaxHeight(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            IconButton(
+                                onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
+                            ) {
+                                Icon(
+                                    imageVector = tabIcons[index],
+                                    contentDescription = stringResource(label),
+                                    tint = if (selected) {
                                         MaterialTheme.colorScheme.primary
                                     } else {
-                                        MaterialTheme.colorScheme.surfaceVariant
-                                    }
-                                ),
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                    },
+                                )
+                            }
+
+                            Box(
+                                modifier = Modifier
+                                    .width(40.dp)
+                                    .height(3.dp)
+                                    .background(
+                                        if (selected) {
+                                            MaterialTheme.colorScheme.primary
+                                        } else {
+                                            MaterialTheme.colorScheme.surfaceVariant
+                                        }
+                                    ),
+                            )
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(20.dp))
+
+                if (isLoading) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                    }
+                } else if (loadError != null) {
+                    Column(
+                        Modifier.fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                    ) {
+                        Text(
+                            stringResource(R.string.home_load_title),
+                            style = MaterialTheme.typography.titleLarge
                         )
+                        Text(
+                            loadError.orEmpty(),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 8.dp),
+                        )
+                    }
+                } else if (songs.isEmpty()) {
+                    EmptyLibraryState()
+                } else {
+                    HorizontalPager(
+                        state = pagerState,
+                        modifier = Modifier.fillMaxSize(),
+                    ) { page ->
+                        when (page) {
+                            0 -> Overview(
+                                songs,
+                                favoriteIds.size,
+                                playlists.size,
+                                playerState.currentSong?.id,
+                                playerState,
+                                playerController,
+                                preferences,
+                                onOpenNowPlaying,
+                                onOpenAlbum,
+                                onOpenArtist
+                            )
+
+                            1 -> if (filtered.isEmpty() && query.isNotBlank()) EmptySearchState(
+                                query
+                            )
+                            else SongList(
+                                filtered,
+                                playerController,
+                                preferences,
+                                onOpenNowPlaying,
+                                onOpenAlbum,
+                                onOpenArtist,
+                                onChanged = {
+                                    scope.launch {
+                                        repository.invalidateCache()
+                                        songs = repository.songs()
+                                        favoriteIds = preferences.favoriteIds()
+                                        playlists = preferences.playlists()
+                                    }
+                                },
+                            )
+
+                            2 -> AlbumList(filtered, onOpenAlbum)
+                            3 -> ArtistList(filtered, onOpenArtist)
+                            4 -> FavoriteList(
+                                songs.filter { it.id in favoriteIds },
+                                playerController,
+                                preferences,
+                                onOpenNowPlaying,
+                                onOpenAlbum,
+                                onOpenArtist,
+                            ) {
+                                favoriteIds = preferences.favoriteIds()
+                            }
+
+                            else -> PlaylistList(playlists, onOpenPlaylist, onRefresh = {
+                                playlists = preferences.playlists()
+                            }, preferences = preferences)
+                        }
                     }
                 }
             }
-
-            Spacer(Modifier.height(20.dp))
-
-            if (isLoading) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                }
-            } else if (loadError != null) {
-                Column(
-                    Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
+            if (pagerState.currentPage != 0 && playerState.currentSong != null) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .navigationBarsPadding()
+                        .padding(bottom = 10.dp)
+                        .zIndex(2f),
                 ) {
-                    Text(
-                        stringResource(R.string.home_load_title),
-                        style = MaterialTheme.typography.titleLarge
+                    SonoraMiniPlayer(
+                        playerController = playerController,
+                        onOpenNowPlaying = onOpenNowPlaying,
                     )
-                    Text(
-                        loadError.orEmpty(),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 8.dp),
-                    )
-                }
-            } else if (songs.isEmpty()) {
-                EmptyLibraryState()
-            } else {
-                HorizontalPager(
-                    state = pagerState,
-                    modifier = Modifier.fillMaxSize(),
-                ) { page ->
-                    when (page) {
-                        0 -> Overview(
-                            songs,
-                            favoriteIds.size,
-                            playlists.size,
-                            playerState.currentSong?.id,
-                            playerController,
-                            preferences,
-                            onOpenNowPlaying,
-                            onOpenAlbum,
-                            onOpenArtist
-                        )
-
-                        1 -> if (filtered.isEmpty() && query.isNotBlank()) EmptySearchState(query)
-                        else SongList(
-                            filtered,
-                            playerController,
-                            preferences,
-                            onOpenNowPlaying,
-                            onOpenAlbum,
-                            onOpenArtist,
-                            onChanged = {
-                                scope.launch {
-                                    repository.invalidateCache()
-                                    songs = repository.songs()
-                                    favoriteIds = preferences.favoriteIds()
-                                    playlists = preferences.playlists()
-                                }
-                            },
-                        )
-
-                        2 -> AlbumList(filtered, onOpenAlbum)
-                        3 -> ArtistList(filtered, onOpenArtist)
-                        4 -> FavoriteList(
-                            songs.filter { it.id in favoriteIds },
-                            playerController,
-                            preferences,
-                            onOpenNowPlaying,
-                            onOpenAlbum,
-                            onOpenArtist,
-                        ) {
-                            favoriteIds = preferences.favoriteIds()
-                        }
-
-                        else -> PlaylistList(playlists, onOpenPlaylist, onRefresh = {
-                            playlists = preferences.playlists()
-                        }, preferences = preferences)
-                    }
                 }
             }
         }
     }
 }
-
-@Composable
-private fun EmptyLibraryState() {
-    Column(
-        Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Icon(
-            Icons.Default.MusicOff,
-            null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(48.dp)
-        )
-        Text(
-            stringResource(R.string.home_no_music),
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(top = 12.dp)
-        )
-        Text(
-            stringResource(R.string.home_add_music),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 4.dp),
-        )
-    }
-}
-
-@Composable
-private fun EmptySearchState(query: String) {
-    Column(
-        Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Icon(
-            Icons.Default.SearchOff,
-            null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(48.dp)
-        )
-        Text(
-            stringResource(R.string.home_no_music),
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(top = 12.dp)
-        )
-        Text(
-            stringResource(R.string.home_no_search_results, query),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 4.dp),
-        )
-    }
-}
-
-@Composable
-internal fun songCountLabel(count: Int): String =
-    if (count == 1) {
-        stringResource(R.string.song_count_one)
-    } else {
-        stringResource(R.string.song_count_other, count)
-    }

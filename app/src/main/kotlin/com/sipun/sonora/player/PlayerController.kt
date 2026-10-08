@@ -2,8 +2,8 @@ package com.sipun.sonora.player
 
 import android.content.ComponentName
 import android.content.Context
-import android.net.Uri
 import android.media.MediaMetadataRetriever
+import android.net.Uri
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
@@ -17,6 +17,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -29,12 +30,12 @@ class PlayerController(context: Context) {
     private val artworkLoader = ArtworkLoader(appContext)
     private val artworkScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var artworkJob: Job? = null
-    private val _state = MutableStateFlow(
-        PlayerState(currentSong = preferences.lastPlayed()),
-    )
+    private var positionUpdateJob: Job? = null
+    private val _state = MutableStateFlow(PlayerState())
     val state: StateFlow<PlayerState> = _state.asStateFlow()
     private var controller: MediaController? = null
     private var pendingQueue: Pair<List<Song>, Int>? = null
+    private var pendingQueueShuffled = false
     private var pendingExternalUri: Uri? = null
     private var restoredLastPlayed = false
     private val controllerFuture = MediaController.Builder(
@@ -44,6 +45,11 @@ class PlayerController(context: Context) {
 
     private val listener = object : Player.Listener {
         override fun onEvents(player: Player, events: Player.Events) = updateState()
+
+        override fun onIsPlayingChanged(isPlaying: Boolean) {
+            updateState()
+            if (isPlaying) startPositionUpdates() else stopPositionUpdates()
+        }
 
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
             _state.value = _state.value.copy(artworkData = null)
@@ -58,16 +64,22 @@ class PlayerController(context: Context) {
                 runCatching { controllerFuture.get() }.onSuccess { mediaController ->
                     controller = mediaController
                     mediaController.addListener(listener)
-                                restoreLastPlayedIfNeeded()
+                    restoreLastPlayedIfNeeded()
                     pendingQueue?.let { (songs, index) ->
                         pendingQueue = null
-                        playQueue(songs, index)
+                        if (pendingQueueShuffled) {
+                            pendingQueueShuffled = false
+                            playQueueShuffled(songs)
+                        } else {
+                            playQueue(songs, index)
+                        }
                     }
                     pendingExternalUri?.let { uri ->
                         pendingExternalUri = null
                         playExternal(uri)
                     }
                     updateState()
+                    if (mediaController.isPlaying) startPositionUpdates()
                 }
             },
             context.mainExecutor,
@@ -132,11 +144,12 @@ class PlayerController(context: Context) {
         if (songs.isEmpty()) return
         val mediaController = controller ?: run {
             pendingQueue = songs to 0
+            pendingQueueShuffled = true
             return
         }
         mediaController.setMediaItems(
             songs.map(::toMediaItem),
-            0,
+            songs.indices.random(),
             C.TIME_UNSET,
         )
         mediaController.shuffleModeEnabled = true
@@ -244,9 +257,40 @@ class PlayerController(context: Context) {
 
     fun release() {
         artworkJob?.cancel()
+        positionUpdateJob?.cancel()
         artworkScope.cancel()
         controller?.removeListener(listener)
         MediaController.releaseFuture(controllerFuture)
+    }
+
+    private fun startPositionUpdates() {
+        if (positionUpdateJob?.isActive == true) return
+
+        positionUpdateJob = artworkScope.launch {
+            while (true) {
+                updatePlaybackPosition()
+                delay(250L)
+            }
+        }
+    }
+
+    private fun stopPositionUpdates() {
+        positionUpdateJob?.cancel()
+        positionUpdateJob = null
+    }
+
+    private fun updatePlaybackPosition() {
+        val mediaController = controller ?: return
+        val duration = mediaController.duration
+            .takeIf { it != C.TIME_UNSET }
+            ?.coerceAtLeast(0L)
+            ?: 0L
+
+        _state.value = _state.value.copy(
+            isPlaying = mediaController.isPlaying,
+            positionMs = mediaController.currentPosition.coerceAtLeast(0L),
+            durationMs = duration,
+        )
     }
 
     private fun restoreLastPlayedIfNeeded() {
@@ -361,6 +405,5 @@ class PlayerController(context: Context) {
         )
     }
 
-    private companion object {
-    }
+    private companion object
 }

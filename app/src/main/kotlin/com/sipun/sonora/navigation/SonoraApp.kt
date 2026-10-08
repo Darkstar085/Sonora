@@ -1,5 +1,6 @@
 package com.sipun.sonora.navigation
 
+import android.net.Uri
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -17,11 +18,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import android.net.Uri
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
@@ -29,7 +27,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.sipun.sonora.player.PlayerController
-import kotlinx.coroutines.delay
 
 @Composable
 fun SonoraApp(
@@ -43,7 +40,6 @@ fun SonoraApp(
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
     val slideOffset = with(LocalDensity.current) { 72.dp.roundToPx() }
-    var miniPlayerVisible by remember { mutableStateOf(currentRoute != SonoraRoute.NowPlaying.route) }
     val playerState by player.state.collectAsStateWithLifecycle()
     LaunchedEffect(externalAudioUri) {
         externalAudioUri?.let {
@@ -55,18 +51,10 @@ fun SonoraApp(
         }
     }
 
-    val showMiniPlayer = miniPlayerVisible &&
-            currentRoute != SonoraRoute.Lyrics.route &&
+    val showMiniPlayer = currentRoute != null &&
+            currentRoute != SonoraRoute.Home.route &&
+            currentRoute != SonoraRoute.NowPlaying.route &&
             playerState.currentSong != null
-
-    LaunchedEffect(currentRoute) {
-        if (currentRoute == SonoraRoute.NowPlaying.route) {
-            miniPlayerVisible = false
-        } else {
-            delay(200)
-            miniPlayerVisible = true
-        }
-    }
 
     DisposableEffect(player) {
         onDispose { player.release() }

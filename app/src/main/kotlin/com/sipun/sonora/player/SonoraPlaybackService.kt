@@ -1,25 +1,25 @@
 package com.sipun.sonora.player
 
 import android.app.PendingIntent
-import android.media.audiofx.LoudnessEnhancer
 import android.content.Intent
+import android.media.audiofx.LoudnessEnhancer
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import androidx.media3.common.C
 import androidx.media3.common.Metadata
-import androidx.media3.extractor.metadata.id3.TextInformationFrame
-import androidx.media3.extractor.mp3.Mp3InfoReplayGain
-import kotlin.math.log10
-import kotlin.math.pow
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.extractor.metadata.id3.TextInformationFrame
+import androidx.media3.extractor.mp3.Mp3InfoReplayGain
 import androidx.media3.session.DefaultMediaNotificationProvider
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import com.sipun.sonora.MainActivity
 import com.sipun.sonora.R
 import com.sipun.sonora.data.preferences.SonoraPreferences
+import kotlin.math.log10
+import kotlin.math.pow
 
 class SonoraPlaybackService : MediaSessionService() {
     private val preferences by lazy { SonoraPreferences(applicationContext) }
@@ -104,7 +104,7 @@ class SonoraPlaybackService : MediaSessionService() {
             if (crossfadePlayer != null) {
                 when {
                     active.currentMediaItemIndex == crossfadeTargetIndex &&
-                        reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO -> {
+                            reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO -> {
                         active.volume = 0f
                     }
 
@@ -153,9 +153,7 @@ class SonoraPlaybackService : MediaSessionService() {
 
             if (active != null) {
                 val crossfadeMs = preferences.crossfadeSeconds() * 1_000L
-                active.setPauseAtEndOfMediaItems(
-                    crossfadeMs == 0L && !preferences.gaplessPlayback(),
-                )
+                active.pauseAtEndOfMediaItems = crossfadeMs == 0L && !preferences.gaplessPlayback()
 
                 if (crossfadePlayer != null) {
                     updateCrossfade(active)
@@ -184,7 +182,7 @@ class SonoraPlaybackService : MediaSessionService() {
         val prepareThreshold = crossfadeMs + PREPARE_BUFFER_MS
         if (remaining !in 0..prepareThreshold || !active.hasNextMediaItem()) return
 
-        val nextIndex = active.getNextMediaItemIndex()
+        val nextIndex = active.nextMediaItemIndex
         if (nextIndex == C.INDEX_UNSET) return
 
         val items = List(active.mediaItemCount) { active.getMediaItemAt(it) }
@@ -291,16 +289,15 @@ class SonoraPlaybackService : MediaSessionService() {
         var peak: Float? = null
 
         for (index in 0 until metadata.length()) {
-            val entry = metadata[index]
-            when (entry) {
+            when (val entry = metadata[index]) {
                 is TextInformationFrame -> {
-                    val key = entry.description?.trim()?.uppercase()
-                    when (key) {
+                    when (val key = entry.description?.trim()?.uppercase()) {
                         "REPLAYGAIN_TRACK_GAIN", "REPLAYGAIN_ALBUM_GAIN" -> {
                             if (gainDb == null || key == "REPLAYGAIN_TRACK_GAIN") {
                                 gainDb = parseGainDb(entry.values.first())
                             }
                         }
+
                         "REPLAYGAIN_TRACK_PEAK", "REPLAYGAIN_ALBUM_PEAK" -> {
                             if (peak == null || key == "REPLAYGAIN_TRACK_PEAK") {
                                 peak = entry.values.first().toFloatOrNull()
@@ -308,6 +305,7 @@ class SonoraPlaybackService : MediaSessionService() {
                         }
                     }
                 }
+
                 is androidx.media3.extractor.metadata.vorbis.VorbisComment -> {
                     when (entry.key.trim().uppercase()) {
                         "REPLAYGAIN_TRACK_GAIN", "REPLAYGAIN_ALBUM_GAIN" -> {
@@ -315,6 +313,7 @@ class SonoraPlaybackService : MediaSessionService() {
                                 gainDb = parseGainDb(entry.value)
                             }
                         }
+
                         "REPLAYGAIN_TRACK_PEAK", "REPLAYGAIN_ALBUM_PEAK" -> {
                             if (peak == null || entry.key.equals("REPLAYGAIN_TRACK_PEAK", true)) {
                                 peak = entry.value.toFloatOrNull()
@@ -322,6 +321,7 @@ class SonoraPlaybackService : MediaSessionService() {
                         }
                     }
                 }
+
                 is Mp3InfoReplayGain -> {
                     val field = entry.field1 ?: entry.field2
                     if (field != null && field.name == Mp3InfoReplayGain.GainField.NAME_RADIO) {
@@ -349,9 +349,10 @@ class SonoraPlaybackService : MediaSessionService() {
         } else {
             normalizationVolumes[player] = 1f
             try {
-                val enhancer = normalizationEffects[player] ?: LoudnessEnhancer(player.audioSessionId).also {
-                    normalizationEffects[player] = it
-                }
+                val enhancer =
+                    normalizationEffects[player] ?: LoudnessEnhancer(player.audioSessionId).also {
+                        normalizationEffects[player] = it
+                    }
                 enhancer.setTargetGain((safeGain * 100f).toInt())
                 enhancer.enabled = true
                 player.volume = 1f
