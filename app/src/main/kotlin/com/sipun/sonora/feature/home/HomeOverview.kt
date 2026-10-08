@@ -358,7 +358,7 @@ private fun LibraryLottieCard(
     }
 
     Card(
-        onClick = if (nowPlayingSong != null) onOpenNowPlaying else onPlayAll,
+        onClick = { if (nowPlayingSong != null) onOpenNowPlaying() },
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -578,7 +578,7 @@ private fun ExpressiveHomeSeekBar(
     } else {
         0f
     }
-    val primary = if (isPlaying) MaterialTheme.colorScheme.primary else Color.White
+    val primary = if (isPlaying) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
     val track = MaterialTheme.colorScheme.surfaceVariant
 
     Box(

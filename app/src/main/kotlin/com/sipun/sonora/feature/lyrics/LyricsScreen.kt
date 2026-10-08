@@ -20,7 +20,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -52,6 +51,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sipun.sonora.R
+import com.sipun.sonora.ui.components.SonoraBackButton
 import com.sipun.sonora.data.lyrics.Lyrics
 import com.sipun.sonora.data.lyrics.LyricsRepository
 import com.sipun.sonora.player.PlayerController
@@ -101,9 +101,7 @@ fun LyricsScreen(playerController: PlayerController, onBack: () -> Unit) {
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
-                    }
+                    SonoraBackButton(onClick = onBack)
                 },
                 actions = {
                     IconButton(onClick = { retry++ }) {

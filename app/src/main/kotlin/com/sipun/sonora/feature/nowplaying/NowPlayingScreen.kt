@@ -542,7 +542,7 @@ fun NowPlayingScreen(
                         }
                     }
 
-                    Spacer(Modifier.height(32.dp))
+                    Spacer(Modifier.height(12.dp))
 
                     Row(
                         Modifier.fillMaxWidth(),
@@ -583,7 +583,7 @@ private fun ExpressiveSeekBar(
     val primary = if (isPlaying) {
         MaterialTheme.colorScheme.primary
     } else {
-        Color.White
+        MaterialTheme.colorScheme.onSurface
     }
     val track = MaterialTheme.colorScheme.surfaceVariant
 
