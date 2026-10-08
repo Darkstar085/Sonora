@@ -430,7 +430,7 @@ fun NowPlayingScreen(
                     .fillMaxWidth()
                     .height(520.dp),
                 shape = RoundedCornerShape(28.dp),
-                color = MaterialTheme.colorScheme.surface,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
                 tonalElevation = 0.dp,
                 shadowElevation = 2.dp,
             ) {

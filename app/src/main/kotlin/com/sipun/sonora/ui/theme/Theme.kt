@@ -138,6 +138,22 @@ fun SonoraTheme(
 
     val colorScheme = when {
         pureBlack -> (dynamicScheme ?: SonoraPureBlackColors).copy(
+            primary = if (dynamicScheme != null) {
+                dynamicScheme.primary
+            } else {
+                Color(customColor)
+            },
+            onPrimary = Color.White,
+            primaryContainer = if (dynamicScheme != null) {
+                dynamicScheme.primaryContainer
+            } else {
+                Color(customColor).copy(alpha = 0.35f)
+            },
+            onPrimaryContainer = if (dynamicScheme != null) {
+                dynamicScheme.onPrimaryContainer
+            } else {
+                Color(customColor)
+            },
             background = Color.Black,
             onBackground = Color(0xFFF5F5F5),
             surface = Color.Black,
