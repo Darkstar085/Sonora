@@ -1,5 +1,7 @@
 package com.sipun.sonora.feature.lyrics
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -263,30 +265,35 @@ private fun LyricsCard(
                         Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        if (index == active) {
-                            Box(
-                                Modifier
-                                    .padding(end = 12.dp)
-                                    .width(5.dp)
-                                    .height(48.dp)
-                                    .clip(RoundedCornerShape(5.dp))
-                                    .background(MaterialTheme.colorScheme.primary),
-                            )
-                        }
-
-                        Text(
-                            text = line.text,
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = if (index == active) {
-                                FontWeight.Bold
-                            } else {
-                                FontWeight.Normal
-                            },
-                            color = if (index == active) {
+                        val isActive = index == active
+                        val textColor by animateColorAsState(
+                            targetValue = if (isActive) {
                                 MaterialTheme.colorScheme.primary
                             } else {
                                 MaterialTheme.colorScheme.onSurfaceVariant
                             },
+                            animationSpec = tween(durationMillis = 220),
+                            label = "lyrics_text_color",
+                        )
+
+                        Box(
+                            Modifier
+                                .padding(end = if (isActive) 12.dp else 0.dp)
+                                .width(if (isActive) 5.dp else 0.dp)
+                                .height(if (isActive) 48.dp else 0.dp)
+                                .clip(RoundedCornerShape(5.dp))
+                                .background(MaterialTheme.colorScheme.primary),
+                        )
+
+                        Text(
+                            text = line.text,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = if (isActive) {
+                                FontWeight.Bold
+                            } else {
+                                FontWeight.Normal
+                            },
+                            color = textColor,
                         )
                     }
                 }

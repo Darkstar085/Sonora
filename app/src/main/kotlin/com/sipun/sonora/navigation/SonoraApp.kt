@@ -54,6 +54,7 @@ fun SonoraApp(
     val showMiniPlayer = currentRoute != null &&
             currentRoute != SonoraRoute.Home.route &&
             currentRoute != SonoraRoute.NowPlaying.route &&
+            currentRoute != SonoraRoute.Lyrics.route &&
             playerState.currentSong != null
 
     DisposableEffect(player) {

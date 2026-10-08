@@ -206,7 +206,7 @@ fun NowPlayingScreen(
     if (showQueue) {
         QueueDialog(
             queue = state.queue,
-            currentId = state.currentSong?.id,
+            currentIndex = state.queueIndex,
             onSelect = { song ->
                 val index = state.queue.indexOfFirst { it.id == song.id }
                 if (index >= 0) playerController.playQueue(state.queue, index)
@@ -371,7 +371,8 @@ fun NowPlayingScreen(
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
-                            song?.title ?: "Select a song from your library",
+                            song?.title?.replace(Regex("\\s*[-–—]\\s*"), " ")?.trim()
+                                ?: "Select a song from your library",
                             style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                             textAlign = TextAlign.Center,
                             maxLines = 1,
