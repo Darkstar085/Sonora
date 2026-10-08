@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -343,33 +344,68 @@ internal fun ArtistDialog(
 
 @Composable
 internal fun SongInfoDialog(song: Song, onDismiss: () -> Unit) {
-    AlertDialog(
+    Dialog(
         onDismissRequest = onDismiss,
-        title = { Text("Song info") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                InfoRow("Title", song.title)
-                InfoRow("Artist", song.artist)
-                InfoRow("Album", song.album)
-                song.genre?.let { InfoRow("Genre", it) }
-                song.year?.let { InfoRow("Year", it.toString()) }
-                song.trackNumber?.let { InfoRow("Track", it.toString()) }
-                song.folder?.let { InfoRow("Folder", it) }
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+    ) {
+        Surface(
+            modifier = Modifier.fillMaxWidth(0.92f).widthIn(max = 460.dp),
+            shape = RoundedCornerShape(28.dp),
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 6.dp,
+            shadowElevation = 8.dp,
+        ) {
+            Column(Modifier.fillMaxWidth().padding(24.dp)) {
+                DialogTitle("Song info")
+                Spacer(Modifier.height(20.dp))
+                SongInfoItem("Title", song.title)
+                SongInfoItem("Artist", song.artist)
+                SongInfoItem("Album", song.album)
+                song.genre?.let { SongInfoItem("Genre", it) }
+                song.year?.let { SongInfoItem("Year", it.toString()) }
+                song.trackNumber?.let { SongInfoItem("Track", it.toString()) }
+                song.folder?.let { SongInfoItem("Folder", it) }
+                DialogCloseButton(onDismiss)
             }
-        },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Close") } },
+        }
+    }
+}
+
+@Composable
+private fun SongInfoItem(label: String, value: String) {
+    Column(Modifier.fillMaxWidth().padding(vertical = 7.dp)) {
+        Text(
+            label,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(2.dp))
+        Text(
+            value,
+            style = MaterialTheme.typography.bodyLarge,
+            maxLines = 3,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+@Composable
+private fun DialogTitle(text: String) {
+    Text(
+        text,
+        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth(),
     )
 }
 
 @Composable
-private fun InfoRow(label: String, value: String) {
-    Column {
-        Text(
-            label,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Text(value, style = MaterialTheme.typography.bodyLarge)
+private fun DialogCloseButton(onDismiss: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+        horizontalArrangement = Arrangement.End,
+    ) {
+        TextButton(onClick = onDismiss) { Text("Close") }
     }
 }
 
@@ -380,23 +416,42 @@ internal fun PlaybackSpeedDialog(
     onDismiss: () -> Unit,
 ) {
     val speeds = listOf(0.5f, 0.75f, 1f, 1.25f, 1.5f, 2f)
-    AlertDialog(
+
+    Dialog(
         onDismissRequest = onDismiss,
-        title = { Text("Playback speed") },
-        text = {
-            Column {
-                speeds.forEach { speed ->
-                    TextButton(
-                        onClick = { onSelect(speed) },
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text(if (speed == currentSpeed) "✓  " else "    " + speed.toString() + "×")
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+    ) {
+        Surface(
+            modifier = Modifier.fillMaxWidth(0.92f).widthIn(max = 460.dp),
+            shape = RoundedCornerShape(28.dp),
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 6.dp,
+            shadowElevation = 8.dp,
+        ) {
+            Column(Modifier.fillMaxWidth().padding(24.dp)) {
+                DialogTitle("Playback speed")
+                Spacer(Modifier.height(20.dp))
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    speeds.chunked(2).forEach { row ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        ) {
+                            row.forEach { speed ->
+                                val selected = speed == currentSpeed
+                                DialogOption(
+                                    text = speedLabel(speed),
+                                    selected = selected,
+                                    onClick = { onSelect(speed) },
+                                )
+                            }
+                        }
                     }
                 }
+                DialogCloseButton(onDismiss)
             }
-        },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Close") } },
-    )
+        }
+    }
 }
 
 @Composable
@@ -405,28 +460,93 @@ internal fun SleepTimerDialog(
     onDismiss: () -> Unit,
 ) {
     val options = listOf(15, 30, 45, 60)
-    AlertDialog(
+
+    Dialog(
         onDismissRequest = onDismiss,
-        title = { Text("Sleep timer") },
-        text = {
-            Column {
-                options.forEach { minutes ->
-                    TextButton(
-                        onClick = { onSelect(minutes) },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("$minutes minutes")
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+    ) {
+        Surface(
+            modifier = Modifier.fillMaxWidth(0.92f).widthIn(max = 460.dp),
+            shape = RoundedCornerShape(28.dp),
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 6.dp,
+            shadowElevation = 8.dp,
+        ) {
+            Column(Modifier.fillMaxWidth().padding(24.dp)) {
+                DialogTitle("Sleep timer")
+                Spacer(Modifier.height(20.dp))
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    options.chunked(2).forEach { row ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        ) {
+                            row.forEach { minutes ->
+                                DialogOption(
+                                    text = "$minutes min",
+                                    onClick = { onSelect(minutes) },
+                                )
+                            }
+                        }
                     }
                 }
-                TextButton(onClick = { onSelect(null) }, modifier = Modifier.fillMaxWidth()) {
-                    Text("Cancel timer")
+                Spacer(Modifier.height(10.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.10f))
+                        .clickable { onSelect(null) }
+                        .padding(vertical = 16.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        "Cancel timer",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                        color = MaterialTheme.colorScheme.primary,
+                    )
                 }
+                DialogCloseButton(onDismiss)
             }
-        },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Close") } },
-    )
+        }
+    }
 }
 
+@Composable
+private fun RowScope.DialogOption(
+    text: String,
+    selected: Boolean = false,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .weight(1f)
+            .clip(RoundedCornerShape(18.dp))
+            .background(
+                if (selected) {
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+                } else {
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)
+                }
+            )
+            .clickable(onClick = onClick)
+            .padding(vertical = 16.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text,
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+            ),
+            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+        )
+    }
+}
+
+private fun speedLabel(speed: Float): String = when (speed) {
+    1f -> "1×"
+    else -> "${speed}×"
+}
 internal fun setAsRingtone(context: android.content.Context, song: Song) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.System.canWrite(context)) {
         context.startActivity(
