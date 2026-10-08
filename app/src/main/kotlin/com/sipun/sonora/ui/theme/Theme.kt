@@ -31,6 +31,9 @@ private val SonoraLightColors = lightColorScheme(
     surfaceVariant = Color(0xFFF0F1F5),
     onSurfaceVariant = Color(0xFF777A83),
     surfaceContainerLow = Color.White,
+    surfaceContainer = Color.White,
+    surfaceContainerHigh = Color.White,
+    surfaceContainerHighest = Color.White,
     outline = Color(0xFFE0E1E6),
 )
 
@@ -46,6 +49,9 @@ private val SonoraDarkColors = darkColorScheme(
     surfaceVariant = Color(0xFF2A282B),
     onSurfaceVariant = Color(0xFFD8C2BE),
     surfaceContainerLow = Color(0xFF1C1B1F),
+    surfaceContainer = Color(0xFF1C1B1F),
+    surfaceContainerHigh = Color(0xFF1C1B1F),
+    surfaceContainerHighest = Color(0xFF1C1B1F),
     outline = Color(0xFFA08C89),
 )
 
@@ -61,6 +67,9 @@ private val SonoraPureBlackColors = darkColorScheme(
     surfaceVariant = Color(0xFF181818),
     onSurfaceVariant = Color(0xFFBDBDBD),
     surfaceContainerLow = Color(0xFF121212),
+    surfaceContainer = Color(0xFF121212),
+    surfaceContainerHigh = Color(0xFF121212),
+    surfaceContainerHighest = Color(0xFF121212),
     outline = Color(0xFF3A3A3A),
 )
 
@@ -114,7 +123,11 @@ fun SonoraTheme(
             secondary = palette.secondary,
             onSecondary = Color.White,
             tertiary = palette.tertiary,
-            onTertiary = Color.White
+            onTertiary = Color.White,
+            surfaceContainer = palette.container,
+            surfaceContainerLow = palette.container,
+            surfaceContainerHigh = palette.container,
+            surfaceContainerHighest = palette.container,
         )
         else lightColorScheme(
             primary = palette.primary,
@@ -132,7 +145,9 @@ fun SonoraTheme(
             surfaceVariant = SonoraLightColors.surfaceVariant,
             onSurfaceVariant = SonoraLightColors.onSurfaceVariant,
             surfaceContainerLow = SonoraLightColors.surfaceContainerLow,
-            surfaceContainerHigh = Color.White,
+            surfaceContainer = SonoraLightColors.surfaceContainerLow,
+            surfaceContainerHigh = SonoraLightColors.surfaceContainerLow,
+            surfaceContainerHighest = SonoraLightColors.surfaceContainerLow,
         )
     } else null
 
@@ -156,11 +171,14 @@ fun SonoraTheme(
             },
             background = Color.Black,
             onBackground = Color(0xFFF5F5F5),
-            surface = Color.Black,
+            surface = Color(0xFF121212),
             onSurface = Color(0xFFF5F5F5),
             surfaceVariant = Color(0xFF181818),
             onSurfaceVariant = Color(0xFFBDBDBD),
             surfaceContainerLow = Color(0xFF121212),
+            surfaceContainer = Color(0xFF121212),
+            surfaceContainerHigh = Color(0xFF121212),
+            surfaceContainerHighest = Color(0xFF121212),
             outline = Color(0xFF3A3A3A),
         )
 

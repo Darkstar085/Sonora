@@ -243,7 +243,7 @@ private fun LyricsCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(30.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Box(Modifier.fillMaxSize()) {
@@ -316,8 +316,8 @@ private fun LyricsCard(
                     .align(Alignment.BottomCenter)
                     .background(
                         Brush.verticalGradient(
-                            0f to MaterialTheme.colorScheme.surface.copy(alpha = 0f),
-                            1f to MaterialTheme.colorScheme.surface,
+                            0f to MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0f),
+                            1f to MaterialTheme.colorScheme.surfaceContainerLow,
                         )
                     ),
             )
