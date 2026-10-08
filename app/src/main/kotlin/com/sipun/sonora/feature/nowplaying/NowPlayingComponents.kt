@@ -64,6 +64,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -194,8 +195,8 @@ internal fun QueueDialog(
                 .fillMaxWidth(0.92f)
                 .widthIn(max = 460.dp),
             shape = RoundedCornerShape(28.dp),
-            color = MaterialTheme.colorScheme.surface,
-            tonalElevation = 6.dp,
+            color = dialogSurfaceColor(),
+            tonalElevation = 0.dp,
             shadowElevation = 8.dp,
         ) {
             Column(Modifier.fillMaxWidth()) {
@@ -351,8 +352,8 @@ internal fun SongInfoDialog(song: Song, onDismiss: () -> Unit) {
         Surface(
             modifier = Modifier.fillMaxWidth(0.92f).widthIn(max = 460.dp),
             shape = RoundedCornerShape(28.dp),
-            color = MaterialTheme.colorScheme.surface,
-            tonalElevation = 6.dp,
+            color = dialogSurfaceColor(),
+            tonalElevation = 0.dp,
             shadowElevation = 8.dp,
         ) {
             Column(Modifier.fillMaxWidth().padding(24.dp)) {
@@ -386,6 +387,15 @@ private fun SongInfoItem(label: String, value: String) {
             maxLines = 3,
             overflow = TextOverflow.Ellipsis,
         )
+    }
+}
+
+@Composable
+private fun dialogSurfaceColor(): Color {
+    return if (MaterialTheme.colorScheme.background.luminance() > 0.5f) {
+        MaterialTheme.colorScheme.surface
+    } else {
+        MaterialTheme.colorScheme.surfaceContainerHigh
     }
 }
 
@@ -424,8 +434,8 @@ internal fun PlaybackSpeedDialog(
         Surface(
             modifier = Modifier.fillMaxWidth(0.92f).widthIn(max = 460.dp),
             shape = RoundedCornerShape(28.dp),
-            color = MaterialTheme.colorScheme.surface,
-            tonalElevation = 6.dp,
+            color = dialogSurfaceColor(),
+            tonalElevation = 0.dp,
             shadowElevation = 8.dp,
         ) {
             Column(Modifier.fillMaxWidth().padding(24.dp)) {
@@ -468,8 +478,8 @@ internal fun SleepTimerDialog(
         Surface(
             modifier = Modifier.fillMaxWidth(0.92f).widthIn(max = 460.dp),
             shape = RoundedCornerShape(28.dp),
-            color = MaterialTheme.colorScheme.surface,
-            tonalElevation = 6.dp,
+            color = dialogSurfaceColor(),
+            tonalElevation = 0.dp,
             shadowElevation = 8.dp,
         ) {
             Column(Modifier.fillMaxWidth().padding(24.dp)) {

@@ -124,7 +124,15 @@ fun SonoraTheme(
             secondary = palette.secondary,
             onSecondary = Color.White,
             tertiary = palette.tertiary,
-            onTertiary = Color.White
+            onTertiary = Color.White,
+            background = SonoraLightColors.background,
+            onBackground = SonoraLightColors.onBackground,
+            surface = SonoraLightColors.surface,
+            onSurface = SonoraLightColors.onSurface,
+            surfaceVariant = SonoraLightColors.surfaceVariant,
+            onSurfaceVariant = SonoraLightColors.onSurfaceVariant,
+            surfaceContainerLow = SonoraLightColors.surfaceContainerLow,
+            surfaceContainerHigh = Color.White,
         )
     } else null
 

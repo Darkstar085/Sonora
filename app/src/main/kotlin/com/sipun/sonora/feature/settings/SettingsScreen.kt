@@ -639,8 +639,8 @@ fun SettingsScreen(
         AlertDialog(
             onDismissRequest = { showThemeDialog = false },
             shape = RoundedCornerShape(28.dp),
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            tonalElevation = 6.dp,
+            containerColor = MaterialTheme.colorScheme.surface,
+            tonalElevation = 0.dp,
             title = {
                 Text(
                     text = stringResource(R.string.settings_theme),
@@ -1118,7 +1118,7 @@ private fun SonoraAboutDialog(
                 .padding(horizontal = 24.dp),
             shape = RoundedCornerShape(30.dp),
             color = MaterialTheme.colorScheme.surface,
-            tonalElevation = 8.dp,
+            tonalElevation = 0.dp,
         ) {
             Column(
                 modifier = Modifier
