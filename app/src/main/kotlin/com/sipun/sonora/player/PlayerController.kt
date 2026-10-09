@@ -123,7 +123,11 @@ class PlayerController(context: Context) {
         }
     }
 
-    fun playQueue(songs: List<Song>, startIndex: Int = 0) {
+    fun playQueue(
+        songs: List<Song>,
+        startIndex: Int = 0,
+        startPositionMs: Long = C.TIME_UNSET,
+    ) {
         if (songs.isEmpty()) return
         val mediaController = controller ?: run {
             pendingQueue = songs to startIndex
@@ -132,7 +136,7 @@ class PlayerController(context: Context) {
         mediaController.setMediaItems(
             songs.map(::toMediaItem),
             startIndex.coerceIn(0, songs.lastIndex),
-            C.TIME_UNSET,
+            startPositionMs,
         )
         mediaController.prepare()
         mediaController.play()
@@ -314,12 +318,18 @@ class PlayerController(context: Context) {
     private fun loadCurrentArtwork() {
         val mediaController = controller ?: return
         val item = mediaController.currentMediaItem ?: return
-        if (item.mediaMetadata.artworkData != null) return
+        item.mediaMetadata.artworkData?.let { artwork ->
+            _state.value = _state.value.copy(artworkData = artwork)
+            return
+        }
 
         artworkJob?.cancel()
         artworkJob = artworkScope.launch {
             val artwork = withContext(Dispatchers.IO) {
-                artworkLoader.extractEmbeddedArtwork(item.localConfiguration?.uri)
+                artworkLoader.extractArtwork(
+                    item.localConfiguration?.uri,
+                    item.mediaMetadata.artworkUri,
+                )
             } ?: return@launch
 
             val current = mediaController.currentMediaItem ?: return@launch

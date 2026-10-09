@@ -1,7 +1,11 @@
 package com.sipun.sonora.player
 
 import android.app.PendingIntent
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.media.AudioManager
 import android.media.audiofx.LoudnessEnhancer
 import android.os.Handler
 import android.os.Looper
@@ -15,6 +19,7 @@ import androidx.media3.extractor.mp3.Mp3InfoReplayGain
 import androidx.media3.session.DefaultMediaNotificationProvider
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
+import androidx.core.content.ContextCompat
 import com.sipun.sonora.MainActivity
 import com.sipun.sonora.R
 import com.sipun.sonora.data.preferences.SonoraPreferences
@@ -24,6 +29,14 @@ import kotlin.math.pow
 class SonoraPlaybackService : MediaSessionService() {
     private val preferences by lazy { SonoraPreferences(applicationContext) }
     private val transitionHandler = Handler(Looper.getMainLooper())
+    private val audioBecomingNoisyReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action != AudioManager.ACTION_AUDIO_BECOMING_NOISY) return
+            cancelCrossfade()
+            activePlayer?.pause()
+        }
+    }
+    private var audioBecomingNoisyReceiverRegistered = false
     private var mediaSession: MediaSession? = null
     private var activePlayer: ExoPlayer? = null
     private var crossfadePlayer: ExoPlayer? = null
@@ -37,6 +50,13 @@ class SonoraPlaybackService : MediaSessionService() {
 
     override fun onCreate() {
         super.onCreate()
+        ContextCompat.registerReceiver(
+            this,
+            audioBecomingNoisyReceiver,
+            IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY),
+            ContextCompat.RECEIVER_NOT_EXPORTED,
+        )
+        audioBecomingNoisyReceiverRegistered = true
         setForegroundServiceTimeoutMs(120_000L)
 
         val initialPlayer = buildPlayer(handleAudioFocus = true)
@@ -53,6 +73,38 @@ class SonoraPlaybackService : MediaSessionService() {
         setMediaNotificationProvider(notificationProvider)
 
         mediaSession = MediaSession.Builder(this, initialPlayer)
+            .setCallback(object : MediaSession.Callback {
+                override fun onConnect(
+                    session: MediaSession,
+                    controller: MediaSession.ControllerInfo,
+                ): MediaSession.ConnectionResult {
+                    val defaultResult = super<MediaSession.Callback>.onConnect(session, controller)
+                    if (controller.isTrusted) return defaultResult
+
+                    val playerCommands = defaultResult.availablePlayerCommands.buildUpon()
+                        .add(Player.COMMAND_PLAY_PAUSE)
+                        .add(Player.COMMAND_PREPARE)
+                        .add(Player.COMMAND_STOP)
+                        .add(Player.COMMAND_SEEK_TO_DEFAULT_POSITION)
+                        .add(Player.COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM)
+                        .add(Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM)
+                        .add(Player.COMMAND_SEEK_TO_PREVIOUS)
+                        .add(Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM)
+                        .add(Player.COMMAND_SEEK_TO_NEXT)
+                        .add(Player.COMMAND_SEEK_BACK)
+                        .add(Player.COMMAND_SEEK_FORWARD)
+                        .add(Player.COMMAND_GET_CURRENT_MEDIA_ITEM)
+                        .add(Player.COMMAND_GET_TIMELINE)
+                        .add(Player.COMMAND_GET_METADATA)
+                        .add(Player.COMMAND_GET_AUDIO_ATTRIBUTES)
+                        .add(Player.COMMAND_GET_VOLUME)
+                        .build()
+                    return MediaSession.ConnectionResult.accept(
+                        defaultResult.availableSessionCommands,
+                        playerCommands,
+                    )
+                }
+            })
             .setSessionActivity(
                 PendingIntent.getActivity(
                     this,
@@ -74,6 +126,10 @@ class SonoraPlaybackService : MediaSessionService() {
 
     override fun onDestroy() {
         transitionHandler.removeCallbacks(transitionRunnable)
+        if (audioBecomingNoisyReceiverRegistered) {
+            unregisterReceiver(audioBecomingNoisyReceiver)
+            audioBecomingNoisyReceiverRegistered = false
+        }
         cancelCrossfade()
         mediaSession?.release()
         mediaSession = null

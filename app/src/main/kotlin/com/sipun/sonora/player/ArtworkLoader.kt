@@ -21,18 +21,32 @@ internal class ArtworkLoader(private val context: Context) {
         if (uri == null) return null
 
         val retriever = MediaMetadataRetriever()
-        return try {
+        val embedded = try {
             retriever.setDataSource(context, uri)
-            val embedded = retriever.embeddedPicture
-            if (embedded != null) {
-                if (embedded.size <= MAX_ARTWORK_BYTES) embedded else resizeArtwork(embedded)
-            } else {
-                extractWithJaudiotagger(uri)
-            }
+            retriever.embeddedPicture
         } catch (_: Exception) {
             null
         } finally {
-            retriever.release()
+            runCatching { retriever.release() }
+        }
+
+        val processed = embedded?.let {
+            if (it.size <= MAX_ARTWORK_BYTES) it else resizeArtwork(it)
+        }
+        return processed ?: runCatching { extractWithJaudiotagger(uri) }.getOrNull()
+    }
+
+    fun extractArtwork(audioUri: Uri?, artworkUri: Uri?): ByteArray? =
+        extractEmbeddedArtwork(audioUri) ?: extractArtworkFromUri(artworkUri)
+
+    private fun extractArtworkFromUri(uri: Uri?): ByteArray? {
+        if (uri == null) return null
+        return try {
+            val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                ?: return null
+            if (bytes.size <= MAX_ARTWORK_BYTES) bytes else resizeArtwork(bytes)
+        } catch (_: Exception) {
+            null
         }
     }
 

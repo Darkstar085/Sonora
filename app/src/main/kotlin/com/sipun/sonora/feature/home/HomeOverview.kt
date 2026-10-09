@@ -248,7 +248,14 @@ internal fun Overview(
                             }
 
                             Card(
-                                onClick = { player.playQueue(songs, songs.indexOf(song)); open() },
+                                onClick = {
+                                    player.playQueue(
+                                        songs,
+                                        songs.indexOf(song),
+                                        preferences.lastPlayedPositionMs(song.id),
+                                    )
+                                    open()
+                                },
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                             ) {
@@ -304,7 +311,11 @@ internal fun Overview(
                                     }
                                     FilledIconButton(
                                         onClick = {
-                                            player.playQueue(songs, songs.indexOf(song))
+                                            player.playQueue(
+                                                songs,
+                                                songs.indexOf(song),
+                                                preferences.lastPlayedPositionMs(song.id),
+                                            )
                                             open()
                                         },
                                         modifier = Modifier
