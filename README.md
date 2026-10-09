@@ -1,7 +1,7 @@
 <div align="center">
 
 <p align="center">
-  <img src=".github/assets/banner.png" alt="Sonora" width="100%">
+  <img src=".github/assets/sonora_banner.png" alt="Sonora logo" width="70%">
 </p>
 
 A beautiful, privacy-friendly music player for Android, built around your local library.
@@ -52,32 +52,38 @@ streaming service.
   <img src=".github/assets/onboarding-permission.png" width="31%" alt="Sonora permission onboarding">
 </p>
 
+### Home
+
+<p align="center">
+  <img src=".github/assets/home_idle.png" width="31%" alt="Sonora Home with playback idle">
+  <img src=".github/assets/home_play.png" width="31%" alt="Sonora Home during playback">
+  <img src=".github/assets/home_recent.png" width="31%" alt="Sonora recently added and listening history">
+</p>
+
 ### Library
 
 <p align="center">
-  <img src=".github/assets/home.png" width="31%" alt="Sonora home">
   <img src=".github/assets/songs.png" width="31%" alt="Sonora songs">
   <img src=".github/assets/albums.png" width="31%" alt="Sonora albums">
-</p>
-
-<p align="center">
   <img src=".github/assets/artists.png" width="31%" alt="Sonora artists">
 </p>
 
 ### Playback
 
 <p align="center">
-  <img src=".github/assets/now-playing.png" width="31%" alt="Sonora now playing">
+  <img src=".github/assets/nowplaying.png" width="31%" alt="Sonora Now Playing screen">
+  <img src=".github/assets/nowplaying_more.png" width="31%" alt="Sonora Now Playing additional controls">
   <img src=".github/assets/lyrics.png" width="31%" alt="Sonora lyrics">
 </p>
 
-### Personalization
+### Settings & Personalization
 
 <p align="center">
   <img src=".github/assets/settings.png" width="31%" alt="Sonora settings">
-  <img src=".github/assets/settings-synamic-color.png" width="31%" alt="Sonora dynamic color settings">
-  <img src=".github/assets/settings-about.png" width="31%" alt="About page">
+  <img src=".github/assets/permissions.png" width="31%" alt="Sonora permission management">
+  <img src=".github/assets/about.png" width="31%" alt="Sonora About screen">
 </p>
+
 
 ---
 
@@ -86,17 +92,21 @@ streaming service.
 ### Local Library
 
 - Scan and browse music stored on the device
-- Songs, albums and artists
-- Album and artist detail pages
+- Search your local music library
+- Songs, albums and artists with dedicated detail pages
 - Playlists and favorites
+- Recently added tracks and continue-listening history on Home
 - Album artwork and local metadata
-- Recently added music
 
 ### Playback
 
 - Play, pause, previous and next
 - Queue management
 - Shuffle and repeat modes
+- Gapless playback between tracks
+- Adjustable crossfade transitions
+- Optional resume playback from where you left off
+- Optional ReplayGain volume normalization
 - Seeking with an expressive playback control
 - Playback speed control
 - Background playback
@@ -113,9 +123,9 @@ streaming service.
 
 ### Metadata
 
-- View local track metadata
-- Edit supported music metadata
-- Album artwork and track information
+- View local track metadata and audio format information
+- Edit tags including title, artist, album artist, genre, year, track/disc number, composer, comments, grouping, lyrics, copyright, and BPM
+- Add, change, or remove embedded album artwork
 
 ### Personalization
 
@@ -127,9 +137,10 @@ streaming service.
 
 ### Android Integration
 
-- Media3-based playback service
-- Background playback
-- System media controls and notifications
+- Media3-based playback service and background playback
+- System media controls and playback notifications
+- Open audio files directly from compatible file managers
+- Permission management for music, artwork/photos, notifications, metadata editing, and media deletion
 - WorkManager-based update flow
 - First-launch onboarding and media permission flow
 
@@ -186,7 +197,7 @@ feature set.
 | Background work    | WorkManager 2.11.2           |
 | Image loading      | Coil 3.6.3                   |
 | Lyrics             | LRCLIB                       |
-| Metadata           | JAudioTagger 3.0.1           |
+| Metadata           | jaudiotagger-kt 1.0.0        |
 | Serialization      | Kotlinx Serialization 1.11.0 |
 | Build              | Gradle + AGP 9.4.0           |
 | Java               | Java 17                      |
@@ -197,39 +208,68 @@ feature set.
 
 ## Project Structure
 
-~~~text
+```text
 app/
+├── build.gradle.kts
 └── src/
     ├── main/
+    │   ├── AndroidManifest.xml
     │   ├── kotlin/com/sipun/sonora/
+    │   │   ├── MainActivity.kt
     │   │   ├── core/
+    │   │   │   └── update/
     │   │   ├── data/
     │   │   │   ├── lyrics/
     │   │   │   ├── media/
     │   │   │   └── preferences/
     │   │   ├── domain/
+    │   │   │   ├── model/
+    │   │   │   └── repository/
     │   │   ├── feature/
     │   │   │   ├── album/
     │   │   │   ├── artist/
     │   │   │   ├── favorites/
     │   │   │   ├── home/
+    │   │   │   │   ├── HomeScreen.kt
+    │   │   │   │   ├── HomeOverview.kt
+    │   │   │   │   ├── HomeOverviewComponents.kt
+    │   │   │   │   ├── HomeLibraryContent.kt
+    │   │   │   │   ├── HomePlaylistContent.kt
+    │   │   │   │   └── HomeScreenEmptyStates.kt
     │   │   │   ├── library/
     │   │   │   ├── lyrics/
     │   │   │   ├── nowplaying/
+    │   │   │   │   ├── NowPlayingScreen.kt
+    │   │   │   │   ├── NowPlayingComponents.kt
+    │   │   │   │   ├── NowPlayingVisuals.kt
+    │   │   │   │   └── PlaybackTimeFormatter.kt
     │   │   │   ├── playlists/
     │   │   │   └── settings/
+    │   │   │       ├── SettingsScreen.kt
+    │   │   │       └── SettingsComponents.kt
     │   │   ├── navigation/
     │   │   ├── player/
     │   │   └── ui/
+    │   │       ├── components/
     │   │       ├── onboarding/
-    │   │       └── theme/
+    │   │       │   ├── WelcomeScreen.kt
+    │   │       │   └── WelcomeVisuals.kt
+    │   │       ├── theme/
+    │   │       └── update/
     │   └── res/
+    │       ├── drawable/
+    │       ├── mipmap-anydpi-v26/
+    │       ├── raw/
+    │       ├── values/
+    │       └── xml/
     ├── test/
     └── androidTest/
-~~~
+```
 
-The project is organized around feature-focused Compose UI, shared AndroidX/data layers, and a
-dedicated playback layer.
+- **Feature UI:** Screens are grouped by feature, with supporting UI extracted into focused files.
+- **Shared UI:** Reusable components live under `ui/components/`; onboarding visuals and theme code have their own packages.
+- **Data and domain:** Local media, metadata, preferences, lyrics, and domain models are kept separate from feature screens.
+- **Playback and updates:** Media3 playback lives under `player/`; update handling is grouped under `core/update/`.
 
 ---
 
