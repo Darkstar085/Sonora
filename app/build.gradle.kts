@@ -1,8 +1,18 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
 }
+
+val signingPropertiesFile = rootProject.file("keystore.properties")
+val signingProperties = Properties().apply {
+    if (signingPropertiesFile.exists()) {
+        signingPropertiesFile.inputStream().use { load(it) }
+    }
+}
+
 android {
     namespace = "com.sipun.sonora"
     compileSdk { version = release(37) }
@@ -16,23 +26,22 @@ android {
     }
     signingConfigs {
         create("release") {
-            val keystoreFile = System.getenv("ANDROID_KEYSTORE_FILE")
-            val keystorePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
-            val keyAlias = System.getenv("ANDROID_KEY_ALIAS")
-            val keyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+            val keystorePath = signingProperties.getProperty("storeFile")
+                ?.takeIf { it.isNotBlank() }
+                ?: System.getenv("ANDROID_KEYSTORE_FILE")
+            if (!keystorePath.isNullOrBlank()) {
+                storeFile = rootProject.file(keystorePath)
+            }
 
-            if (!keystoreFile.isNullOrBlank()) {
-                storeFile = file(keystoreFile)
-            }
-            if (!keystorePassword.isNullOrBlank()) {
-                storePassword = keystorePassword
-            }
-            if (!keyAlias.isNullOrBlank()) {
-                this.keyAlias = keyAlias
-            }
-            if (!keyPassword.isNullOrBlank()) {
-                this.keyPassword = keyPassword
-            }
+            storePassword = signingProperties.getProperty("storePassword")
+                ?.takeIf { it.isNotBlank() }
+                ?: System.getenv("ANDROID_KEYSTORE_PASSWORD")
+            keyAlias = signingProperties.getProperty("keyAlias")
+                ?.takeIf { it.isNotBlank() }
+                ?: System.getenv("ANDROID_KEY_ALIAS")
+            keyPassword = signingProperties.getProperty("keyPassword")
+                ?.takeIf { it.isNotBlank() }
+                ?: System.getenv("ANDROID_KEY_PASSWORD")
         }
     }
 
