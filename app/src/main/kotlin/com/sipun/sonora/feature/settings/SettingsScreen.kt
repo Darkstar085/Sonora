@@ -1143,7 +1143,7 @@ private fun SonoraAboutDialog(
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         androidx.compose.foundation.Image(
-                            painter = painterResource(R.drawable.sonora_launcher_logo),
+                            painter = painterResource(R.drawable.sonora_icon_foreground_art),
                             contentDescription = stringResource(R.string.about_sonora),
                             modifier = Modifier.size(54.dp),
                         )
