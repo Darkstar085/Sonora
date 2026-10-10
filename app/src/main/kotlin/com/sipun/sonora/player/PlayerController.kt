@@ -35,6 +35,7 @@ class PlayerController(context: Context) {
     val state: StateFlow<PlayerState> = _state.asStateFlow()
     private var controller: MediaController? = null
     private var pendingQueue: Pair<List<Song>, Int>? = null
+    private var pendingQueuePositionMs = C.TIME_UNSET
     private var pendingQueueShuffled = false
     private var pendingExternalUri: Uri? = null
     private var restoredLastPlayed = false
@@ -66,12 +67,15 @@ class PlayerController(context: Context) {
                     mediaController.addListener(listener)
                     restoreLastPlayedIfNeeded()
                     pendingQueue?.let { (songs, index) ->
+                        val shuffled = pendingQueueShuffled
+                        val positionMs = pendingQueuePositionMs
                         pendingQueue = null
-                        if (pendingQueueShuffled) {
-                            pendingQueueShuffled = false
+                        pendingQueueShuffled = false
+                        pendingQueuePositionMs = C.TIME_UNSET
+                        if (shuffled) {
                             playQueueShuffled(songs)
                         } else {
-                            playQueue(songs, index)
+                            playQueue(songs, index, positionMs)
                         }
                     }
                     pendingExternalUri?.let { uri ->
@@ -131,6 +135,8 @@ class PlayerController(context: Context) {
         if (songs.isEmpty()) return
         val mediaController = controller ?: run {
             pendingQueue = songs to startIndex
+            pendingQueuePositionMs = startPositionMs
+            pendingQueueShuffled = false
             return
         }
         mediaController.setMediaItems(
@@ -148,6 +154,7 @@ class PlayerController(context: Context) {
         if (songs.isEmpty()) return
         val mediaController = controller ?: run {
             pendingQueue = songs to 0
+            pendingQueuePositionMs = C.TIME_UNSET
             pendingQueueShuffled = true
             return
         }
@@ -271,9 +278,15 @@ class PlayerController(context: Context) {
         if (positionUpdateJob?.isActive == true) return
 
         positionUpdateJob = artworkScope.launch {
+            var ticksUntilPersist = 0
             while (true) {
                 updatePlaybackPosition()
-                delay(250L)
+                ticksUntilPersist++
+                if (ticksUntilPersist >= POSITION_PERSIST_TICKS) {
+                    persistPlaybackPosition()
+                    ticksUntilPersist = 0
+                }
+                delay(POSITION_UPDATE_INTERVAL_MS)
             }
         }
     }
@@ -295,6 +308,14 @@ class PlayerController(context: Context) {
             positionMs = mediaController.currentPosition.coerceAtLeast(0L),
             durationMs = duration,
         )
+    }
+
+    private fun persistPlaybackPosition() {
+        val mediaController = controller ?: return
+        val item = mediaController.currentMediaItem ?: return
+        val song = _state.value.queue.firstOrNull { it.id.toString() == item.mediaId }
+            ?: item.toSong()
+        preferences.saveLastPlayed(song, mediaController.currentPosition.coerceAtLeast(0L))
     }
 
     private fun restoreLastPlayedIfNeeded() {
@@ -415,5 +436,8 @@ class PlayerController(context: Context) {
         )
     }
 
-    private companion object
+    private companion object {
+        const val POSITION_UPDATE_INTERVAL_MS = 250L
+        const val POSITION_PERSIST_TICKS = 4
+    }
 }
