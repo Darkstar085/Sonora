@@ -1,5 +1,18 @@
 <resources>
     <string name="app_name">Sonora</string>
+    <string name="widget_mini_title">Sonora Mini Player</string>
+    <string name="widget_full_title">Sonora Full Player</string>
+    <string name="widget_mini_description">Compact Sonora playback controls.</string>
+    <string name="widget_full_description">Sonora player with progress, shuffle and repeat controls.</string>
+    <string name="widget_nothing_playing">Nothing playing</string>
+    <string name="widget_open_sonora_to_play">Open Sonora to play music</string>
+    <string name="widget_album_art">Album artwork</string>
+    <string name="widget_playback_progress">Playback progress</string>
+    <string name="widget_toggle_playback">Play or pause</string>
+    <string name="widget_previous">Previous track</string>
+    <string name="widget_next">Next track</string>
+    <string name="widget_shuffle">Shuffle</string>
+    <string name="widget_repeat">Repeat mode</string>
     <string name="home_tagline">Your music, simply.</string>
     <string name="tab_overview">Overview</string>
     <string name="tab_songs">Songs</string>
@@ -154,4 +167,6 @@
     <string name="metadata_remove_artwork">Remove artwork</string>
     <string name="metadata_save">Save changes</string>
     <string name="metadata_save_failed">Couldn\'t save metadata: %1$s</string>
+    <string name="widget_now_playing">Now playing</string>
+    <string name="widget_paused">Paused</string>
 </resources>

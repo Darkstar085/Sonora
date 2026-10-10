@@ -1,6 +1,7 @@
 package com.sipun.sonora.data.preferences
 
 import android.content.Context
+import android.content.Intent
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,8 +21,9 @@ enum class DynamicPalette {
 }
 
 class ThemePreferences private constructor(context: Context) {
+    private val appContext = context.applicationContext
     private val preferences =
-        context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
+        appContext.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
 
     private val _theme = MutableStateFlow(readTheme())
     val theme: StateFlow<AppTheme> = _theme.asStateFlow()
@@ -63,6 +65,17 @@ class ThemePreferences private constructor(context: Context) {
         _customColor.value = color
     }
 
+    fun resolvedWidgetAccent(): Int =
+        preferences.getInt(KEY_WIDGET_ACCENT, readCustomColor())
+
+    fun saveResolvedWidgetAccent(color: Int) {
+        if (preferences.getInt(KEY_WIDGET_ACCENT, Int.MIN_VALUE) == color) return
+        preferences.edit().putInt(KEY_WIDGET_ACCENT, color).apply()
+        appContext.sendBroadcast(
+            Intent("com.sipun.sonora.widget.ACTION_REFRESH").setPackage(appContext.packageName),
+        )
+    }
+
     private fun readPureBlack(): Boolean =
         preferences.getBoolean(KEY_PURE_BLACK, false)
 
@@ -94,6 +107,7 @@ class ThemePreferences private constructor(context: Context) {
         private const val KEY_DYNAMIC_COLOR = "dynamic_color"
         private const val KEY_DYNAMIC_PALETTE = "dynamic_palette"
         private const val KEY_CUSTOM_COLOR = "custom_color"
+        private const val KEY_WIDGET_ACCENT = "widget_accent"
 
         @Volatile
         private var instance: ThemePreferences? = null

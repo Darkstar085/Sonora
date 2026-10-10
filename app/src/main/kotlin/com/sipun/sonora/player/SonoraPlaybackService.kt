@@ -23,12 +23,26 @@ import androidx.core.content.ContextCompat
 import com.sipun.sonora.MainActivity
 import com.sipun.sonora.R
 import com.sipun.sonora.data.preferences.SonoraPreferences
+import com.sipun.sonora.widget.SonoraWidgetRenderer
 import kotlin.math.log10
 import kotlin.math.pow
 
 class SonoraPlaybackService : MediaSessionService() {
     private val preferences by lazy { SonoraPreferences(applicationContext) }
     private val transitionHandler = Handler(Looper.getMainLooper())
+    private val widgetRefreshHandler = Handler(Looper.getMainLooper())
+    private val widgetRefreshRunnable = object : Runnable {
+        override fun run() {
+            refreshWidgets()
+            if (activePlayer?.isPlaying == true) {
+                widgetRefreshHandler.postDelayed(this, WIDGET_REFRESH_INTERVAL_MS)
+            }
+        }
+    }
+
+    private fun refreshWidgets() {
+        SonoraWidgetRenderer.refreshFromPlayer(this, activePlayer)
+    }
     private val audioBecomingNoisyReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action != AudioManager.ACTION_AUDIO_BECOMING_NOISY) return
@@ -93,6 +107,8 @@ class SonoraPlaybackService : MediaSessionService() {
                         .add(Player.COMMAND_SEEK_TO_NEXT)
                         .add(Player.COMMAND_SEEK_BACK)
                         .add(Player.COMMAND_SEEK_FORWARD)
+                        .add(Player.COMMAND_SET_SHUFFLE_MODE)
+                        .add(Player.COMMAND_SET_REPEAT_MODE)
                         .add(Player.COMMAND_GET_CURRENT_MEDIA_ITEM)
                         .add(Player.COMMAND_GET_TIMELINE)
                         .add(Player.COMMAND_GET_METADATA)
@@ -118,6 +134,7 @@ class SonoraPlaybackService : MediaSessionService() {
             .build()
 
         addSession(mediaSession!!)
+        refreshWidgets()
         transitionHandler.post(transitionRunnable)
     }
 
@@ -126,6 +143,7 @@ class SonoraPlaybackService : MediaSessionService() {
 
     override fun onDestroy() {
         transitionHandler.removeCallbacks(transitionRunnable)
+        widgetRefreshHandler.removeCallbacks(widgetRefreshRunnable)
         if (audioBecomingNoisyReceiverRegistered) {
             unregisterReceiver(audioBecomingNoisyReceiver)
             audioBecomingNoisyReceiverRegistered = false
@@ -151,6 +169,18 @@ class SonoraPlaybackService : MediaSessionService() {
             .build()
 
     private val serviceListener = object : Player.Listener {
+        override fun onEvents(player: Player, events: Player.Events) {
+            refreshWidgets()
+        }
+
+        override fun onIsPlayingChanged(isPlaying: Boolean) {
+            widgetRefreshHandler.removeCallbacks(widgetRefreshRunnable)
+            refreshWidgets()
+            if (isPlaying) {
+                widgetRefreshHandler.postDelayed(widgetRefreshRunnable, WIDGET_REFRESH_INTERVAL_MS)
+            }
+        }
+
         override fun onMediaItemTransition(
             mediaItem: androidx.media3.common.MediaItem?,
             reason: Int,
@@ -455,6 +485,7 @@ class SonoraPlaybackService : MediaSessionService() {
     private companion object {
         private const val NOTIFICATION_CHANNEL_ID = "sonora_playback"
         private const val TRANSITION_TICK_MS = 50L
+        private const val WIDGET_REFRESH_INTERVAL_MS = 1_000L
         private const val PREPARE_BUFFER_MS = 3_000L
         private const val NON_GAPLESS_DELAY_MS = 350L
     }

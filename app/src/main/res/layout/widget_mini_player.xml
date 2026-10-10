@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_glass_dark"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingHorizontal="14dp"
+    android:paddingVertical="10dp">
+
+    <ImageView
+        android:id="@+id/widget_artwork"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="@drawable/widget_artwork_background"
+        android:clipToOutline="true"
+        android:contentDescription="@string/widget_album_art"
+        android:scaleType="centerCrop"
+        android:src="@drawable/widget_music_note" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="10dp"
+        android:layout_weight="1"
+        android:gravity="center_vertical"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/widget_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="@string/widget_nothing_playing"
+            android:textColor="#FFF5F5F5"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/widget_artist"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="@string/widget_open_sonora_to_play"
+            android:textColor="#FFBDBDBD"
+            android:textSize="11sp" />
+
+        <ImageView
+            android:id="@+id/widget_progress"
+            android:layout_width="match_parent"
+            android:layout_height="3dp"
+            android:layout_marginTop="7dp"
+            android:contentDescription="@string/widget_playback_progress"
+            android:scaleType="fitXY" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="40dp"
+        android:layout_height="40dp">
+
+        <ImageView
+            android:id="@+id/widget_play_circle"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/widget_toggle_playback"
+            android:scaleType="fitXY"
+            android:src="@drawable/widget_play_circle" />
+
+        <ImageView
+            android:id="@+id/widget_play_icon"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="11dp"
+            android:src="@drawable/widget_play"
+            android:tint="#FFFFFFFF" />
+
+        <ImageView
+            android:id="@+id/widget_pause_icon"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="11dp"
+            android:src="@drawable/widget_pause"
+            android:tint="#FFFFFFFF"
+            android:visibility="gone" />
+    </FrameLayout>
+</LinearLayout>

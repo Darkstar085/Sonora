@@ -58,6 +58,39 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+        <receiver
+            android:name=".widget.SonoraMiniPlayerWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_mini_title">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.sipun.sonora.widget.ACTION_REFRESH" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/sonora_mini_widget_info" />
+        </receiver>
+        <receiver
+            android:name=".widget.SonoraFullPlayerWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_full_title">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.sipun.sonora.widget.ACTION_REFRESH" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/sonora_full_widget_info" />
+        </receiver>
+        <activity
+            android:name=".widget.SonoraWidgetActionActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:noHistory="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+        <receiver
+            android:name=".widget.SonoraWidgetActionReceiver"
+            android:exported="false" />
         <service
             android:name=".player.SonoraPlaybackService"
             android:exported="true"

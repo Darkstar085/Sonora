@@ -117,10 +117,11 @@ class AndroidMusicRepository(private val contentResolver: ContentResolver) : Mus
                     durationMs = cursor.getLong(duration),
                     uri = uri.toString(),
                     albumArtUri = if (currentAlbumId > 0) {
-                        ContentUris.withAppendedId(
-                            MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI,
-                            currentAlbumId,
-                        ).toString()
+                        Uri.parse("content://media/external/audio/albumart")
+                            .buildUpon()
+                            .appendPath(currentAlbumId.toString())
+                            .build()
+                            .toString()
                     } else {
                         null
                     },
