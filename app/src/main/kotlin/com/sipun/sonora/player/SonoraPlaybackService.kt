@@ -331,6 +331,16 @@ class SonoraPlaybackService : MediaSessionService() {
     private fun finalizeCrossfade(oldPlayer: ExoPlayer, nextPlayer: ExoPlayer) {
         nextPlayer.volume = normalizationVolumes[nextPlayer] ?: 1f
         nextPlayer.addListener(serviceListener)
+
+        oldPlayer.setAudioAttributes(
+            androidx.media3.common.AudioAttributes.DEFAULT,
+            false,
+        )
+        nextPlayer.setAudioAttributes(
+            androidx.media3.common.AudioAttributes.DEFAULT,
+            true,
+        )
+
         mediaSession?.setPlayer(nextPlayer)
         activePlayer = nextPlayer
 
