@@ -46,7 +46,6 @@ def validate(requested):
 
 
 def build():
-    workspace = Path(os.environ.get("GITHUB_WORKSPACE", "."))
     target = apk_path()
     run(["chmod", "+x", "./gradlew"])
     run(["./gradlew", "assembleRelease", "--stacktrace"])
@@ -81,7 +80,7 @@ def verify():
     run([str(signers[-1]), "verify", "--verbose", str(target)])
 
 
-def previous_tag(tag):
+def previous_tags():
     repo = os.environ["GITHUB_REPOSITORY"]
     return output(
         [
@@ -102,7 +101,7 @@ def previous_tag(tag):
 
 def notes():
     version, tag, _ = version_info()
-    tags = [item for item in previous_tag(tag) if item != tag]
+    tags = [item for item in previous_tags() if item != tag]
     previous = tags[0] if tags else ""
     release_notes = ["## What's new", ""]
 
@@ -256,7 +255,7 @@ def telegram():
     if not target.is_file() or not os.access(target, os.R_OK):
         raise SystemExit(f"Release APK is unavailable or unreadable: {target}")
 
-    tags = [item for item in previous_tag(tag) if item != tag]
+    tags = [item for item in previous_tags() if item != tag]
     previous = tags[0] if tags else ""
     version_line = (
         f"🚀 Version: {previous[1:]} → {version}" if previous

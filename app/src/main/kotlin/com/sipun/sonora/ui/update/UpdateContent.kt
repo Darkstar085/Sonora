@@ -158,11 +158,12 @@ fun UpdateContent(
     }
 
     pendingUpdate?.let { update ->
-        if (downloading && progress != null) {
+        val currentProgress = progress
+        if (downloading && currentProgress != null) {
             DownloadProgressDialog(
                 update = update,
                 appIcon = appIcon,
-                progress = progress!!,
+                progress = currentProgress,
                 onCancel = {
                     UpdateManager.cancelDownload(context, update.tag)
                     downloading = false

@@ -202,6 +202,7 @@ fun LyricsScreen(playerController: PlayerController, onBack: () -> Unit) {
                 }
             }
 
+            val currentLyrics = lyrics
             when {
                 loading -> Box(
                     Modifier
@@ -212,7 +213,7 @@ fun LyricsScreen(playerController: PlayerController, onBack: () -> Unit) {
                     CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
 
-                lyrics == null || lyrics!!.lines.isEmpty() -> Box(
+                currentLyrics == null || currentLyrics.lines.isEmpty() -> Box(
                     Modifier
                         .fillMaxWidth()
                         .weight(1f),
@@ -233,7 +234,7 @@ fun LyricsScreen(playerController: PlayerController, onBack: () -> Unit) {
                 }
 
                 else -> LyricsCard(
-                    lyrics = lyrics!!,
+                    lyrics = currentLyrics,
                     positionMs = state.positionMs,
                     onSeek = { seekMs -> playerController.seekTo(seekMs) },
                     modifier = Modifier.weight(1f),

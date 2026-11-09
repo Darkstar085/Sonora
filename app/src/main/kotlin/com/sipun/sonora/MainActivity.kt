@@ -54,7 +54,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         AndroidMusicRepository.notifyMetadataChanged()
-        configureSystemBars()
+        enableEdgeToEdge()
         UpdateNotificationHelper.createChannel(this)
         handleUpdateIntent(intent)
         handleAudioIntent(intent)
@@ -122,10 +122,7 @@ class MainActivity : ComponentActivity() {
             }
 
             permissionGranted -> {
-                SonoraContent(
-                    externalAudioUri = pendingAudioUri,
-                    onExternalAudioConsumed = { pendingAudioUri = null },
-                )
+                SonoraContent()
             }
 
             else -> {
@@ -162,10 +159,7 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    private fun SonoraContent(
-        externalAudioUri: Uri? = null,
-        onExternalAudioConsumed: () -> Unit = {},
-    ) {
+    private fun SonoraContent() {
         val appIcon = remember {
             requireNotNull(ContextCompat.getDrawable(this, R.drawable.sonora_icon_foreground))
                 .toBitmap()
@@ -201,23 +195,7 @@ class MainActivity : ComponentActivity() {
     private fun handleAudioIntent(intent: Intent?) {
         if (intent?.action != Intent.ACTION_VIEW || intent.data == null) return
         if (intent.resolveTypeIfNeeded(contentResolver)?.startsWith("audio/") != true) return
-        if (!hasMusicPermission()) {
-            pendingAudioUri = intent.data
-            return
-        }
         pendingAudioUri = intent.data
-    }
-
-    private fun hasMusicPermission(): Boolean {
-        val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            Manifest.permission.READ_MEDIA_AUDIO
-        } else {
-            Manifest.permission.READ_EXTERNAL_STORAGE
-        }
-        return ContextCompat.checkSelfPermission(
-            this,
-            permission
-        ) == PackageManager.PERMISSION_GRANTED
     }
 
     private fun requestBatteryOptimizationExemption() {
@@ -233,10 +211,6 @@ class MainActivity : ComponentActivity() {
                 Uri.parse("package:" + packageName),
             ),
         )
-    }
-
-    private fun configureSystemBars() {
-        enableEdgeToEdge()
     }
 
     private fun handleUpdateIntent(intent: Intent?) {

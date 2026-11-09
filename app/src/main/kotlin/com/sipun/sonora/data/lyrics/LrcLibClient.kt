@@ -17,7 +17,7 @@ internal class LrcLibClient {
         var best = runCatching { requestExact(exactUrl) }.getOrNull()
             ?.takeIf { !it.instrumental && it.hasLyrics() }
         var bestScore = best?.let {
-            it.matchScore(title, artist, album) + it.preferenceScore(title, artist, album)
+            it.matchScore(title, artist, album) + it.preferenceScore()
         } ?: Int.MIN_VALUE
 
         val titles = titleVariants(title)
@@ -38,11 +38,7 @@ internal class LrcLibClient {
                 .map { response -> response to response.matchScore(title, artist, album) }
                 .filter { (_, score) -> score >= MIN_MATCH_SCORE }
                 .map { (response, score) ->
-                    response to (score + response.preferenceScore(
-                        title,
-                        artist,
-                        album
-                    ))
+                    response to (score + response.preferenceScore())
                 }
                 .maxByOrNull { it.second }
                 ?: continue
@@ -51,7 +47,7 @@ internal class LrcLibClient {
                 bestScore = candidate.second
             }
         }
-        return best?.toLyrics(title, artist, album)
+        return best?.toLyrics()
     }
 
     private fun requestExact(url: String): Response? {
@@ -116,9 +112,9 @@ internal class LrcLibClient {
     private fun Response.hasLyrics(): Boolean =
         !plainLyrics.isNullOrBlank() || !syncedLyrics.isNullOrBlank()
 
-    private fun Response.toLyrics(title: String, artist: String, album: String): Lyrics? {
+    private fun Response.toLyrics(): Lyrics? {
         if (instrumental) return null
-        val (selectedText, selectedSynced) = selectLyricsText(title, artist, album) ?: return null
+        val (selectedText, selectedSynced) = selectLyricsText() ?: return null
         if (selectedSynced) {
             val synced = LyricsParser.parse(selectedText)
             if (synced.lines.isNotEmpty()) return synced
@@ -127,17 +123,13 @@ internal class LrcLibClient {
         return lines.takeIf { it.isNotEmpty() }?.let { Lyrics(it, false) }
     }
 
-    private fun Response.preferenceScore(title: String, artist: String, album: String): Int {
-        val selection = selectLyricsText(title, artist, album) ?: return 0
+    private fun Response.preferenceScore(): Int {
+        val selection = selectLyricsText() ?: return 0
         val (lyrics, synced) = selection
         return (if (synced) 4 else 0) + languageScore(lyrics)
     }
 
-    private fun Response.selectLyricsText(
-        title: String,
-        artist: String,
-        album: String,
-    ): Pair<String, Boolean>? {
+    private fun Response.selectLyricsText(): Pair<String, Boolean>? {
         val synced = syncedLyrics?.takeIf(String::isNotBlank)
         val plain = plainLyrics?.takeIf(String::isNotBlank)
         if (synced == null) return plain?.let { it to false }
