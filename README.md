@@ -196,7 +196,7 @@ feature set.
 | Background work    | WorkManager 2.11.2           |
 | Image loading      | Coil 3.6.3                   |
 | Lyrics             | LRCLIB                       |
-| Metadata           | jaudiotagger-kt 1.0.0        |
+| Metadata           | jaudiotagger-kt 1.0.1        |
 | Serialization      | Kotlinx Serialization 1.11.0 |
 | Build              | Gradle + AGP 9.4.0           |
 | Java               | Java 17                      |
