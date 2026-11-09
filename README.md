@@ -7,40 +7,18 @@
 A beautiful, privacy-friendly music player for Android, built around your local library.
 
 <p align="center">
-  <a href="https://github.com/Darkstar085/Sonora">
-    <img src="https://img.shields.io/badge/Android-API%2029%2B-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android API 29+">
-  </a>
-  <a href="https://github.com/JetBrains/kotlin/releases/tag/v2.4.10">
-    <img src="https://img.shields.io/badge/Kotlin-2.4.10-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin 2.4.10">
-  </a>
-  <a href="https://developer.android.com/compose">
-    <img src="https://img.shields.io/badge/UI-Jetpack%20Compose-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white" alt="Jetpack Compose">
-  </a>
-  <a href="https://m3.material.io/">
+  <img src="https://img.shields.io/badge/Android-API%2029%2B-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android API 29+">
+  <img src="https://img.shields.io/badge/Kotlin-2.4.10-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin 2.4.10">
+  <img src="https://img.shields.io/badge/UI-Jetpack%20Compose-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white" alt="Jetpack Compose">
   <img src="https://img.shields.io/badge/Material%203-Expressive-6750A4?style=for-the-badge&logo=materialdesign&logoColor=white" alt="Material 3 Expressive">
-</a>
-  <a href="https://github.com/Darkstar085/Sonora/releases">
-    <img src="https://img.shields.io/github/v/release/Darkstar085/Sonora?style=for-the-badge&label=Latest%20Release&color=FF6F00" alt="Latest Release">
-  </a>
-  <a href="https://github.com/Darkstar085/Sonora/releases">
-    <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Darkstar085/Sonora/main/.github/badges/downloads.json&style=for-the-badge&label=APK%20Downloads" alt="APK Downloads">
-  </a>
-  <a href="https://github.com/Darkstar085/Sonora/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/Darkstar085/Sonora?style=for-the-badge&color=E91E63" alt="MIT License">
-  </a>
+  <img src="https://img.shields.io/github/v/release/Darkstar085/Sonora?style=for-the-badge&label=Latest%20Release&color=FF6F00" alt="Latest Release">
+  <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Darkstar085/Sonora/main/.github/badges/downloads.json&style=for-the-badge&label=APK%20Downloads" alt="APK Downloads">
+  <img src="https://img.shields.io/github/license/Darkstar085/Sonora?style=for-the-badge&color=E91E63" alt="MIT License">
 </p>
 
 </div>
 
 ---
-
-## About
-
-Sonora is a local-first music player designed to keep your music experience focused and personal.
-
-It scans the music stored on your device, organizes your collection into songs, albums, artists and
-playlists, and provides a modern Android playback experience without turning the app into a
-streaming service.
 
 ## Screenshots
 
@@ -145,13 +123,35 @@ streaming service.
 
 ---
 
-## Downloads
+## Download
 
-Get the latest available Sonora build from [**GitHub
+Get the latest available version from [**GitHub
 Releases**](https://github.com/Darkstar085/Sonora/releases/latest).
 
-For development builds, clone the repository and build the debug APK locally using the instructions
+For a development build, clone the repository and build the debug APK locally using the instructions
 below.
+
+---
+
+## Tech Stack
+
+| Area               | Technology                   |
+|--------------------|------------------------------|
+| Language           | Kotlin 2.4.10                |
+| UI                 | Jetpack Compose              |
+| Design             | Material 3 / M3 Expressive   |
+| Android foundation | AndroidX                     |
+| Navigation         | Navigation Compose 2.10.2    |
+| Playback           | AndroidX Media3 1.11.1       |
+| Background work    | WorkManager 2.11.2           |
+| Image loading      | Coil 3.6.3                   |
+| Lyrics             | LRCLIB                       |
+| Metadata           | jaudiotagger-kt 1.0.1        |
+| Serialization      | Kotlinx Serialization 1.11.0 |
+| Build              | Gradle + AGP 9.4.0           |
+| Java               | Java 17                      |
+| Minimum Android    | Android 10 / API 29          |
+| Compile / Target   | Android API 37               |
 
 ---
 
@@ -183,28 +183,6 @@ feature set.
 
 ---
 
-## Tech Stack
-
-| Area               | Technology                   |
-|--------------------|------------------------------|
-| Language           | Kotlin 2.4.10                |
-| UI                 | Jetpack Compose              |
-| Design             | Material 3 / M3 Expressive   |
-| Android foundation | AndroidX                     |
-| Navigation         | Navigation Compose 2.10.2    |
-| Playback           | AndroidX Media3 1.11.1       |
-| Background work    | WorkManager 2.11.2           |
-| Image loading      | Coil 3.6.3                   |
-| Lyrics             | LRCLIB                       |
-| Metadata           | jaudiotagger-kt 1.0.1        |
-| Serialization      | Kotlinx Serialization 1.11.0 |
-| Build              | Gradle + AGP 9.4.0           |
-| Java               | Java 17                      |
-| Minimum Android    | Android 10 / API 29          |
-| Compile / Target   | Android API 37               |
-
----
-
 ## Project Structure
 
 The layout below reflects the current source tree. Feature screens are grouped by user-facing area;
@@ -222,6 +200,7 @@ shared services and reusable UI live in their own packages.
 │   └── src/
 │       ├── main/
 │       │   ├── AndroidManifest.xml
+│       │   ├── java/com/beatofthedrum/alacdecoder/ # ALAC decoder implementation and renderer
 │       │   ├── kotlin/com/sipun/sonora/
 │       │   │   ├── MainActivity.kt
 │       │   │   ├── core/update/         # Update checks, verification, installation, worker
@@ -285,7 +264,7 @@ shared services and reusable UI live in their own packages.
 
 ---
 
-## Building
+## Build from Source
 
 Clone the repository:
 
